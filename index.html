@@ -519,22 +519,46 @@ function knock(t, freq, gain, len) {
   o.connect(og).connect(a.destination); o.start(a.currentTime + t); o.stop(a.currentTime + t + .1);
 }
 // recorded sound effects: decoded once, played through the same audio context (falls back to synthesized sounds until loaded)
-const SAMPLES = { dice: 'assets/sfx/dice-shuffle.mp3' }, sampleBuf = {};
+// each sound can have several recorded variations; one is picked at random (never the same one twice in a row)
+const SAMPLES = {
+  dice: ['assets/sfx/dice-shuffle.mp3'],
+  land: ['assets/sfx/land-1.mp3', 'assets/sfx/land-2.mp3', 'assets/sfx/land-3.mp3'],
+  place: ['assets/sfx/place-1.mp3', 'assets/sfx/place-2.mp3', 'assets/sfx/place-3.mp3', 'assets/sfx/place-4.mp3'],
+  slide: ['assets/sfx/slide-1.mp3', 'assets/sfx/slide-2.mp3', 'assets/sfx/slide-3.mp3', 'assets/sfx/slide-4.mp3'],
+  bearoff: ['assets/sfx/bearoff-1.mp3', 'assets/sfx/bearoff-2.mp3', 'assets/sfx/bearoff-3.mp3'],
+};
+// per-file level so variations sound equally loud (the slides differ a lot in how long and dense they are)
+const SAMPLE_GAIN = { 'assets/sfx/slide-2.mp3': .22, 'assets/sfx/slide-3.mp3': .22, 'assets/sfx/slide-4.mp3': .26 };
+const sampleBuf = {}, lastPick = {};
 let samplesLoading = false;
 function loadSamples() {
   const a = audio(); if (!a || samplesLoading) return; samplesLoading = true;
-  for (const [k, url] of Object.entries(SAMPLES)) fetch(url).then(r => r.arrayBuffer()).then(b => new Promise((ok, no) => a.decodeAudioData(b, ok, no))).then(buf => { sampleBuf[k] = buf; }).catch(() => {});
+  for (const urls of Object.values(SAMPLES)) for (const url of urls)
+    fetch(url).then(r => r.arrayBuffer()).then(b => new Promise((ok, no) => a.decodeAudioData(b, ok, no))).then(buf => { sampleBuf[url] = buf; }).catch(() => {});
 }
-function playSample(k, gain = 1, rate) {
-  const a = audio(), buf = sampleBuf[k]; if (!a || !buf) { loadSamples(); return false; }
-  const src = a.createBufferSource(), g = a.createGain(); src.buffer = buf; g.gain.value = gain;
-  src.playbackRate.value = rate || (.94 + Math.random() * .12);   // slight variation so repeated rolls don't sound identical
-  src.connect(g).connect(a.destination); src.start(); return true;
+// opts: gain, rate (default: small random pitch change), dur (stop after this many seconds with a short fade)
+function playSample(k, gain = 1, opts = {}) {
+  const a = audio(); if (!a) return false;
+  const ready = (SAMPLES[k] || []).filter(u => sampleBuf[u]);
+  if (!ready.length) { loadSamples(); return false; }
+  let i = Math.floor(Math.random() * ready.length);
+  if (ready.length > 1 && ready[i] === lastPick[k]) i = (i + 1) % ready.length;
+  const url = ready[i]; lastPick[k] = url;
+  const src = a.createBufferSource(), g = a.createGain(), t = a.currentTime;
+  src.buffer = sampleBuf[url]; g.gain.value = gain * (SAMPLE_GAIN[url] ?? 1);
+  src.playbackRate.value = opts.rate || (.95 + Math.random() * .1);
+  src.connect(g).connect(a.destination); src.start(t);
+  if (opts.dur) { g.gain.setValueAtTime(g.gain.value, t + opts.dur - .08); g.gain.linearRampToValueAtTime(0, t + opts.dur); src.stop(t + opts.dur + .02); }
+  return true;
 }
 document.addEventListener('pointerdown', () => loadSamples(), { once: true, capture: true });
 const sfx = {
-  place() { knock(0, 1500, .9, .06); },
-  dice() { if (!playSample('dice', .9)) for (let i = 0; i < 7; i++) knock(i * .065 + Math.random() * .03, 2600 + Math.random() * 1200, .35 + Math.random() * .3, .035); },
+  place() { if (!playSample('place', .9)) knock(0, 1500, .9, .06); },
+  slide() { playSample('slide', .55); },
+  bearoff() { if (!playSample('bearoff', .85)) knock(0, 1500, .9, .06); },
+  land() { if (!playSample('land', .8)) knock(0, 1800, .7, .05); },
+  ui() { knock(0, 1500, .6, .05); },
+  dice() { if (!playSample('dice', .8, { dur: .62 })) for (let i = 0; i < 7; i++) knock(i * .065 + Math.random() * .03, 2600 + Math.random() * 1200, .35 + Math.random() * .3, .035); },
   win() { const a = audio(); if (!a) return; [523, 659, 784, 1046].forEach((f, i) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, a.currentTime + i * .12); g.gain.exponentialRampToValueAtTime(.18, a.currentTime + i * .12 + .02); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + i * .12 + .5); o.connect(g).connect(a.destination); o.start(a.currentTime + i * .12); o.stop(a.currentTime + i * .12 + .55); }); }
 };
 const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch {} };
@@ -705,7 +729,8 @@ async function rollAnim(final) {
   sfx.dice(); buzz(15);
   G.rolledList = [final[0], final[1]];
   showDice(G.rolledList, G.p, true);
-  await sleep(1000); knock(0, 1800, .7, .05); buzz(10);
+  later(() => { sfx.land(); buzz(10); }, 560);
+  await sleep(1000);
 }
 
 // ---------- HUD ----------
@@ -746,14 +771,14 @@ function animateMove(p, m) {
   if (m.hit) { hitEl = locs[toK].pop(); locs['bar' + (1 - p)].push(hitEl); hitEl.classList.add('moving'); later(() => hitEl.classList.remove('moving'), 420); }
   locs[toK].push(el); if (m.to === 24) el.classList.add('off');
   el.classList.add('moving'); later(() => el.classList.remove('moving'), 420);
-  layout(); later(() => { sfx.place(); buzz(8); }, 260);
+  layout(); sfx.slide(); later(() => { (m.to === 24 ? sfx.bearoff : sfx.place)(); buzz(8); }, 260);
   return { el, fromK, toK, hitEl, p };
 }
 function undoAnim(op) {
   locs[op.toK].pop(); locs[op.fromK].push(op.el); op.el.classList.remove('off');
   if (op.hitEl) { locs['bar' + (1 - op.p)].pop(); locs[op.toK].push(op.hitEl); }
   op.el.classList.add('moving'); later(() => op.el.classList.remove('moving'), 420);
-  layout(); later(sfx.place, 260);
+  layout(); sfx.slide(); later(sfx.place, 260);
 }
 
 // ---------- human interaction ----------
@@ -895,7 +920,7 @@ async function openingRoll() {
   G.phase = 'opening'; hud();
   let a, b; do { a = rnd(); b = rnd(); } while (a === b);
   await sleep(300); if (id !== gameId) return;
-  sfx.dice();
+  sfx.dice(); later(sfx.land, 560);
   diceEls.forEach(d => d.remove()); diceEls = [];
   diceEls.push(placeDie(a, (FIELD.L[0] + FIELD.L[1]) / 2, MIDY, [rr(-60, 60), rr(400, 470)], 0),
                placeDie(b, (FIELD.R[0] + FIELD.R[1]) / 2, MIDY, [rr(-60, 60), -rr(400, 470)], 70));
@@ -939,11 +964,11 @@ $('overlay').addEventListener('click', e => {
   if (act === 'watchad' && NET.ok) { serverWallet('ad_reward', {}, '+50 coins'); return; }
   if (act.startsWith('pack-') && NET.ok) { serverWallet('preview_pack', { amount: +act.slice(5) }, `+${fmt(+act.slice(5))} coins`); return; }
   if (act === 'buy' && pendingBuy && NET.ok) { const b = pendingBuy; pendingBuy = null; serverWallet('buy', { kind: b.kind, id: b.id }, `${b.it.name} is yours`); return; }
-  if (act === 'watchad') { coins += 50; store.set('coins', coins); syncCoins(true); sfx.place(); mtoast('+50 coins'); }
+  if (act === 'watchad') { coins += 50; store.set('coins', coins); syncCoins(true); sfx.ui(); mtoast('+50 coins'); }
   if (act === 'ad') { document.querySelector('.mnav [data-go="ad"]').click(); }
   if (act === 'coins') coinSheet();
   if (act === 'scene') { const order = ['auto', 'day', 'night']; prefs.scene = order[(order.indexOf(prefs.scene || 'auto') + 1) % 3]; store.set('scene', prefs.scene); setVars(); document.querySelector('.mnav [data-go="settings"]').click(); }
-  if (act.startsWith('pack-')) { coins += +act.slice(5); store.set('coins', coins); syncCoins(true); sfx.place(); mtoast(`+${fmt(+act.slice(5))} coins`); }
+  if (act.startsWith('pack-')) { coins += +act.slice(5); store.set('coins', coins); syncCoins(true); sfx.ui(); mtoast(`+${fmt(+act.slice(5))} coins`); }
   if (act === 'buy' && pendingBuy && coins >= pendingBuy.it.price) {
     coins -= pendingBuy.it.price; store.set('coins', coins); syncCoins(true);
     owned[pendingBuy.kind].push(pendingBuy.id); store.set('owned', owned);
@@ -1025,7 +1050,7 @@ function renderShop() {
 }
 function doEquip(kind, id) {
   if (NET.ok) api('equip', { kind, id }).then(r => r.profile && applyProfile(r.profile));
-  equip[kind === 'skins' ? 'skin' : 'set'] = id; store.set('equip', equip); setVars(); renderShop(); sfx.place();
+  equip[kind === 'skins' ? 'skin' : 'set'] = id; store.set('equip', equip); setVars(); renderShop(); sfx.ui();
 }
 $('shopTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; shopTab = b.dataset.t; renderShop(); });
 $('shopList').addEventListener('click', e => {
@@ -1082,9 +1107,9 @@ function syncMenu() {
   $('meStats').textContent = stats.played ? `${stats.won} won of ${stats.played}` : 'Ready for a game';
   syncCoins();
 }
-$('mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; audio(); prefs.variant = b.classList.contains('sw') ? (prefs.variant === 'short' ? 'long' : 'short') : b.dataset.v; store.set('variant', prefs.variant); syncMenu(); sfx.place(); });
+$('mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; audio(); prefs.variant = b.classList.contains('sw') ? (prefs.variant === 'short' ? 'long' : 'short') : b.dataset.v; store.set('variant', prefs.variant); syncMenu(); sfx.ui(); });
 function startGame(opp) { prefs.opp = opp; store.set('opp', opp); showScreen('game'); requestAnimationFrame(() => newGame(false)); }
-$('onlineBtn').onclick = () => { audio(); sfx.place(); showScreen('rooms'); };
+$('onlineBtn').onclick = () => { audio(); sfx.ui(); showScreen('rooms'); };
 $('roomsBack').onclick = () => showScreen('menu');
 $('botBtn').onclick = () => { audio(); sheet(`<h2>Play the bot</h2><p>${prefs.variant === 'short' ? 'Short' : 'Long'} nardi, no coins at stake.</p>
   <div class="opts"><button class="opt" data-act="bot-easy"><b>Easy</b><span>Relaxed. Makes mistakes.</span></button><button class="opt" data-act="bot-hard"><b>Hard</b><span>Plays to win.</span></button></div>
@@ -1163,7 +1188,7 @@ async function refreshProfile() { const r = await api('me'); if (r.profile) appl
 async function serverWallet(action, args, okMsg) {
   const r = await api(action, args);
   if (r.error) return sheet(`<h2>Not done</h2><p>${errText(r.error)}</p><button class="list-btn" data-act="close">Close</button>`);
-  applyProfile(r.profile); syncCoins(true); sfx.place(); mtoast(okMsg);
+  applyProfile(r.profile); syncCoins(true); sfx.ui(); mtoast(okMsg);
 }
 function offlineSheet() {
   sheet(`<h2>Online play</h2><p>${ERR.network}</p><p style="font-size:12px">Online games need the published iNardi app or website. Bot games and two players on one phone still work.</p>
@@ -1297,7 +1322,7 @@ async function startOnline(row) {
 async function onlineOpening(row) {
   const id = gameId; G.phase = 'opening'; hud();
   await sleep(250); if (id !== gameId) return;
-  sfx.dice();
+  sfx.dice(); later(sfx.land, 560);
   const [a, b] = row.opening, side0 = FLIP, from = s => [rr(-60, 60), (s === 0 ? 1 : -1) * rr(400, 470)];
   const cx = s => s === 0 ? (FIELD.L[0] + FIELD.L[1]) / 2 : (FIELD.R[0] + FIELD.R[1]) / 2;
   diceEls.forEach(d => d.remove());
