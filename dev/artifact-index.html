@@ -54,7 +54,61 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .mtop { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex: none; animation: rise .5s both; }
 .me { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .me .ava { width: 42px; height: 42px; border-radius: 50%; flex: none; background: var(--cl) center / cover; box-shadow: 0 0 0 2px var(--gold), 0 4px 10px rgba(0,0,0,.5); }
-.me b { display: block; font-weight: 600; font-size: 15px; }
+.me { cursor: pointer; }
+.me .mi { min-width: 0; }
+.me .ava { position: relative; }
+.alv { position: absolute; right: -7px; bottom: -5px; min-width: 21px; height: 21px; padding: 0 4px; box-sizing: border-box; border-radius: 11px; display: grid; place-items: center; background: linear-gradient(180deg, var(--gold-hi), var(--gold)); color: #2a1a0c; font: 800 11px/1 system-ui, sans-serif; box-shadow: 0 0 0 2px #1a110a; }
+.me b { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 15px; min-width: 0; }
+.me b #meName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lvl { flex: none; display: inline-block; padding: 2px 6px; border-radius: 7px; background: linear-gradient(180deg, var(--gold-hi), var(--gold)); color: #2a1a0c; font: 800 10.5px/1.15 system-ui, sans-serif; letter-spacing: .03em; vertical-align: 1px; }
+.xpbar { height: 5px; width: 104px; margin-top: 5px; border-radius: 3px; background: rgba(255,255,255,.1); overflow: hidden; }
+.xpbar i { display: block; height: 100%; width: 0; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-hi)); transition: width .9s cubic-bezier(.2,.7,.2,1); }
+.rgrp { display: flex; align-items: center; gap: 8px; flex: none; }
+.gift { position: relative; width: 40px; height: 38px; border-radius: 12px; border: 1px solid var(--line); background: rgba(10,6,3,.6); display: grid; place-items: center; }
+.gift svg { width: 22px; height: 22px; fill: none; stroke: var(--gold-hi); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+.gift .dot { position: absolute; top: -3px; right: -3px; width: 11px; height: 11px; border-radius: 50%; background: #d4512f; box-shadow: 0 0 0 2px #1a110a, 0 0 8px #d4512f; }
+.gift:has(.dot:not([hidden])) svg { animation: wiggle 2.4s ease-in-out infinite; }
+@keyframes wiggle { 0%, 80%, 100% { transform: none; } 84% { transform: rotate(-12deg); } 88% { transform: rotate(10deg); } 92% { transform: rotate(-6deg); } }
+/* daily bonus */
+.dgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.dtile { border-radius: 12px; border: 1px solid var(--line); background: #1b130c; padding: 7px 2px 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; }
+.dtile small { font-size: 10.5px; color: var(--muted); font-weight: 600; }
+.dtile img { width: 26px; height: 26px; }
+.dtile b { font-size: 13px; font-variant-numeric: tabular-nums; }
+.dtile.big { grid-column: span 2; }
+.dtile.big img { width: 34px; height: 34px; }
+.dtile.got { opacity: .45; }
+.dtile.got::after { content: "✓"; position: absolute; top: 3px; right: 6px; font-size: 12px; color: #6fd18b; font-weight: 800; }
+.dtile.now { border-color: var(--gold); background: linear-gradient(180deg, #3a2814, #22170d); box-shadow: 0 0 0 1px var(--gold), 0 0 18px rgba(216,168,95,.3); }
+.dtile.now small { color: var(--gold-hi); }
+/* XP after a game */
+.xpline { width: 100%; padding: 10px 12px; border-radius: 12px; background: #1b130c; border: 1px solid var(--line); }
+.xpline:empty { display: none; }
+.xpline .xt { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 7px; }
+.xpline .xt b { color: var(--gold-hi); }
+.xpline .xpbar { width: 100%; height: 7px; margin: 0; }
+.xpline .lvup { margin-top: 9px; text-align: center; font-family: var(--font-display); font-size: 19px; color: var(--gold-hi); animation: rise .5s both; }
+.xpline .lvup small { display: block; font-family: var(--font-body); font-size: 12.5px; color: var(--text); }
+/* leaderboard and friends */
+.lbinfo { margin: 12px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.45; text-align: center; flex: none; }
+.lblist { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; margin-top: 12px; padding-bottom: 8px; }
+.lrow { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 14px; background: rgba(10,6,3,.55); border: 1px solid var(--line); flex: none; }
+.lrow.me { border-color: var(--gold); box-shadow: inset 0 0 0 1px var(--gold); }
+.lrow .rk { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 13px; flex: none; background: #2a1d12; color: var(--muted); }
+.lrow .rk.r1 { background: linear-gradient(180deg, #ffe08a, #c9962e); color: #3a2405; } .lrow .rk.r2 { background: linear-gradient(180deg, #f1f3f6, #9aa3ae); color: #2b2f35; } .lrow .rk.r3 { background: linear-gradient(180deg, #f0b98a, #a5622f); color: #3a1a05; }
+.lrow .nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lrow .nm b { font-weight: 600; font-size: 15px; display: flex; gap: 6px; align-items: center; min-width: 0; }
+.lrow .nm b span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lrow .nm small { font-size: 12px; color: var(--muted); }
+.lrow .val { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 15px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.lrow .val small { font-size: 10.5px; color: var(--gold-hi); font-weight: 700; display: flex; align-items: center; gap: 3px; }
+.lrow .val small img { width: 13px; height: 13px; }
+.lbme { flex: none; margin-top: 8px; }
+.lbempty { text-align: center; color: var(--muted); font-size: 14px; line-height: 1.5; padding: 30px 16px; }
+.fsec { font-size: 11.5px; letter-spacing: .14em; font-weight: 700; color: var(--gold); margin: 8px 2px 0; flex: none; }
+.fbtn { flex: none; height: 34px; padding: 0 14px; border-radius: 17px; border: 0; font-weight: 700; font-size: 12.5px; letter-spacing: .06em; background: linear-gradient(180deg, var(--gold-hi), var(--gold)); color: #2a1a0c; }
+.fbtn.ghost { background: #1b130c; border: 1px solid var(--line); color: var(--muted); width: 34px; padding: 0; font-size: 15px; }
+.fstat { display: inline-flex; align-items: center; }
 .me small { color: var(--muted); font-size: 12px; }
 .coins { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 4px 0 5px; border-radius: 20px; background: rgba(10,6,3,.6); border: 1px solid var(--line); font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; flex: none; transition: transform .2s; }
 .coins.bump { transform: scale(1.12); }
@@ -107,9 +161,9 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .row2 .btn-wood:nth-child(1) { animation: rise .6s .68s both; }
 .row2 .btn-wood:nth-child(2) { animation: rise .6s .74s both; }
 .btn-wood svg, .mnav svg, .back svg { width: 21px; height: 21px; fill: none; stroke: var(--gold-hi); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.mnav { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 14px; padding: 9px 4px 8px; border-radius: 18px;
+.mnav { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); margin-top: 14px; padding: 9px 4px 8px; border-radius: 18px;
   background: linear-gradient(180deg, rgba(46,31,20,.92), rgba(22,15,9,.96)); border: 1px solid var(--line); animation: rise .6s .82s both; }
-.mnav button { border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .04em; position: relative; padding: 2px 0; }
+.mnav button { border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; color: var(--muted); letter-spacing: .02em; white-space: nowrap; position: relative; padding: 2px 0; }
 .mnav svg { width: 24px; height: 24px; stroke: var(--gold); }
 .mnav .badge { position: absolute; top: -5px; left: calc(50% + 6px); background: #b8452c; color: #fff; font-size: 10px; font-weight: 700; border-radius: 8px; padding: 1px 5px; box-shadow: 0 1px 3px rgba(0,0,0,.5); }
 
@@ -431,8 +485,8 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 <!-- ============ MENU ============ -->
 <section id="menu" class="screen mscreen">
   <div class="mtop">
-    <div class="me"><div class="ava"></div><div><b id="meName">Guest</b><small id="meStats">Ready for a game</small></div></div>
-    <div class="coins"><img src="assets/coin.webp" alt=""><span class="coinval">1,000</span><button class="plus" data-go="coins" aria-label="Get coins">+</button></div>
+    <div class="me" data-go="profile" role="button" aria-label="Your profile"><div class="ava"><span class="alv" id="meLvl" title="Level">1</span></div><div class="mi"><b><span id="meName">Guest</span></b><div class="xpbar"><i id="meXp"></i></div><small id="meStats" hidden>Ready for a game</small></div></div>
+    <div class="rgrp"><button class="gift" data-go="daily" aria-label="Daily bonus"><svg viewBox="0 0 24 24"><rect x="3.5" y="9" width="17" height="11.5" rx="1.5"/><path d="M2.5 9h19v-1.5a1 1 0 0 0-1-1h-17a1 1 0 0 0-1 1z"/><path d="M12 6.5v14"/><path d="M12 6.5C10.8 3.6 7 3 7 5.2c0 1.6 3 1.3 5 1.3zM12 6.5c1.2-2.9 5-3.5 5-1.3 0 1.6-3 1.3-5 1.3z"/></svg><i class="dot" hidden></i></button><div class="coins"><img src="assets/coin.webp" alt=""><span class="coinval">1,000</span><button class="plus" data-go="coins" aria-label="Get coins">+</button></div></div>
   </div>
   <div class="hero">
     <div class="tilt"><div class="hb mini" id="heroBoard" role="img" aria-label="Nardi board"></div><div class="sheen"></div></div><img class="board3d" id="board3d" alt="Nardi board" hidden>
@@ -451,7 +505,8 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   <nav class="mnav">
     <button data-go="shop"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 12H6.2L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>Shop</button>
     <button data-go="ad"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.6-2.8z"/></svg><span class="badge">+50</span>Free coins</button>
-    <button data-go="profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>Profile</button>
+    <button data-go="friends"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.3A5 5 0 0 1 21 19"/></svg><span class="badge" id="frBadge" hidden></span>Friends</button>
+    <button data-go="leaders"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v4M8.5 20.5h7M10 17h4v3.5h-4z"/></svg>Leaders</button>
     <button data-go="settings"><svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></svg>Settings</button>
   </nav>
 </section>
@@ -467,6 +522,20 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   </div>
   <div class="howroom"><div><b>How rooms work.</b> You and your opponent each put in the stake. The winner takes the pot. A mars does not change the prize.</div></div>
   <button class="bimg btn-wood" id="inviteBtn"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v12M8 7l4-4 4 4"/></svg>INVITE A FRIEND</button>
+</section>
+<!-- ============ LEADERBOARD ============ -->
+<section id="leaders" class="screen mscreen" hidden>
+  <div class="mtop"><button class="back" data-back aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Leaderboard</h2><div class="coins"><img src="assets/coin.webp" alt=""><span class="coinval">1,000</span><button class="plus" data-go="coins" aria-label="Get coins">+</button></div></div>
+  <div class="tabs" id="lbTabs"><button data-b="wins" aria-pressed="true">WINS</button><button data-b="coins" aria-pressed="false">COINS WON</button></div>
+  <p class="lbinfo" id="lbInfo"></p>
+  <div class="lblist" id="lbList"></div>
+  <div class="lbme" id="lbMe" hidden></div>
+</section>
+<!-- ============ FRIENDS ============ -->
+<section id="friends" class="screen mscreen" hidden>
+  <div class="mtop"><button class="back" data-back aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Friends</h2><div class="coins"><img src="assets/coin.webp" alt=""><span class="coinval">1,000</span><button class="plus" data-go="coins" aria-label="Get coins">+</button></div></div>
+  <p class="rsub" id="frSub"></p>
+  <div class="lblist" id="frList"></div>
 </section>
 <!-- ============ SHOP ============ -->
 <section id="shop" class="screen mscreen" hidden>
@@ -862,7 +931,8 @@ function hud() {
   const nm = names();
   for (const p of [0, 1]) {
     const e = p ^ FLIP;
-    $('name' + e).textContent = nm[p];
+    const lv = G.opp === 'online' ? G.online.g['p' + p + '_level'] : G.opp !== 'local' && p === 0 ? myProg().level : null;
+    $('name' + e).innerHTML = esc(nm[p]) + (lv ? ` <span class="lvl">Lv ${lv}</span>` : '');
     $('chip' + e).style.backgroundImage = `url(${SA(equip.set, p ? 'dark' : 'light')})`;
     $('stats' + e).textContent = `${N.pips(G.s, p)} pips · ${G.s.off[p]} off`;
     $('score' + e).textContent = G.score[p];
@@ -1041,11 +1111,12 @@ function gameOver(w) {
   G.phase = 'over';
   const pts = N.resultPoints(G.s, w); G.score[w] += pts; hud();
   if (G.opp !== 'local') { stats.played++; if (w === 0) stats.won++; store.set('stats', stats); }
+  const xpP = G.opp === 'local' ? Promise.resolve(null) : awardBot(w === 0, pts === 2).catch(() => null);
   if (!isBot(w)) sfx.win(); else sfx.lose();
   const nm = names(), title = G.opp === 'local' ? `${nm[w]} wins` : w === 0 ? 'You win' : 'Bot wins';
   later(() => sheet(`<h2>${title}</h2><p>${pts === 2 ? 'Mars: the other side bore off nothing, so this game counts double.' : 'A clean win.'}</p>
-    <p style="font-family:var(--font-display);font-size:26px;color:var(--text)">${G.score[0]} : ${G.score[1]}</p>
-    <button class="cta" data-act="again">PLAY AGAIN</button><button class="list-btn" data-act="menu">Main menu</button>`), 700);
+    <p style="font-family:var(--font-display);font-size:26px;color:var(--text)">${G.score[0]} : ${G.score[1]}</p><div class="xpline" id="xpLine"></div>
+    <button class="cta" data-act="again">PLAY AGAIN</button><button class="list-btn" data-act="menu">Main menu</button>`) || xpP.then(showXp), 700);
 }
 async function openingRoll() {
   const id = gameId;
@@ -1091,7 +1162,7 @@ const RULES = `<h2>How to play</h2><div class="rules">
 $('overlay').addEventListener('click', e => {
   const act = e.target.closest('[data-act]')?.dataset.act;
   if (!act) { if (e.target.id === 'overlay' && G.phase !== 'over' && !sheetLocked) closeSheet(); return; }
-  if (onlineAct(act, e)) return;
+  if (socialAct(act, e) || onlineAct(act, e)) return;
   closeSheet();
   if (act === 'again') newGame(true);
   if (act === 'menu') { gameId++; G.timers.forEach(clearTimeout); leaveOnline(); showScreen('menu'); if (NET.ok) refreshProfile(); }
@@ -1104,7 +1175,6 @@ $('overlay').addEventListener('click', e => {
   if (act === 'watchad') { coins += 50; store.set('coins', coins); syncCoins(true); sfx.ui(); mtoast('+50 coins'); }
   if (act === 'ad') { document.querySelector('.mnav [data-go="ad"]').click(); }
   if (act === 'coins') coinSheet();
-  if (act === 'mute') { prefs.chatMute = !prefs.chatMute; store.set('chatMute', prefs.chatMute); e.target.closest('button').textContent = `Opponent's messages: ${prefs.chatMute ? 'hidden' : 'shown'}`; return; }
   if (act === 'scene') { const order = ['auto', 'day', 'night']; prefs.scene = order[(order.indexOf(prefs.scene || 'auto') + 1) % 3]; store.set('scene', prefs.scene); setVars(); document.querySelector('.mnav [data-go="settings"]').click(); }
   if (act.startsWith('pack-')) { coins += +act.slice(5); store.set('coins', coins); syncCoins(true); sfx.ui(); mtoast(`+${fmt(+act.slice(5))} coins`); }
   if (act === 'buy' && pendingBuy && coins >= pendingBuy.it.price) {
@@ -1579,7 +1649,7 @@ function syncCoins(bump) {
 let mtT;
 function mtoast(msg) { const t = $('mtoast'); t.textContent = msg; t.classList.add('show'); clearTimeout(mtT); mtT = setTimeout(() => t.classList.remove('show'), 1800); }
 function showScreen(id) {
-  for (const sc of ['menu', 'rooms', 'shop', 'game']) $(sc).hidden = sc !== id;
+  for (const sc of ['menu', 'rooms', 'shop', 'game', 'leaders', 'friends']) $(sc).hidden = sc !== id;
   if (typeof chatOpen === 'function') { chatOpen(false); autoPopOpen(false); }
   musicSync();
   if (id === 'menu') { setVars(); heroBoard(); heroDice(); syncMenu(); requestAnimationFrame(placeHero); }
@@ -1607,7 +1677,7 @@ function syncMenu() {
   m.querySelectorAll('button[data-v]').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === prefs.variant));
   $('modeDesc').textContent = prefs.variant === 'short' ? 'Classic rules · hit single checkers' : 'No hitting · all 15 start on the head';
   $('meStats').textContent = stats.played ? `${stats.won} won of ${stats.played}` : 'Ready for a game';
-  syncCoins();
+  syncCoins(); syncProgress();
 }
 $('mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; audio(); prefs.variant = b.classList.contains('sw') ? (prefs.variant === 'short' ? 'long' : 'short') : b.dataset.v; store.set('variant', prefs.variant); syncMenu(); });
 // game art (board, points, checkers, dice) is loaded and decoded ahead of time and kept in memory,
@@ -1640,15 +1710,21 @@ document.querySelectorAll('.room').forEach(r => r.onclick = () => {
   if (!NET.ok) return offlineSheet();
   findMatch(stake, tier);
 });
+document.querySelectorAll('[data-back]').forEach(b => b.onclick = () => showScreen('menu'));
 document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', e => {
   e.stopPropagation(); audio(); const go = b.dataset.go;
   if (go === 'ad') sheet(`<img class="bigcoin" src="assets/coin.webp" alt=""><h2>Free coins</h2><p>Watch a short video and get 50 coins.</p><p style="font-size:12px">In this preview the ad is skipped and the coins are added straight away.</p>
     <button class="cta" data-act="watchad">WATCH AD · +50</button><button class="list-btn" data-act="close">Not now</button>`);
   if (go === 'shop') showScreen('shop');
+  if (go === 'daily') dailySheet();
+  if (go === 'friends') openFriends();
+  if (go === 'leaders') openLeaders();
   if (go === 'coins') coinSheet();
-  if (go === 'profile') sheet(`<h2>${NET.profile ? esc(NET.profile.name) : 'Guest'}</h2><p><span class="netdot ${NET.ok ? 'on' : ''}"></span>${NET.ok ? 'Online' : 'Offline'} · ${stats.played} games played · ${stats.won} won</p><p>Coins: ${fmt(coins)}</p>
+  if (go === 'profile') { const pr = myProg(); sheet(`<h2>${NET.profile ? esc(NET.profile.name) : 'Guest'}</h2><p><span class="netdot ${NET.ok ? 'on' : ''}"></span>${NET.ok ? 'Online' : 'Offline'} · ${stats.played} games played · ${stats.won} won</p>
+    <div class="xpline"><div class="xt"><span>Level ${pr.level}</span><b>${fmt(pr.xp - xpFor(pr.level))} / ${fmt(xpFor(pr.level + 1) - xpFor(pr.level))} XP</b></div><div class="xpbar"><i style="width:${lvPct(pr.xp, pr.level)}%"></i></div></div>
+    <p style="font-size:12px">Win online: 50 XP (mars 75) · lose: 20 · against the bot: 20 for a win, 8 for a loss. Every level pays coins; every fifth level pays more. Next: ${fmt(levelReward(pr.level + 1))} coins.</p>
     ${NET.ok ? `<input class="namein" id="nameIn" maxlength="16" value="${esc(NET.profile.name)}" aria-label="Your name"><div class="err" id="nameErr"></div><button class="cta" data-act="rename">SAVE NAME</button>` : ''}
-    <button class="list-btn" data-act="close">Close</button>`);
+    <button class="list-btn" data-act="close">Close</button>`); }
   if (go === 'settings') sheet(`<h2>Settings</h2>${volHTML()}<button class="list-btn" data-act="scene">Menu scene: ${{ auto: 'by time of day', day: 'sunset', night: 'night' }[prefs.scene || 'auto']}</button><button class="list-btn" data-act="rules">How to play</button><button class="list-btn" data-act="close">Close</button>`);
 }));
 
@@ -1659,7 +1735,10 @@ const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const ERR = {
   not_enough_coins: 'Not enough coins for this table.', already_in_game: 'You already have a game in progress.', invite_gone: 'That code is not valid any more.',
   own_invite: 'That is your own invite. Send it to a friend.', bad_name: 'Use 2–16 letters or numbers.', too_soon: 'Please wait a moment before the next reward.',
-  network: 'No connection to the server. Check your internet.', conflict: 'The game changed. Syncing…', illegal_move: 'That move was refused. Syncing…',
+  network: 'No connection to the server. Check your internet.', not_finished: 'That game is not over yet.', opponent_gone: 'Your opponent has left.',
+  opponent_busy: 'Your opponent is already playing another game.', opponent_no_coins: 'Your opponent does not have enough coins for this stake.',
+  not_played: 'You can add players after you have played a game together.', not_friends: 'You can only invite friends who added you back.',
+  too_many_friends: 'Your friends list is full.', already_claimed: 'You already took today’s bonus.', conflict: 'The game changed. Syncing…', illegal_move: 'That move was refused. Syncing…',
 };
 const errText = c => ERR[c] || 'Something went wrong (' + c + ').';
 
@@ -1674,7 +1753,7 @@ async function netInit() {
     NET.sb.auth.onAuthStateChange((_e, s) => { if (s) NET.sb.realtime.setAuth(s.access_token); });
     const me = await api('me');
     if (!me.profile) throw new Error(me.error || 'no profile');
-    NET.ok = true; applyProfile(me.profile);
+    NET.ok = true; NET.lastMe = me; if (me.daily) dailyNet = me.daily; applyProfile(me.profile);
     return me;
   } catch (e) { console.warn('[iNardi] offline:', e); NET.ok = false; return false; }
 }
@@ -1733,12 +1812,15 @@ function findMatch(stake, tier) {
 }
 
 // ---- friend invites
-async function createInvite() {
+async function createInvite(friend) {
   sheet(`<h2>Invite a friend</h2><div class="spin"></div>`, true);
-  const r = await api('invite_create', { variant: prefs.variant });
+  const r = await api('invite_create', friend ? { variant: prefs.variant, friend_id: friend.id } : { variant: prefs.variant });
   if (r.error) return sheet(`<h2>Invite a friend</h2><p>${errText(r.error)}</p><button class="list-btn" data-act="close">Close</button>`);
   const g = r.game, link = location.origin + location.pathname + '#join-' + g.invite_code, inv = NET.inv = { id: g.id, code: g.invite_code, link, on: true };
-  sheet(`<h2>Invite a friend</h2><p>${g.variant === 'short' ? 'Short' : 'Long'} nardi. Send this code or link. The game starts when your friend joins.</p>
+  if (friend) sheet(`<h2>Invite sent</h2><div class="spin"></div><p>Waiting for <b>${esc(friend.name)}</b> to accept a game of ${g.variant === 'short' ? 'Short' : 'Long'} nardi…</p>
+    <p style="font-size:12px">${friend.online ? 'They are online now.' : 'They are offline right now. They will see the invite if they open iNardi in the next 10 minutes.'}</p>
+    <button class="list-btn" data-act="inv-cancel">Cancel invite</button>`, true);
+  else sheet(`<h2>Invite a friend</h2><p>${g.variant === 'short' ? 'Short' : 'Long'} nardi. Send this code or link. The game starts when your friend joins.</p>
     <div class="code">${g.invite_code}</div><div class="linkbox">${esc(link)}</div>
     <button class="cta" data-act="inv-share">${navigator.share ? 'SHARE LINK' : 'COPY LINK'}</button>
     <p id="invText" style="font-size:13px"><span class="netdot on"></span>Waiting for your friend…</p>
@@ -1748,7 +1830,7 @@ async function createInvite() {
     if (!inv.on) return;
     const { data } = await NET.sb.from('games').select('*').eq('id', inv.id).maybeSingle();
     if (data && data.status === 'active') { inv.on = false; sfx.matchFound(); return startOnline(data); }
-    if (data && data.status === 'cancelled') { inv.on = false; return sheet(`<h2>Invite expired</h2><button class="list-btn" data-act="close">Close</button>`); }
+    if (data && data.status === 'cancelled') { inv.on = false; return sheet(`<h2>${friend ? 'No game' : 'Invite expired'}</h2>${friend ? `<p>${esc(friend.name)} said no, or the invite expired.</p>` : ''}<button class="list-btn" data-act="close">Close</button>`); }
   }
 }
 function joinSheet(code = '', msg = '') {
@@ -1946,11 +2028,243 @@ function onlineOver(row) {
   const why = row.end_reason === 'resign' ? (won ? `${opp} resigned.` : 'You resigned.')
     : row.end_reason === 'timeout' ? (won ? `${opp} ran out of time.` : 'You ran out of time.')
     : row.points === 2 ? 'Mars: no checkers were borne off by the loser.' : 'All fifteen checkers borne off.';
+  const before = myProg(), oppId = row['p' + (1 - o.seat)];
   const money = row.stake ? `<p style="font-family:var(--font-display);font-size:26px;color:${won ? 'var(--gold-hi)' : 'var(--muted)'}"><img src="assets/coin.webp" alt="" style="width:26px;vertical-align:-5px"> ${won ? '+' + fmt(row.stake * 2) : '−' + fmt(row.stake)}</p>` : '';
-  refreshProfile();
-  later(() => sheet(`<h2>${won ? 'You win' : 'You lose'}</h2><p>${why}</p>${money}
-    ${row.kind === 'match' ? '<button class="cta" data-act="requeue">PLAY AGAIN</button>' : ''}
-    <button class="list-btn" data-act="menu">Main menu</button>`, true), 700);
+  const xpP = refreshProfile().then(() => { const a = myProg(); let c = 0; for (let l = before.level + 1; l <= a.level; l++) c += levelReward(l); return { xp: a.xp - before.xp, from: before.level, level: a.level, coins: c }; }).catch(() => null);
+  later(() => { sheet(`<h2>${won ? 'You win' : 'You lose'}</h2><p>${why}</p>${money}<div class="xpline" id="xpLine"></div>
+    <button class="cta" data-act="rematch">REMATCH</button>
+    ${row.kind === 'match' ? '<button class="list-btn" data-act="requeue">New opponent</button>' : ''}
+    <button class="list-btn" data-act="add-friend" id="addFr" hidden>Add friend</button>
+    <button class="list-btn" data-act="menu">Main menu</button>`, true); xpP.then(showXp); if (oppId) friendButtonFor(oppId); }, 700);
+}
+
+// ---------- progression: levels and XP, daily bonus (on the server when online, on this phone when offline) ----------
+// total XP for a level: 50·L·(L−1) → level 2 at 100 XP, 3 at 300, 5 at 1,000, 10 at 4,500 (same formula as the server)
+const levelFor = xp => Math.floor((1 + Math.sqrt(1 + .08 * Math.max(0, xp))) / 2);
+const xpFor = l => 50 * l * (l - 1);
+const levelReward = l => l % 5 === 0 ? 500 + 100 * l : 100 + 10 * l;
+const DAILY = [100, 150, 200, 300, 400, 500, 1000];
+var localProg = store.get('progress', { xp: 0, level: 1 }), localDailyState = store.get('daily', { last: null, streak: 0 }), dailyNet = null;
+const myProg = () => NET.ok && NET.profile ? { xp: NET.profile.xp || 0, level: NET.profile.level || 1 } : (localProg || { xp: 0, level: 1 });
+const ymdYerevan = (daysAgo = 0) => new Date(Date.now() + 4 * 3600e3 - daysAgo * 864e5).toISOString().slice(0, 10);
+function localDaily() {
+  const d = localDailyState || { last: null, streak: 0 }, available = d.last !== ymdYerevan(0);
+  return { available, day: available ? (d.last === ymdYerevan(1) ? d.streak % 7 + 1 : 1) : d.streak, streak: d.streak };
+}
+const dailyNow = () => NET.ok ? dailyNet : localDaily();
+const lvPct = (xp, level) => Math.max(0, Math.min(100, (xp - xpFor(level)) / (xpFor(level + 1) - xpFor(level)) * 100));
+function syncProgress() {
+  if (!$('meLvl')) return;
+  const { xp, level } = myProg();
+  $('meLvl').textContent = level; $('meXp').style.width = lvPct(xp, level) + '%';
+  const d = dailyNow(); document.querySelectorAll('.gift .dot').forEach(e => e.hidden = !(d && d.available));
+}
+function dailySheet() {
+  const d = dailyNow(); if (!d) return;
+  const tiles = DAILY.map((c, i) => { const n = i + 1, st = (n < d.day || (!d.available && n === d.day)) ? 'got' : (d.available && n === d.day ? 'now' : '');
+    return `<div class="dtile ${st} ${n === 7 ? 'big' : ''}"><small>Day ${n}</small><img src="assets/coin.webp" alt=""><b>${fmt(c)}</b></div>`; }).join('');
+  sheet(`<h2>Daily bonus</h2><p>${d.available ? `Day ${d.day} of 7. Come back every day: the reward grows, and day 7 pays ${fmt(DAILY[6])}. Miss a day and it starts again from day 1.` : 'You already took today’s bonus. Come back tomorrow for the next one.'}</p>
+    <div class="dgrid">${tiles}</div>
+    ${d.available ? `<button class="cta" data-act="daily-claim">CLAIM ${fmt(DAILY[d.day - 1])}</button>` : ''}<button class="list-btn" data-act="close">${d.available ? 'Later' : 'Close'}</button>`);
+}
+function coinCelebrate(n, title, sub = '') {
+  sfx.win(); syncCoins(true);
+  sheet(`<img class="bigcoin" src="assets/coin.webp" alt=""><h2>+${fmt(n)} coins</h2><p>${title}</p>${sub}<button class="cta" data-act="close">GREAT</button>`);
+}
+async function claimDaily() {
+  if (NET.ok) {
+    sheet(`<h2>Daily bonus</h2><div class="spin"></div>`, true);
+    const r = await api('claim_daily');
+    if (r.daily) dailyNet = r.daily;
+    if (r.profile) applyProfile(r.profile);
+    if (r.error) { syncProgress(); return r.error === 'already_claimed' ? dailySheet() : sheet(`<h2>Daily bonus</h2><p>${errText(r.error)}</p><button class="list-btn" data-act="close">Close</button>`); }
+    syncProgress(); return coinCelebrate(r.reward, `Day ${r.day} bonus. See you tomorrow!`);
+  }
+  const d = localDaily(); if (!d.available) return dailySheet();
+  localDailyState = { last: ymdYerevan(0), streak: d.day }; store.set('daily', localDailyState);
+  const n = DAILY[d.day - 1]; coins += n; store.set('coins', coins); syncProgress(); coinCelebrate(n, `Day ${d.day} bonus. See you tomorrow!`);
+}
+// XP for a finished game against the bot: { xp, from, level, coins } or null
+async function awardBot(won, mars) {
+  if (G.opp === 'local') return null;
+  if (NET.ok) {
+    const r = await api('bot_result', { won, mars });
+    if (!r.profile) return null;
+    applyProfile(r.profile); return r.xp;
+  }
+  const xp = won ? (mars ? 30 : 20) : 8, p = localProg, from = p.level;
+  p.xp += xp; const to = Math.max(from, levelFor(p.xp)); let c = 0;
+  for (let l = from + 1; l <= to; l++) c += levelReward(l);
+  p.level = to; store.set('progress', p);
+  if (c) { coins += c; store.set('coins', coins); syncCoins(true); }
+  syncProgress(); return { xp, from, level: to, coins: c };
+}
+// fill the XP box of the result sheet; the bar slides from where it was to where it is now
+function showXp(r) {
+  const el = $('xpLine'); if (!el || !r || !r.xp) return;
+  const { xp, level } = myProg(), before = xp - r.xp, up = r.level > r.from;
+  el.innerHTML = `<div class="xt"><span>Level ${level}</span><b>+${r.xp} XP</b></div><div class="xpbar"><i style="width:${up ? 0 : lvPct(before, level)}%"></i></div>
+    ${up ? `<div class="lvup">Level up! You are now level ${level}<small>+${fmt(r.coins)} coins</small></div>` : ''}`;
+  requestAnimationFrame(() => requestAnimationFrame(() => { const i = el.querySelector('.xpbar i'); if (i) i.style.width = lvPct(xp, level) + '%'; }));
+  if (up) { later(() => { sfx.matchFound(); syncCoins(true); }, 500); }
+}
+
+// ---------- weekly leaderboard ----------
+var lbBoard = 'wins';
+const until = t => { const s = Math.max(0, (Date.parse(t) - Date.now()) / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
+function lbRow(r, wins) {
+  const prize = wins && r.rank <= 10 ? `<small><img src="assets/coin.webp" alt="">${fmt([5000, 3000, 2000][r.rank - 1] || 500)}</small>` : '';
+  return `<div class="lrow ${r.me ? 'me' : ''}"><div class="rk ${r.rank <= 3 ? 'r' + r.rank : ''}">${r.rank}</div>
+    <div class="nm"><b><span>${esc(r.name)}${r.me ? ' (you)' : ''}</span><span class="lvl">Lv ${r.level}</span></b><small>${wins ? `${fmt(r.coins)} coins won` : `${r.wins} win${r.wins === 1 ? '' : 's'}`}</small></div>
+    <div class="val">${wins ? `${r.wins} win${r.wins === 1 ? '' : 's'}` : `<span><img src="assets/coin.webp" alt="" style="width:16px;vertical-align:-3px"> ${fmt(r.coins)}</span>`}${prize}</div></div>`;
+}
+async function openLeaders() {
+  showScreen('leaders');
+  $('lbTabs').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.b === lbBoard));
+  const list = $('lbList'), me = $('lbMe'); me.hidden = true;
+  if (!NET.ok) { $('lbInfo').textContent = ''; list.innerHTML = `<div class="lbempty">${ERR.network}<br>The leaderboard needs a connection.</div>`; return; }
+  list.innerHTML = '<div class="spin"></div>';
+  const board = lbBoard, r = await api('leaderboard', { board });
+  if (board !== lbBoard || $('leaders').hidden) return;
+  if (r.error) { list.innerHTML = `<div class="lbempty">${errText(r.error)}</div>`; return; }
+  const wins = board === 'wins';
+  $('lbInfo').innerHTML = `This week · ends in <b>${until(r.ends_at)}</b><br>${wins ? 'Top 10 by wins get coins: 1st 5,000 · 2nd 3,000 · 3rd 2,000 · 4th–10th 500.' : 'Coins won in coin rooms this week. Prizes go by the Wins board.'} Only coin-room games count.`;
+  list.innerHTML = r.top.length ? r.top.map(x => lbRow(x, wins)).join('') : `<div class="lbempty">Nobody on the board yet this week.<br>Win a game in a coin room to be the first.</div>`;
+  if (r.me && !r.top.some(x => x.me)) { me.hidden = false; me.innerHTML = lbRow(r.me, wins); }
+  else if (!r.me) { me.hidden = false; me.innerHTML = `<div class="lrow me"><div class="rk">–</div><div class="nm"><b><span>You</span><span class="lvl">Lv ${myProg().level}</span></b><small>Win a game in a coin room to join the board.</small></div></div>`; }
+}
+$('lbTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.dataset.b === lbBoard) return; lbBoard = b.dataset.b; openLeaders(); });
+
+// ---------- friends ----------
+var friendsList = [], frTimer = 0;
+function frBadge() { const n = friendsList.filter(f => f.state === 'request').length, b = $('frBadge'); b.hidden = !n; b.textContent = n; }
+function frRow(f) {
+  const st = f.state === 'friend' ? (f.playing ? '<span class="netdot on" style="background:#e3b450;box-shadow:0 0 6px #e3b450"></span>Playing a game' : f.online ? '<span class="netdot on"></span>Online' : '<span class="netdot"></span>Offline')
+    : f.state === 'request' ? 'Wants to be your friend' : 'Waiting for them to add you back';
+  const btn = f.state === 'friend' ? `<button class="fbtn" data-fr="invite" data-id="${f.id}">INVITE</button><button class="fbtn ghost" data-fr="more" data-id="${f.id}" aria-label="More">⋯</button>`
+    : f.state === 'request' ? `<button class="fbtn" data-fr="add" data-id="${f.id}">ADD BACK</button><button class="fbtn ghost" data-fr="remove" data-id="${f.id}" aria-label="Remove">✕</button>`
+    : `<button class="fbtn ghost" data-fr="remove" data-id="${f.id}" aria-label="Cancel request">✕</button>`;
+  return `<div class="lrow"><div class="nm"><b><span>${esc(f.name)}</span><span class="lvl">Lv ${f.level}</span></b><small class="fstat">${st}</small></div>${btn}</div>`;
+}
+function renderFriends() {
+  const L = $('frList'); frBadge(); if (!L || $('friends').hidden) return;
+  $('frSub').textContent = `Invites are for ${prefs.variant === 'short' ? 'Short' : 'Long'} nardi. Switch the game on the main menu.`;
+  const sec = (title, arr) => arr.length ? `<div class="fsec">${title}</div>` + arr.map(frRow).join('') : '';
+  const fr = friendsList.filter(f => f.state === 'friend'), rq = friendsList.filter(f => f.state === 'request'), sent = friendsList.filter(f => f.state === 'sent');
+  L.innerHTML = friendsList.length ? sec('REQUESTS', rq) + sec('FRIENDS', fr) + sec('SENT', sent)
+    : `<div class="lbempty">No friends yet.<br>After an online game, tap <b>ADD FRIEND</b> to add your opponent. When they add you back, you can see when they are online and invite them with one tap.</div>`;
+}
+async function loadFriends() { if (!NET.ok) return; const r = await api('friends'); if (r.friends) { friendsList = r.friends; renderFriends(); } }
+async function openFriends() {
+  showScreen('friends');
+  if (!NET.ok) { $('frSub').textContent = ''; $('frList').innerHTML = `<div class="lbempty">${ERR.network}<br>Friends need a connection.</div>`; return; }
+  if (!friendsList.length) $('frList').innerHTML = '<div class="spin"></div>';
+  renderFriends(); await loadFriends();
+  clearInterval(frTimer); frTimer = setInterval(() => { if ($('friends').hidden) return clearInterval(frTimer); loadFriends(); }, 20000);
+}
+$('frList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-fr]'); if (!b) return; audio();
+  const f = friendsList.find(x => x.id === b.dataset.id); if (!f) return;
+  if (b.dataset.fr === 'invite') return createInvite(f);
+  if (b.dataset.fr === 'more') return sheet(`<h2>${esc(f.name)}</h2><p>Level ${f.level}</p><button class="list-btn" data-act="fr-remove" data-id="${f.id}">Remove friend</button><button class="list-btn" data-act="close">Close</button>`);
+  b.disabled = true;
+  const r = await api(b.dataset.fr === 'add' ? 'friend_add' : 'friend_remove', { user_id: f.id });
+  if (r.friends) { friendsList = r.friends; renderFriends(); if (b.dataset.fr === 'add') mtoast(`You and ${f.name} are friends`); }
+  else { b.disabled = false; mtoast(errText(r.error)); }
+});
+
+// ---------- invites sent to me (friend invites and rematch requests) ----------
+var seenInv = new Set(), pingTimer = 0;
+function onInvites(list) {
+  for (const g of list || []) {
+    if (seenInv.has(g.id) || Date.now() - Date.parse(g.created_at) > 600e3) continue;
+    if (G.online && G.phase !== 'over' && !$('game').hidden) continue;           // in a game: ask after it
+    if (!$('viewer').hidden) continue;
+    seenInv.add(g.id); NET.pendingInv = g; sfx.matchFound();
+    const who = `<b>${esc(g.p0_name || 'A player')}</b> <span class="lvl">Lv ${g.p0_level || 1}</span>`, v = g.variant === 'short' ? 'Short' : 'Long';
+    return sheet(g.rematch_of
+      ? `<h2>Rematch?</h2><p>${who} wants to play again.</p><p>${v} nardi${g.stake ? ` · stake ${fmt(g.stake)} coins` : ''}</p><button class="cta" data-act="pinv-yes">PLAY AGAIN</button><button class="list-btn" data-act="pinv-no">No thanks</button>`
+      : `<h2>Game invite</h2><p>${who} invites you to a game of ${v} nardi.</p><button class="cta" data-act="pinv-yes">PLAY</button><button class="list-btn" data-act="pinv-no">Not now</button>`, true);
+  }
+}
+function watchInvites() {
+  if (NET.invChan || !NET.ok) return;
+  NET.invChan = NET.sb.channel('inv-' + NET.uid)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'games', filter: 'invited=eq.' + NET.uid }, pl => {
+      const g = pl.new; if (!g || !g.id) return;
+      if (g.status === 'waiting') onInvites([g]);
+      else if (NET.pendingInv && NET.pendingInv.id === g.id && g.status === 'cancelled') { NET.pendingInv = null; closeSheet(); mtoast('The invite was cancelled'); }
+    }).subscribe();
+  clearInterval(pingTimer);
+  pingTimer = setInterval(() => { if (!document.hidden && NET.ok) api('ping').then(r => onInvites(r.invites)); }, 45000);
+}
+async function acceptInvite() {
+  const g = NET.pendingInv; NET.pendingInv = null; if (!g) return closeSheet();
+  if (G.online && G.phase === 'over') leaveOnline();
+  if (!g.rematch_of) return joinCode(g.invite_code);
+  sheet(`<h2>Rematch</h2><div class="spin"></div>`, true);
+  const r = await api('rematch', { game_id: g.rematch_of });
+  if (r.game && r.game.status === 'active') { sfx.matchFound(); return startOnline(r.game); }
+  sheet(`<h2>Rematch</h2><p>${errText(r.error || 'invite_gone')}</p><button class="list-btn" data-act="menu">Main menu</button>`, true);
+}
+
+// ---------- rematch after an online game ----------
+async function askRematch() {
+  const o = G.online; if (!o) return;
+  const oldId = o.id, opp = names()[1 - o.seat];
+  sheet(`<h2>Rematch</h2><div class="spin"></div>`, true);
+  const r = await api('rematch', { game_id: oldId });
+  if (r.game) { sfx.matchFound(); return startOnline(r.game); }
+  if (r.error) return sheet(`<h2>Rematch</h2><p>${errText(r.error)}</p><button class="list-btn" data-act="menu">Main menu</button>`, true);
+  const w = NET.inv = { id: r.waiting.id, on: true, rematch: true };
+  sheet(`<h2>Rematch</h2><div class="spin"></div><p>Waiting for <b>${esc(opp)}</b> to accept…</p><p style="font-size:12px">The request stays open for 10 minutes.</p><button class="list-btn" data-act="rm-cancel">Cancel</button>`, true);
+  while (w.on) {
+    await sleep(2000); if (!w.on) return;
+    const { data } = await NET.sb.from('games').select('*').eq('id', w.id).maybeSingle();
+    if (data && data.status === 'active') { w.on = false; sfx.matchFound(); return startOnline(data); }
+    if (data && data.status === 'cancelled') { w.on = false; return sheet(`<h2>No rematch</h2><p>${esc(opp)} said no or has left.</p><button class="list-btn" data-act="menu">Main menu</button>`, true); }
+  }
+}
+// add the opponent of the game that just ended
+async function addOpponent(btn) {
+  const o = G.online; if (!o) return;
+  const id = o.g['p' + (1 - o.seat)]; btn.disabled = true;
+  const r = await api('friend_add', { user_id: id });
+  if (r.friends) { friendsList = r.friends; frBadge(); const f = r.friends.find(x => x.id === id); btn.textContent = f && f.state === 'friend' ? 'Friends ✓' : 'Friend request sent ✓'; }
+  else { btn.disabled = false; mtoast(errText(r.error)); }
+}
+async function friendButtonFor(oppId) {
+  const b = $('addFr'); if (!b) return;
+  const r = await api('friends'); if (!r.friends || !$('addFr')) return;
+  friendsList = r.friends; frBadge();
+  const f = r.friends.find(x => x.id === oppId);
+  if (!f || f.state === 'request') { b.hidden = false; b.textContent = f ? 'Add back as friend' : 'Add friend'; }
+  else { b.hidden = false; b.disabled = true; b.textContent = f.state === 'friend' ? 'Friends ✓' : 'Friend request sent ✓'; }
+}
+// sheet actions for these features; true when handled
+function socialAct(act, e) {
+  if (act === 'daily-claim') { claimDaily(); return true; }
+  if (act === 'pinv-yes') { acceptInvite(); return true; }
+  if (act === 'pinv-no') { const g = NET.pendingInv; NET.pendingInv = null; if (g) api('invite_decline', { game_id: g.id }); closeSheet(); return true; }
+  if (act === 'rematch') { askRematch(); return true; }
+  if (act === 'rm-cancel') { if (NET.inv) { NET.inv.on = false; api('invite_cancel', { game_id: NET.inv.id }); } closeSheet(); gameId++; G.timers.forEach(clearTimeout); leaveOnline(); showScreen('menu'); refreshProfile(); return true; }
+  if (act === 'add-friend') { addOpponent(e.target.closest('button')); return true; }
+  if (act === 'fr-remove') { const id = e.target.closest('[data-id]').dataset.id; closeSheet(); api('friend_remove', { user_id: id }).then(r => { if (r.friends) { friendsList = r.friends; renderFriends(); } }); return true; }
+  if (act === 'mute') { prefs.chatMute = !prefs.chatMute; store.set('chatMute', prefs.chatMute); e.target.closest('button').textContent = `Opponent's messages: ${prefs.chatMute ? 'hidden' : 'shown'}`; return true; }
+  if (act === 'prizes-ok') { api('ack_prizes'); closeSheet(); return true; }
+  return false;
+}
+// once the intro is over and we know whether we're online: weekly prize, then the daily bonus
+var introDone = false, netDone = false, startShown = false;
+function afterStart(me) {
+  if (me && me.daily) dailyNet = me.daily;
+  syncProgress();
+  if (!introDone || !netDone || startShown) return;
+  startShown = true;
+  if (!$('overlay').hidden || $('menu').hidden) return;
+  const pz = me && me.prizes && me.prizes[0];
+  if (pz) { sfx.win(); return sheet(`<img class="bigcoin" src="assets/coin.webp" alt=""><h2>Weekly prize</h2><p>You finished <b>#${pz.rank}</b> on last week’s leaderboard.</p><p style="font-family:var(--font-display);font-size:26px;color:var(--gold-hi)">+${fmt(pz.coins)} coins</p><button class="cta" data-act="prizes-ok">COLLECT</button>`, true); }
+  const d = dailyNow(); if (d && d.available) dailySheet();
 }
 
 setVars(); syncMenu(); heroBoard(); heroDice(); requestAnimationFrame(placeHero);
@@ -1994,6 +2308,7 @@ const EPM_LOGO = {"W":272,"H":371.2691690180153,"mono":{"E":"M0 0H33V253H0ZM0 0H
     if (finished) return; finished = true;
     if (sting) { const t = a.currentTime; sting.g.gain.setTargetAtTime(0, t, .15); sting.src.stop(t + .8); }
     el.classList.add('out'); setTimeout(() => el.remove(), 550); setTimeout(musicStart, 400);
+    setTimeout(() => { introDone = true; afterStart(NET.lastMe); }, 650);
     if (!$('menu').hidden) showScreen('menu');   // replay the menu's entrance animations now that it's visible
   };
   Promise.race([Promise.all([Promise.all(loads), new Promise(r => setTimeout(r, 3200))]), new Promise(r => setTimeout(r, 6500))]).then(finish);
@@ -2010,8 +2325,12 @@ function joinFromLink(me) {
 }
 window.addEventListener('hashchange', () => joinFromLink(NET.ok));
 netInit().then(me => {
+  netDone = true;
+  if (me) { watchInvites(); loadFriends(); }
   if (me && me.game && me.game.status === 'active') return resumeActive();
-  joinFromLink(me);
+  if (joinFromLink(me)) return;
+  afterStart(me);
+  if (me && me.invites && me.invites.length) setTimeout(() => { if ($('overlay').hidden) onInvites(me.invites); }, 400);
 });
 })();
 </script>

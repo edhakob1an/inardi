@@ -62,6 +62,35 @@ async function activeGame(uid: string) {
     .or(`p0.eq.${uid},p1.eq.${uid}`).order('created_at', { ascending: false }).limit(1);
   return data && data[0] || null;
 }
+// calendar day in Yerevan (UTC+4, no daylight saving): the daily bonus resets at local midnight
+const ymd = (daysAgo = 0) => new Date(Date.now() + 4 * 3600e3 - daysAgo * 864e5).toISOString().slice(0, 10);
+function dailyStatus(p: Game) {
+  const available = p.daily_last !== ymd(0);
+  return { available, day: available ? (p.daily_last === ymd(1) ? (p.daily_streak % 7) + 1 : 1) : p.daily_streak, streak: p.daily_streak };
+}
+const DAILY = [100, 150, 200, 300, 400, 500, 1000];
+async function touch(uid: string) { await db.from('profiles').update({ last_seen: new Date().toISOString() }).eq('id', uid); }
+// invites sent to this player (friend invites and rematch requests) that are still open
+async function pendingInvites(uid: string) {
+  const { data } = await db.from('games').select('id,p0,p0_name,p0_level,variant,stake,invite_code,rematch_of,created_at')
+    .eq('invited', uid).eq('status', 'waiting').gte('created_at', new Date(Date.now() - 600e3).toISOString()).order('created_at', { ascending: false }).limit(5);
+  return data || [];
+}
+async function unseenPrizes(uid: string) {
+  const { data } = await db.from('weekly_prizes').select('week,rank,coins').eq('user_id', uid).eq('seen', false);
+  return data || [];
+}
+const isUuid = (x: unknown) => typeof x === 'string' && /^[0-9a-f-]{36}$/i.test(x);
+async function playedTogether(a: string, b: string) {
+  const { data } = await db.from('games').select('id').in('status', ['active', 'finished'])
+    .or(`and(p0.eq.${a},p1.eq.${b}),and(p0.eq.${b},p1.eq.${a})`).limit(1);
+  return !!(data && data.length);
+}
+async function isFriendRow(a: string, b: string) {
+  const { data } = await db.from('friends').select('user_id').eq('user_id', a).eq('friend_id', b).maybeSingle();
+  return !!data;
+}
+
 async function finish(g: Game, winner: number, reason: string, points: number) {
   await rpc('settle_game', { p_game: g.id, p_winner: winner, p_reason: reason, p_points: points });
   return await loadGame(g.id);
@@ -69,7 +98,69 @@ async function finish(g: Game, winner: number, reason: string, points: number) {
 
 const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
   // ---------------------------------------------------------------- account
-  async me(uid) { return { profile: await profile(uid), game: await activeGame(uid) }; },
+  async me(uid) {
+    await touch(uid);
+    const p = await profile(uid);
+    return { profile: p, game: await activeGame(uid), daily: dailyStatus(p), prizes: await unseenPrizes(uid), invites: await pendingInvites(uid) };
+  },
+
+  // called every ~45 s while the app is open: keeps "online" status fresh and picks up invites
+  async ping(uid) { await touch(uid); return { invites: await pendingInvites(uid) }; },
+
+  // ---------------------------------------------------------------- daily bonus, XP, weekly prizes
+  async claim_daily(uid) {
+    const r = await rpc('claim_daily', { p_user: uid });
+    const p = await profile(uid);
+    return { ...r, profile: p, daily: dailyStatus(p) };
+  },
+
+  async ack_prizes(uid) { await db.from('weekly_prizes').update({ seen: true }).eq('user_id', uid).eq('seen', false); return { ok: true }; },
+
+  // a finished game against the bot; rate-limited because the result comes from the phone
+  async bot_result(uid, a) {
+    const p = await profile(uid);
+    if (p.last_bot_xp_at && Date.parse(p.last_bot_xp_at) > Date.now() - 90e3) throw new Fail('too_soon');
+    await db.from('profiles').update({ last_bot_xp_at: new Date().toISOString() }).eq('id', uid);
+    const xp = a.won ? (a.mars ? 30 : 20) : 8;
+    const r = await rpc('add_xp', { p_user: uid, p_xp: xp });
+    return { xp: r, profile: await profile(uid) };
+  },
+
+  async leaderboard(uid, a) { return await rpc('leaderboard', { p_user: uid, p_board: a.board === 'coins' ? 'coins' : 'wins' }); },
+
+  // ---------------------------------------------------------------- friends
+  async friends(uid) { await touch(uid); return { friends: await rpc('friends_list', { p_user: uid }) }; },
+
+  async friend_add(uid, a) {
+    if (!isUuid(a.user_id) || a.user_id === uid) throw new Fail('bad_user');
+    if (!(await isFriendRow(a.user_id, uid)) && !(await playedTogether(uid, a.user_id))) throw new Fail('not_played');
+    const { count } = await db.from('friends').select('user_id', { count: 'exact', head: true }).eq('user_id', uid);
+    if ((count || 0) >= 200) throw new Fail('too_many_friends');
+    const { error } = await db.from('friends').upsert({ user_id: uid, friend_id: a.user_id }, { onConflict: 'user_id,friend_id', ignoreDuplicates: true });
+    if (error) throw error;
+    return { friends: await rpc('friends_list', { p_user: uid }) };
+  },
+
+  async friend_remove(uid, a) {
+    if (!isUuid(a.user_id)) throw new Fail('bad_user');
+    await db.from('friends').delete().eq('user_id', uid).eq('friend_id', a.user_id);
+    await db.from('friends').delete().eq('user_id', a.user_id).eq('friend_id', uid);
+    return { friends: await rpc('friends_list', { p_user: uid }) };
+  },
+
+  async invite_decline(uid, a) {
+    await db.from('games').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', a.game_id).eq('invited', uid).eq('status', 'waiting');
+    return { ok: true };
+  },
+
+  // ---------------------------------------------------------------- rematch (same opponent, same stake; colours are re-rolled)
+  async rematch(uid, a) {
+    if (!isUuid(a.game_id)) throw new Fail('bad_game');
+    const old = await loadGame(a.game_id);
+    const r = await rpc('rematch', { p_user: uid, p_old: old.id, p_state: N.newGame(old.variant), p_opening: openingRoll() });
+    if (r.game_id) return { game: await loadGame(r.game_id) };
+    return { waiting: await loadGame(r.waiting) };
+  },
 
   async set_name(uid, a) {
     const name = String(a.name || '').normalize('NFC').replace(/\s+/g, ' ').trim();
@@ -106,12 +197,17 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
     if (!variantOk(a.variant)) throw new Fail('bad_variant');
     const cur = await activeGame(uid);
     if (cur && cur.status === 'active') throw new Fail('already_in_game');
+    let invited = null;
+    if (a.friend_id !== undefined) {
+      if (!isUuid(a.friend_id) || !(await isFriendRow(uid, a.friend_id)) || !(await isFriendRow(a.friend_id, uid))) throw new Fail('not_friends');
+      invited = a.friend_id;
+    }
     await db.from('games').update({ status: 'cancelled' }).eq('p0', uid).eq('status', 'waiting');
     const p = await profile(uid);
     for (let i = 0; i < 5; i++) {
       const code = inviteCode();
       const { data, error } = await db.from('games').insert({
-        variant: a.variant, kind: 'invite', status: 'waiting', invite_code: code, p0: uid, p0_name: p.name, state: N.newGame(a.variant),
+        variant: a.variant, kind: 'invite', status: 'waiting', invite_code: code, p0: uid, p0_name: p.name, p0_level: p.level, invited, state: N.newGame(a.variant),
       }).select().single();
       if (!error) return { game: data };
       if (error.code !== '23505') throw error;   // retry only on a duplicate code
@@ -128,7 +224,7 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
     if (cur && cur.status === 'active') throw new Fail('already_in_game');
     const p = await profile(uid), op = openingRoll();
     const { data, error } = await db.from('games').update({
-      p1: uid, p1_name: p.name, status: 'active', opening: op, turn: op[0] > op[1] ? 0 : 1, phase: 'roll',
+      p1: uid, p1_name: p.name, p1_level: p.level, status: 'active', opening: op, turn: op[0] > op[1] ? 0 : 1, phase: 'roll',
       deadline: later(TURN_SECONDS + FIRST_TURN_GRACE), move_no: g.move_no + 1, updated_at: new Date().toISOString(),
     }).eq('id', g.id).eq('status', 'waiting').is('p1', null).select().maybeSingle();
     if (error) throw error; if (!data) throw new Fail('invite_gone', 404);
