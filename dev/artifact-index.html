@@ -883,7 +883,9 @@ function refreshHints() {
   if (G.phase !== 'move' || !canAct(G.p) || G.busy || !G.turn) { legalNow = []; return; }
   legalNow = G.turn.legal();
   const sources = new Set(legalNow.map(srcKeyOf));
-  for (const k of sources) { const arr = locs[k]; if (arr.length) arr[arr.length - 1].classList.add(k === G.sel ? 'sel' : 'can'); }
+  // once a checker is picked, only it stays highlighted (other movable checkers can still be tapped to switch)
+  const picked = G.sel && sources.has(G.sel);
+  for (const k of sources) { if (picked && k !== G.sel) continue; const arr = locs[k]; if (arr.length) arr[arr.length - 1].classList.add(k === G.sel ? 'sel' : 'can'); }
   if (G.sel && sources.has(G.sel)) {
     for (const m of legalNow.filter(m => srcKeyOf(m) === G.sel)) {
       const tk = locKey(G.p, m.to), t = document.createElement('div');
