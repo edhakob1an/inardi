@@ -402,6 +402,9 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .sheet .rules li { margin-bottom: 6px; color: var(--muted); }
 .sheet .rules b { color: var(--text); font-weight: 600; }
 .sheet ul { padding-left: 18px; margin: 0; }
+.vol { display: grid; grid-template-columns: 64px 1fr 30px; align-items: center; gap: 12px; border: 1px solid var(--line); background: #1b130c; border-radius: 12px; padding: 11px 14px; font-size: 15px; font-weight: 600; }
+.vol input { width: 100%; accent-color: var(--gold); height: 28px; margin: 0; }
+.vol b { font-size: 13px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 .list-btn { border: 1px solid var(--line); background: #1b130c; border-radius: 12px; padding: 13px; font-size: 15px; font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .checker, .die { transition: none; } .target, .lane, .checker::before, #rollBtn.pulse, .tilt, .btn-brass::after { animation: none; } .die3 { transition: none; } }
 </style>
@@ -542,11 +545,49 @@ let owned = store.get('owned', { skins: ['walnut'], sets: ['classic'] }), equip 
 if (!owned.dice) owned.dice = ['ivory', ...(owned.skins.includes('oak') ? ['wood'] : []), ...(owned.skins.includes('ebony') ? ['pearl'] : [])];
 if (!DICE[equip.dice]) equip.dice = (SKINS[equip.skin] || SKINS.walnut).dice;
 if (!SKINS[equip.skin]) equip.skin = 'walnut'; if (!SETS[equip.set]) equip.set = 'classic';
-let prefs = { scene: store.get('scene', 'auto'), variant: store.get('variant', 'short'), opp: store.get('opp', 'normal'), sound: store.get('sound', true) };
+let prefs = { scene: store.get('scene', 'auto'), variant: store.get('variant', 'short'), opp: store.get('opp', 'normal'), sfxVol: store.get('sfxVol', store.get('sound', true) ? 1 : 0), musicVol: store.get('musicVol', .6) };
 
 // ---------- sound (synthesized) ----------
 let ac = null;
-function audio() { if (!prefs.sound) return null; try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); } catch { ac = null; } return ac; }
+function getAC() { try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume(); } catch { ac = null; } return ac; }
+// sound effects go through one gain node (the "Sounds" volume); music has its own (the "Music" volume)
+function audio() { const a = getAC(); if (a && prefs.sfxVol <= 0) { musicStart(); return null; } return a; }
+let sfxBus = null;
+function sfxOut(a) { if (!sfxBus) { sfxBus = a.createGain(); sfxBus.connect(a.destination); } sfxBus.gain.value = prefs.sfxVol; return sfxBus; }
+// ---------- music: one lounge track, looped, a little quieter during a game ----------
+const music = { el: null, gain: null, playing: false };
+const musicLevel = () => prefs.musicVol * .5 * ($('game') && !$('game').hidden ? .6 : 1);
+function musicStart() {
+  if (music.playing || prefs.musicVol <= 0 || document.hidden) return;
+  const a = getAC(); if (!a) return;
+  if (!music.el) {
+    music.el = new Audio('assets/sfx/music-lounge.mp3'); music.el.loop = true; music.el.preload = 'auto';
+    music.gain = a.createGain(); music.gain.gain.value = 0;
+    a.createMediaElementSource(music.el).connect(music.gain).connect(a.destination);
+  }
+  music.playing = true;
+  music.el.play().then(() => { const t = a.currentTime; music.gain.gain.cancelScheduledValues(t); music.gain.gain.setValueAtTime(music.gain.gain.value, t); music.gain.gain.linearRampToValueAtTime(musicLevel(), t + 2.5); })
+    .catch(() => { music.playing = false; });
+}
+function musicSync() {
+  if (!music.el) return musicStart();
+  if (prefs.musicVol <= 0) { music.gain.gain.setTargetAtTime(0, ac.currentTime, .15); setTimeout(() => { if (prefs.musicVol <= 0) { music.el.pause(); music.playing = false; } }, 600); return; }
+  if (!music.playing) return musicStart();
+  music.gain.gain.setTargetAtTime(musicLevel(), ac.currentTime, .4);
+}
+document.addEventListener('pointerdown', () => musicStart(), true);
+document.addEventListener('visibilitychange', () => {
+  if (!music.el) return;
+  if (document.hidden) { music.el.pause(); music.playing = false; } else musicStart();
+});
+const volHTML = () => `<label class="vol"><span>Music</span><input type="range" min="0" max="100" step="5" data-vol="musicVol" value="${Math.round(prefs.musicVol * 100)}"><b>${Math.round(prefs.musicVol * 100)}</b></label>
+  <label class="vol"><span>Sounds</span><input type="range" min="0" max="100" step="5" data-vol="sfxVol" value="${Math.round(prefs.sfxVol * 100)}"><b>${Math.round(prefs.sfxVol * 100)}</b></label>`;
+document.addEventListener('input', e => {
+  const r = e.target.closest('[data-vol]'); if (!r) return;
+  const k = r.dataset.vol, v = r.value / 100; prefs[k] = v; store.set(k, v); r.nextElementSibling.textContent = r.value;
+  if (k === 'musicVol') musicSync(); else if (sfxBus) sfxBus.gain.value = v;
+});
+document.addEventListener('change', e => { const r = e.target.closest('[data-vol="sfxVol"]'); if (r) sfx.tap(); });
 function knock(t, freq, gain, len) {
   const a = audio(); if (!a) return;
   const n = Math.floor(a.sampleRate * len), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
@@ -554,10 +595,10 @@ function knock(t, freq, gain, len) {
   const src = a.createBufferSource(); src.buffer = buf;
   const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.4;
   const g = a.createGain(); g.gain.value = gain;
-  src.connect(f).connect(g).connect(a.destination); src.start(a.currentTime + t);
+  src.connect(f).connect(g).connect(sfxOut(a)); src.start(a.currentTime + t);
   const o = a.createOscillator(), og = a.createGain(); o.frequency.value = freq / 9;
   og.gain.setValueAtTime(gain * .5, a.currentTime + t); og.gain.exponentialRampToValueAtTime(.001, a.currentTime + t + .09);
-  o.connect(og).connect(a.destination); o.start(a.currentTime + t); o.stop(a.currentTime + t + .1);
+  o.connect(og).connect(sfxOut(a)); o.start(a.currentTime + t); o.stop(a.currentTime + t + .1);
 }
 // recorded sound effects: decoded once, played through the same audio context (falls back to synthesized sounds until loaded)
 // each sound can have several recorded variations; one is picked at random (never the same one twice in a row)
@@ -595,7 +636,7 @@ function playSample(k, gain = 1, opts = {}) {
   const src = a.createBufferSource(), g = a.createGain(), t = a.currentTime;
   src.buffer = sampleBuf[url]; g.gain.value = gain * (SAMPLE_GAIN[url] ?? 1);
   src.playbackRate.value = opts.rate || (.95 + Math.random() * .1);
-  src.connect(g).connect(a.destination); src.start(t);
+  src.connect(g).connect(sfxOut(a)); src.start(t);
   if (opts.dur) { g.gain.setValueAtTime(g.gain.value, t + opts.dur - .08); g.gain.linearRampToValueAtTime(0, t + opts.dur); src.stop(t + opts.dur + .02); }
   return true;
 }
@@ -627,7 +668,7 @@ const sfx = {
   tick() { playSample('tick', .55, { rate: 1 }); },
   invalid() { playSample('invalid', .45, { rate: 1 }); },
   dice() { if (!playSample('dice', .8, { dur: .62 })) for (let i = 0; i < 7; i++) knock(i * .065 + Math.random() * .03, 2600 + Math.random() * 1200, .35 + Math.random() * .3, .035); },
-  win() { if (playSample('win', .55, { rate: 1 })) return; const a = audio(); if (!a) return; [523, 659, 784, 1046].forEach((f, i) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, a.currentTime + i * .12); g.gain.exponentialRampToValueAtTime(.18, a.currentTime + i * .12 + .02); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + i * .12 + .5); o.connect(g).connect(a.destination); o.start(a.currentTime + i * .12); o.stop(a.currentTime + i * .12 + .55); }); }
+  win() { if (playSample('win', .55, { rate: 1 })) return; const a = audio(); if (!a) return; [523, 659, 784, 1046].forEach((f, i) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, a.currentTime + i * .12); g.gain.exponentialRampToValueAtTime(.18, a.currentTime + i * .12 + .02); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + i * .12 + .5); o.connect(g).connect(sfxOut(a)); o.start(a.currentTime + i * .12); o.stop(a.currentTime + i * .12 + .55); }); }
 };
 const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch {} };
 
@@ -1054,17 +1095,16 @@ $('overlay').addEventListener('click', e => {
   }
   if (act === 'restart') newGame(true);
   if (act === 'rules') sheet(RULES);
-  if (act === 'sound') { prefs.sound = !prefs.sound; store.set('sound', prefs.sound); syncMenu(); }
-});
+  });
 $('menuBtn').onclick = () => G.opp === 'online' ? sheet(`<h2>${G.variant === 'short' ? 'Short' : 'Long'} nardi${G.online.g.stake ? ' · ' + fmt(G.online.g.stake) : ''}</h2>
   <button class="list-btn" data-act="close">Resume</button>
   <button class="list-btn" data-act="resign">Resign</button>
   <button class="list-btn" data-act="rules">How to play</button>
-  <button class="list-btn" data-act="sound">Sound: ${prefs.sound ? 'on' : 'off'}</button>`) : sheet(`<h2>${G.variant === 'short' ? 'Short' : 'Long'} nardi</h2>
+  ${volHTML()}`) : sheet(`<h2>${G.variant === 'short' ? 'Short' : 'Long'} nardi</h2>
   <button class="list-btn" data-act="close">Resume</button>
   <button class="list-btn" data-act="restart">Restart game</button>
   <button class="list-btn" data-act="rules">How to play</button>
-  <button class="list-btn" data-act="sound">Sound: ${prefs.sound ? 'on' : 'off'}</button>
+  ${volHTML()}
   <button class="list-btn" data-act="menu">Main menu</button>`);
 // ---------- skins: shared vars, mini boards, shop ----------
 function sceneNow() {
@@ -1450,6 +1490,7 @@ let mtT;
 function mtoast(msg) { const t = $('mtoast'); t.textContent = msg; t.classList.add('show'); clearTimeout(mtT); mtT = setTimeout(() => t.classList.remove('show'), 1800); }
 function showScreen(id) {
   for (const sc of ['menu', 'rooms', 'shop', 'game']) $(sc).hidden = sc !== id;
+  musicSync();
   if (id === 'menu') { setVars(); heroBoard(); heroDice(); syncMenu(); requestAnimationFrame(placeHero); }
   if (id === 'shop') renderShop();
   if (id === 'rooms') $('roomsSub').textContent = `${prefs.variant === 'short' ? 'Short' : 'Long'} nardi. Pick a table and we match you with a player at the same stake.`;
@@ -1506,7 +1547,7 @@ document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', 
   if (go === 'profile') sheet(`<h2>${NET.profile ? esc(NET.profile.name) : 'Guest'}</h2><p><span class="netdot ${NET.ok ? 'on' : ''}"></span>${NET.ok ? 'Online' : 'Offline'} · ${stats.played} games played · ${stats.won} won</p><p>Coins: ${fmt(coins)}</p>
     ${NET.ok ? `<input class="namein" id="nameIn" maxlength="16" value="${esc(NET.profile.name)}" aria-label="Your name"><div class="err" id="nameErr"></div><button class="cta" data-act="rename">SAVE NAME</button>` : ''}
     <button class="list-btn" data-act="close">Close</button>`);
-  if (go === 'settings') sheet(`<h2>Settings</h2><button class="list-btn" data-act="sound">Sound: ${prefs.sound ? 'on' : 'off'}</button><button class="list-btn" data-act="scene">Menu scene: ${{ auto: 'by time of day', day: 'sunset', night: 'night' }[prefs.scene || 'auto']}</button><button class="list-btn" data-act="rules">How to play</button><button class="list-btn" data-act="close">Close</button>`);
+  if (go === 'settings') sheet(`<h2>Settings</h2>${volHTML()}<button class="list-btn" data-act="scene">Menu scene: ${{ auto: 'by time of day', day: 'sunset', night: 'night' }[prefs.scene || 'auto']}</button><button class="list-btn" data-act="rules">How to play</button><button class="list-btn" data-act="close">Close</button>`);
 }));
 
 // ---------- online play (Supabase) ----------
@@ -1841,14 +1882,14 @@ const EPM_LOGO = {"W":272,"H":371.2691690180153,"mono":{"E":"M0 0H33V253H0ZM0 0H
       const at = (performance.now() - t0) / 1000;
       if (finished || sting || a.state !== 'running' || at > .8) return;
       const src = a.createBufferSource(), g = a.createGain(); src.buffer = buf; g.gain.value = .8;
-      src.connect(g).connect(a.destination); src.start(a.currentTime, at); sting = { src, g };
+      src.connect(g).connect(sfxOut(a)); src.start(a.currentTime, at); sting = { src, g };
     };
     go(); if (!sting) a.resume().then(go, () => {});
   }).catch(() => {});
   const finish = () => {
     if (finished) return; finished = true;
     if (sting) { const t = a.currentTime; sting.g.gain.setTargetAtTime(0, t, .15); sting.src.stop(t + .8); }
-    el.classList.add('out'); setTimeout(() => el.remove(), 550);
+    el.classList.add('out'); setTimeout(() => el.remove(), 550); setTimeout(musicStart, 400);
     if (!$('menu').hidden) showScreen('menu');   // replay the menu's entrance animations now that it's visible
   };
   Promise.race([Promise.all([Promise.all(loads), new Promise(r => setTimeout(r, 3200))]), new Promise(r => setTimeout(r, 6500))]).then(finish);
