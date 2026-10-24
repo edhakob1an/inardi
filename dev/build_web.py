@@ -19,7 +19,9 @@ doc = f'''<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="iNardi">
 <meta name="description" content="iNardi: Armenian nardi, short and long. Play friends online, coin rooms and bots on carved wooden boards.">
-<link rel="icon" href="assets/coin.webp">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icon/icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icon/icon-180.png">
 <link rel="apple-touch-icon" href="assets/coin.webp">
 <style>:root{{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}}body{{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}}img{{max-width:100%}}[hidden]{{display:none!important}}</style>
 {head.strip()}
