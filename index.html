@@ -518,9 +518,23 @@ function knock(t, freq, gain, len) {
   og.gain.setValueAtTime(gain * .5, a.currentTime + t); og.gain.exponentialRampToValueAtTime(.001, a.currentTime + t + .09);
   o.connect(og).connect(a.destination); o.start(a.currentTime + t); o.stop(a.currentTime + t + .1);
 }
+// recorded sound effects: decoded once, played through the same audio context (falls back to synthesized sounds until loaded)
+const SAMPLES = { dice: 'assets/sfx/dice-shuffle.mp3' }, sampleBuf = {};
+let samplesLoading = false;
+function loadSamples() {
+  const a = audio(); if (!a || samplesLoading) return; samplesLoading = true;
+  for (const [k, url] of Object.entries(SAMPLES)) fetch(url).then(r => r.arrayBuffer()).then(b => new Promise((ok, no) => a.decodeAudioData(b, ok, no))).then(buf => { sampleBuf[k] = buf; }).catch(() => {});
+}
+function playSample(k, gain = 1, rate) {
+  const a = audio(), buf = sampleBuf[k]; if (!a || !buf) { loadSamples(); return false; }
+  const src = a.createBufferSource(), g = a.createGain(); src.buffer = buf; g.gain.value = gain;
+  src.playbackRate.value = rate || (.94 + Math.random() * .12);   // slight variation so repeated rolls don't sound identical
+  src.connect(g).connect(a.destination); src.start(); return true;
+}
+document.addEventListener('pointerdown', () => loadSamples(), { once: true, capture: true });
 const sfx = {
   place() { knock(0, 1500, .9, .06); },
-  dice() { for (let i = 0; i < 7; i++) knock(i * .065 + Math.random() * .03, 2600 + Math.random() * 1200, .35 + Math.random() * .3, .035); },
+  dice() { if (!playSample('dice', .9)) for (let i = 0; i < 7; i++) knock(i * .065 + Math.random() * .03, 2600 + Math.random() * 1200, .35 + Math.random() * .3, .035); },
   win() { const a = audio(); if (!a) return; [523, 659, 784, 1046].forEach((f, i) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, a.currentTime + i * .12); g.gain.exponentialRampToValueAtTime(.18, a.currentTime + i * .12 + .02); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + i * .12 + .5); o.connect(g).connect(a.destination); o.start(a.currentTime + i * .12); o.stop(a.currentTime + i * .12 + .55); }); }
 };
 const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch {} };
