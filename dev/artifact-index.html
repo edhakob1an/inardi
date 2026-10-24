@@ -1485,9 +1485,22 @@ const EPM_LOGO = {"W":272,"H":371.2691690180153,"mono":{"E":"M0 0H33V253H0ZM0 0H
   const tick = () => { n++; bar.style.transform = `scaleX(${Math.min(1, n / total)})`; };
   const loads = urls.map(u => new Promise(res => { const im = new Image(); im.onload = im.onerror = () => { tick(); res(); }; im.src = u; }));
   loads.push((document.fonts ? document.fonts.ready : Promise.resolve()).then(tick, tick));
-  let finished = false;
+  let finished = false, sting = null;
+  // studio sound: browsers only allow sound once the page may play audio (always in the installed app;
+  // on the web often only after a first tap), so it plays when allowed and stays in sync with the animation
+  const t0 = performance.now(), a = audio();
+  if (a) fetch('assets/sfx/studio-sting.mp3').then(r => r.arrayBuffer()).then(b => new Promise((ok, no) => a.decodeAudioData(b, ok, no))).then(buf => {
+    const go = () => {
+      const at = (performance.now() - t0) / 1000;
+      if (finished || sting || a.state !== 'running' || at > .8) return;
+      const src = a.createBufferSource(), g = a.createGain(); src.buffer = buf; g.gain.value = .8;
+      src.connect(g).connect(a.destination); src.start(a.currentTime, at); sting = { src, g };
+    };
+    go(); if (!sting) a.resume().then(go, () => {});
+  }).catch(() => {});
   const finish = () => {
     if (finished) return; finished = true;
+    if (sting) { const t = a.currentTime; sting.g.gain.setTargetAtTime(0, t, .15); sting.src.stop(t + .8); }
     el.classList.add('out'); setTimeout(() => el.remove(), 550);
     if (!$('menu').hidden) showScreen('menu');   // replay the menu's entrance animations now that it's visible
   };
