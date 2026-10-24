@@ -526,6 +526,11 @@ const SAMPLES = {
   place: ['assets/sfx/place-1.mp3', 'assets/sfx/place-2.mp3', 'assets/sfx/place-3.mp3', 'assets/sfx/place-4.mp3'],
   slide: ['assets/sfx/slide-1.mp3', 'assets/sfx/slide-2.mp3', 'assets/sfx/slide-3.mp3', 'assets/sfx/slide-4.mp3'],
   bearoff: ['assets/sfx/bearoff-1.mp3', 'assets/sfx/bearoff-2.mp3', 'assets/sfx/bearoff-3.mp3'],
+  tap: ['assets/sfx/tap-1.mp3', 'assets/sfx/tap-2.mp3'],
+  button: ['assets/sfx/button-1.mp3'],
+  switch: ['assets/sfx/switch-1.mp3', 'assets/sfx/switch-2.mp3', 'assets/sfx/switch-3.mp3'],
+  popup: ['assets/sfx/popup-1.mp3', 'assets/sfx/popup-2.mp3'],
+  back: ['assets/sfx/back-1.mp3'],
 };
 // per-file level so variations sound equally loud (the slides differ a lot in how long and dense they are)
 const SAMPLE_GAIN = { 'assets/sfx/slide-2.mp3': .22, 'assets/sfx/slide-3.mp3': .22, 'assets/sfx/slide-4.mp3': .26 };
@@ -552,12 +557,27 @@ function playSample(k, gain = 1, opts = {}) {
   return true;
 }
 document.addEventListener('pointerdown', () => loadSamples(), { once: true, capture: true });
+document.addEventListener('click', e => {
+  const t = e.target.closest('button, a, .room, .opt, .pack'); if (!t || t.disabled) return;
+  if (t.id === 'rollBtn' || t.closest('#boardWrap')) return;                     // dice and checkers have their own sounds
+  if (t.matches('[data-act="close"]')) return;                                   // closing a sheet plays the close sound
+  lastBtnSound = performance.now();
+  if (t.matches('.back')) return sfx.back();
+  if (t.closest('#mode, .tabs') || t.matches('[data-act="sound"], [data-act="scene"]')) return sfx.toggle();
+  if (t.matches('.btn-brass, .btn-wood, .cta, .room, .pack, .opt')) return sfx.button();
+  sfx.tap();
+}, true);
 const sfx = {
   place() { if (!playSample('place', .9)) knock(0, 1500, .9, .06); },
   slide() { playSample('slide', .55); },
   bearoff() { if (!playSample('bearoff', .85)) knock(0, 1500, .9, .06); },
   land() { if (!playSample('land', .8)) knock(0, 1800, .7, .05); },
   ui() { knock(0, 1500, .6, .05); },
+  tap() { playSample('tap', .6, { rate: 1 }) || knock(0, 1500, .5, .04); },
+  button() { playSample('button', .35, { rate: 1 }) || knock(0, 1300, .6, .05); },
+  toggle() { playSample('switch', .7, { rate: 1 }) || knock(0, 1700, .5, .04); },
+  popup() { playSample('popup', .32, { rate: 1 }); },
+  back() { playSample('back', .38, { rate: 1 }); },
   dice() { if (!playSample('dice', .8, { dur: .62 })) for (let i = 0; i < 7; i++) knock(i * .065 + Math.random() * .03, 2600 + Math.random() * 1200, .35 + Math.random() * .3, .035); },
   win() { const a = audio(); if (!a) return; [523, 659, 784, 1046].forEach((f, i) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, a.currentTime + i * .12); g.gain.exponentialRampToValueAtTime(.18, a.currentTime + i * .12 + .02); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + i * .12 + .5); o.connect(g).connect(a.destination); o.start(a.currentTime + i * .12); o.stop(a.currentTime + i * .12 + .55); }); }
 };
@@ -944,8 +964,13 @@ function newGame(keepScore) {
 
 // ---------- menus & sheets ----------
 let sheetLocked = false;
-function sheet(html, locked) { sheetLocked = !!locked; $('sheet').innerHTML = html; $('overlay').hidden = false; }
-function closeSheet() { $('overlay').hidden = true; sheetLocked = false; }
+let lastClose = 0, lastBtnSound = 0;
+function sheet(html, locked) { sheetLocked = !!locked; $('sheet').innerHTML = html; if ($('overlay').hidden && performance.now() - lastClose > 40) sfx.popup(); $('overlay').hidden = false; }
+function closeSheet() {
+  const was = !$('overlay').hidden; $('overlay').hidden = true; sheetLocked = false; lastClose = performance.now();
+  // the close whoosh only when the sheet really goes away, and not right after an action button already made its sound
+  if (was && performance.now() - lastBtnSound > 60) setTimeout(() => { if ($('overlay').hidden) sfx.back(); }, 0);
+}
 const RULES = `<h2>How to play</h2><div class="rules">
   <p style="text-align:left;margin-bottom:8px"><b>Both games:</b> roll, then move checkers by each die. You must use both dice if you can; if only one can be played, you must play the larger. Doubles are played four times. Bring all 15 into your home quarter, then bear them off. If the opponent bore off none, it is a mars and counts double.</p>
   <ul><li><b>Short:</b> you move opposite to your opponent. A single checker is a blot; landing on it sends it to the bar, and it must re-enter before anything else moves. Two or more checkers hold a point.</li>
@@ -1050,7 +1075,7 @@ function renderShop() {
 }
 function doEquip(kind, id) {
   if (NET.ok) api('equip', { kind, id }).then(r => r.profile && applyProfile(r.profile));
-  equip[kind === 'skins' ? 'skin' : 'set'] = id; store.set('equip', equip); setVars(); renderShop(); sfx.ui();
+  equip[kind === 'skins' ? 'skin' : 'set'] = id; store.set('equip', equip); setVars(); renderShop();
 }
 $('shopTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; shopTab = b.dataset.t; renderShop(); });
 $('shopList').addEventListener('click', e => {
@@ -1107,9 +1132,9 @@ function syncMenu() {
   $('meStats').textContent = stats.played ? `${stats.won} won of ${stats.played}` : 'Ready for a game';
   syncCoins();
 }
-$('mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; audio(); prefs.variant = b.classList.contains('sw') ? (prefs.variant === 'short' ? 'long' : 'short') : b.dataset.v; store.set('variant', prefs.variant); syncMenu(); sfx.ui(); });
+$('mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; audio(); prefs.variant = b.classList.contains('sw') ? (prefs.variant === 'short' ? 'long' : 'short') : b.dataset.v; store.set('variant', prefs.variant); syncMenu(); });
 function startGame(opp) { prefs.opp = opp; store.set('opp', opp); showScreen('game'); requestAnimationFrame(() => newGame(false)); }
-$('onlineBtn').onclick = () => { audio(); sfx.ui(); showScreen('rooms'); };
+$('onlineBtn').onclick = () => { audio(); showScreen('rooms'); };
 $('roomsBack').onclick = () => showScreen('menu');
 $('botBtn').onclick = () => { audio(); sheet(`<h2>Play the bot</h2><p>${prefs.variant === 'short' ? 'Short' : 'Long'} nardi, no coins at stake.</p>
   <div class="opts"><button class="opt" data-act="bot-easy"><b>Easy</b><span>Relaxed. Makes mistakes.</span></button><button class="opt" data-act="bot-hard"><b>Hard</b><span>Plays to win.</span></button></div>
