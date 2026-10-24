@@ -306,6 +306,22 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .score { position: absolute; right: -6px; bottom: -6px; min-width: 20px; height: 20px; padding: 0 5px; box-sizing: border-box; border-radius: 10px; background: var(--gold); color: #2a1a0c; font: 700 12px/20px var(--font-body); text-align: center; font-variant-numeric: tabular-nums; box-shadow: 0 1px 3px rgba(0,0,0,.5); }
 .iconbtn { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: #1b130c; display: grid; place-items: center; flex: none; }
 .iconbtn:disabled { opacity: .35; }
+#chatBtn[aria-expanded="true"] { border-color: var(--gold); }
+@media (max-width: 440px) { #bar0 { gap: 7px; padding-inline: 8px; } #bar0 .iconbtn { width: 38px; } #rollBtn { min-width: 92px; padding: 0 12px; } }
+/* quick chat */
+#chatPop { position: fixed; z-index: 45; left: 50%; width: min(360px, calc(100vw - 24px)); transform: translateX(-50%); padding: 12px; border-radius: 18px; background: linear-gradient(180deg, #2c1e13, #1b130c); border: 1px solid var(--gold); box-shadow: 0 18px 40px rgba(0,0,0,.6); animation: cpop .18s ease-out both; }
+#chatPop[hidden] { display: none !important; }
+@keyframes cpop { from { opacity: 0; transform: translate(-50%, 10px) scale(.96); } }
+#chatPop .cemo { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+#chatPop .cemo button { border: 0; background: none; font-size: 28px; line-height: 1; height: 46px; border-radius: 12px; }
+#chatPop .cemo button:active, #chatPop .cphr button:active { background: rgba(216,168,95,.18); }
+#chatPop .cphr { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+#chatPop .cphr button { border: 1px solid var(--line); background: #1b130c; color: var(--text); border-radius: 16px; padding: 8px 12px; font-size: 13.5px; font-weight: 600; }
+.cbub { position: fixed; z-index: 44; pointer-events: none; padding: 8px 14px; border-radius: 16px; background: #f3e7d5; color: #2a1a0c; font-weight: 700; font-size: 15px; box-shadow: 0 8px 20px rgba(0,0,0,.5); white-space: nowrap; animation: cbub 2.8s both; }
+.cbub.emo { font-size: 34px; padding: 4px 10px; background: rgba(243,231,213,.95); }
+.cbub::after { content: ""; position: absolute; left: 22px; width: 12px; height: 12px; background: inherit; transform: rotate(45deg); }
+.cbub.up::after { bottom: -5px; } .cbub.down::after { top: -5px; }
+@keyframes cbub { 0% { opacity: 0; transform: scale(.6); } 8% { opacity: 1; transform: scale(1.06); } 14% { transform: scale(1); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(-6px); } }
 .iconbtn svg { width: 22px; height: 22px; stroke: var(--text); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 #rollBtn { border: 0; height: 46px; min-width: 104px; padding: 0 16px; border-radius: 12px; font-family: var(--font-display); font-size: 18px; letter-spacing: .1em; color: #2a1a0c;
   background: linear-gradient(180deg, var(--gold-hi), var(--gold)); box-shadow: inset 0 -3px 0 rgba(0,0,0,.18); flex: none; }
@@ -487,11 +503,13 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   <div class="pbar" id="bar0"><div class="tbar"></div>
     <div class="avatar"><div class="chip" id="chip0"></div><div class="score" id="score0" title="Games won">0</div></div>
     <div class="pinfo"><div class="pname" id="name0">You</div><div class="pstats" id="stats0"></div></div>
+    <button class="iconbtn" id="chatBtn" aria-label="Send an emoji or phrase"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><path d="M9 10.5h.01M15 10.5h.01"/><path d="M9.2 14a3.6 3.6 0 0 0 5.6 0"/></svg></button>
     <button class="iconbtn" id="undoBtn" aria-label="Undo move" disabled><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
     <button id="rollBtn">ROLL</button>
   </div>
 </section>
 
+<div id="chatPop" hidden><div class="cemo"></div><div class="cphr"></div></div>
 <div class="overlay" id="overlay" hidden><div class="sheet" id="sheet"></div></div>
 
 <div id="errbar" hidden style="position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);z-index:99;background:#5b150b;color:#fff;border:1px solid #ff9b78;border-radius:10px;padding:10px 12px;font:12px/1.4 ui-monospace,monospace;white-space:pre-wrap;word-break:break-word"></div>
@@ -545,7 +563,7 @@ let owned = store.get('owned', { skins: ['walnut'], sets: ['classic'] }), equip 
 if (!owned.dice) owned.dice = ['ivory', ...(owned.skins.includes('oak') ? ['wood'] : []), ...(owned.skins.includes('ebony') ? ['pearl'] : [])];
 if (!DICE[equip.dice]) equip.dice = (SKINS[equip.skin] || SKINS.walnut).dice;
 if (!SKINS[equip.skin]) equip.skin = 'walnut'; if (!SETS[equip.set]) equip.set = 'classic';
-let prefs = { scene: store.get('scene', 'auto'), variant: store.get('variant', 'short'), opp: store.get('opp', 'normal'), sfxVol: store.get('sfxVol', store.get('sound', true) ? 1 : 0), musicVol: store.get('musicVol', .6) };
+let prefs = { scene: store.get('scene', 'auto'), variant: store.get('variant', 'short'), opp: store.get('opp', 'normal'), sfxVol: store.get('sfxVol', store.get('sound', true) ? 1 : 0), musicVol: store.get('musicVol', .6), chatMute: store.get('chatMute', false) };
 
 // ---------- sound (synthesized) ----------
 let ac = null;
@@ -844,6 +862,7 @@ async function rollAnim(final) {
 
 // ---------- HUD ----------
 function hud() {
+  $('chatBtn').hidden = G.opp === 'local';
   const nm = names();
   for (const p of [0, 1]) {
     const e = p ^ FLIP;
@@ -1088,6 +1107,7 @@ $('overlay').addEventListener('click', e => {
   if (act === 'watchad') { coins += 50; store.set('coins', coins); syncCoins(true); sfx.ui(); mtoast('+50 coins'); }
   if (act === 'ad') { document.querySelector('.mnav [data-go="ad"]').click(); }
   if (act === 'coins') coinSheet();
+  if (act === 'mute') { prefs.chatMute = !prefs.chatMute; store.set('chatMute', prefs.chatMute); e.target.closest('button').textContent = `Opponent's messages: ${prefs.chatMute ? 'hidden' : 'shown'}`; return; }
   if (act === 'scene') { const order = ['auto', 'day', 'night']; prefs.scene = order[(order.indexOf(prefs.scene || 'auto') + 1) % 3]; store.set('scene', prefs.scene); setVars(); document.querySelector('.mnav [data-go="settings"]').click(); }
   if (act.startsWith('pack-')) { coins += +act.slice(5); store.set('coins', coins); syncCoins(true); sfx.ui(); mtoast(`+${fmt(+act.slice(5))} coins`); }
   if (act === 'buy' && pendingBuy && coins >= pendingBuy.it.price) {
@@ -1102,6 +1122,7 @@ $('menuBtn').onclick = () => G.opp === 'online' ? sheet(`<h2>${G.variant === 'sh
   <button class="list-btn" data-act="close">Resume</button>
   <button class="list-btn" data-act="resign">Resign</button>
   <button class="list-btn" data-act="rules">How to play</button>
+  <button class="list-btn" data-act="mute">Opponent's messages: ${prefs.chatMute ? 'hidden' : 'shown'}</button>
   ${volHTML()}`) : sheet(`<h2>${G.variant === 'short' ? 'Short' : 'Long'} nardi</h2>
   <button class="list-btn" data-act="close">Resume</button>
   <button class="list-btn" data-act="restart">Restart game</button>
@@ -1481,6 +1502,46 @@ function coinSheet() {
     <p style="font-size:12px">In this preview, packs are added free. Real prices come with Google Play billing.</p>
     <button class="list-btn" data-act="ad">Watch an ad · +50</button><button class="list-btn" data-act="close">Close</button>`);
 }
+// ---------- quick chat: fixed emojis and phrases (online they go to the opponent, against the bot it sometimes answers) ----------
+const CHAT_EMO = ['😀', '😂', '😎', '😮', '😢', '😡', '👍', '👏', '🔥', '🎲', '🍀', '🤝'];
+const CHAT_PHR = ['Hi!', 'Good luck!', 'Nice move!', 'Lucky roll!', 'Wow!', 'Oops!', 'Hurry up!', 'Thanks!', 'Well played!', 'Good game!'];
+const CHAT = [...CHAT_EMO, ...CHAT_PHR];
+const BOT_REPLY = { 'Hi!': ['Hi!', '😀'], 'Good luck!': ['Good luck!', 'Thanks!', '🍀'], 'Nice move!': ['Thanks!', '😎'], 'Lucky roll!': ['😎', 'Hehe', '🎲'],
+  'Wow!': ['😎'], 'Oops!': ['😂', '😮'], 'Hurry up!': ['Thinking…', '😮'], 'Thanks!': ['👍'], 'Well played!': ['Thanks!', '🤝'], 'Good game!': ['Good game!', '🤝'] };
+let chatLast = 0, chatTimer = 0;
+$('chatPop').querySelector('.cemo').innerHTML = CHAT_EMO.map((e, i) => `<button data-c="${i}">${e}</button>`).join('');
+$('chatPop').querySelector('.cphr').innerHTML = CHAT_PHR.map((t, i) => `<button data-c="${CHAT_EMO.length + i}">${t}</button>`).join('');
+function chatOpen(on) {
+  const pop = $('chatPop'), btn = $('chatBtn');
+  pop.hidden = !on; btn.setAttribute('aria-expanded', on);
+  if (on) { const r = $('bar0').getBoundingClientRect(); pop.style.bottom = (innerHeight - r.top + 8) + 'px'; pop.style.top = 'auto'; }
+}
+// show a bubble next to a player's bar (seat as shown on screen: 0 = bottom, 1 = top)
+function chatBubble(screenSeat, k) {
+  const txt = CHAT[k]; if (txt === undefined) return;
+  const isEmo = k < CHAT_EMO.length, bar = $('bar' + screenSeat).getBoundingClientRect(), av = $('bar' + screenSeat).querySelector('.avatar').getBoundingClientRect();
+  document.querySelectorAll('.cbub.s' + screenSeat).forEach(e => e.remove());
+  const b = document.createElement('div'); b.className = `cbub s${screenSeat} ${isEmo ? 'emo' : ''} ${screenSeat ? 'down' : 'up'}`; b.textContent = txt;
+  b.style.left = Math.max(8, av.left - 4) + 'px';
+  if (screenSeat) b.style.top = (bar.bottom + 10) + 'px'; else b.style.bottom = (innerHeight - bar.top + 10) + 'px';
+  b.style.transformOrigin = screenSeat ? '20px 0' : '20px 100%';
+  document.body.appendChild(b); setTimeout(() => b.remove(), 2900);
+  sfx.popup();
+}
+function chatSend(k) {
+  const now = performance.now(); if (now - chatLast < 2500) return; chatLast = now;
+  chatOpen(false); chatBubble(0, k);
+  if (G.opp === 'online' && NET.chan) NET.chan.send({ type: 'broadcast', event: 'chat', payload: { s: G.online.seat, k } });
+  else if (G.opp !== 'local' && Math.random() < .6) {
+    const r = BOT_REPLY[CHAT[k]] || ['😎', '👍', '🎲', '😂'], pick = r[Math.floor(Math.random() * r.length)];
+    let rk = CHAT.indexOf(pick); clearTimeout(chatTimer);
+    chatTimer = setTimeout(() => { if (!$('game').hidden) { if (rk < 0) { CHAT.push(pick); rk = CHAT.length - 1; } chatBubble(1, rk); } }, 900 + Math.random() * 1200);
+  }
+}
+function chatReceive(p) { if (!G.online || p.s === G.online.seat || typeof p.k !== 'number' || p.k < 0 || p.k >= CHAT_EMO.length + CHAT_PHR.length) return; if (!prefs.chatMute) chatBubble(1, p.k); }
+$('chatBtn').onclick = e => { e.stopPropagation(); chatOpen($('chatPop').hidden); };
+$('chatPop').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) chatSend(+b.dataset.c); });
+document.addEventListener('pointerdown', e => { if (!$('chatPop').hidden && !e.target.closest('#chatPop, #chatBtn')) chatOpen(false); }, true);
 // ---------- main menu ----------
 let coins = store.get('coins', 1000), stats = store.get('stats', { played: 0, won: 0 });
 const fmt = n => n.toLocaleString('en-US');
@@ -1492,6 +1553,7 @@ let mtT;
 function mtoast(msg) { const t = $('mtoast'); t.textContent = msg; t.classList.add('show'); clearTimeout(mtT); mtT = setTimeout(() => t.classList.remove('show'), 1800); }
 function showScreen(id) {
   for (const sc of ['menu', 'rooms', 'shop', 'game']) $(sc).hidden = sc !== id;
+  if (typeof chatOpen === 'function') chatOpen(false);
   musicSync();
   if (id === 'menu') { setVars(); heroBoard(); heroDice(); syncMenu(); requestAnimationFrame(placeHero); }
   if (id === 'shop') renderShop();
@@ -1731,6 +1793,7 @@ async function startOnline(row) {
   const o = G.online;
   NET.chan = NET.sb.channel('game-' + row.id)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'games', filter: 'id=eq.' + row.id }, pl => receive(pl.new))
+    .on('broadcast', { event: 'chat' }, m => chatReceive(m.payload || {}))
     .subscribe();
   NET.poll = setInterval(async () => {
     if (o.dead) return;
