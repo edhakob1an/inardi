@@ -517,6 +517,8 @@ const SAMPLES = {
   switch: ['assets/sfx/switch-1.mp3', 'assets/sfx/switch-2.mp3', 'assets/sfx/switch-3.mp3'],
   popup: ['assets/sfx/popup-1.mp3', 'assets/sfx/popup-2.mp3'],
   back: ['assets/sfx/back-1.mp3'],
+  yourturn: ['assets/sfx/yourturn-1.mp3'], matchfound: ['assets/sfx/matchfound-1.mp3'], win: ['assets/sfx/win-1.mp3'],
+  lose: ['assets/sfx/lose-1.mp3'], tick: ['assets/sfx/tick-1.mp3'], invalid: ['assets/sfx/invalid-1.mp3'],
 };
 // per-file level so variations sound equally loud (the slides differ a lot in how long and dense they are)
 const SAMPLE_GAIN = { 'assets/sfx/slide-2.mp3': .22, 'assets/sfx/slide-3.mp3': .22, 'assets/sfx/slide-4.mp3': .26 };
@@ -564,8 +566,13 @@ const sfx = {
   toggle() { playSample('switch', .7, { rate: 1 }) || knock(0, 1700, .5, .04); },
   popup() { playSample('popup', .32, { rate: 1 }); },
   back() { playSample('back', .38, { rate: 1 }); },
+  lose() { playSample('lose', .45, { rate: 1 }); },
+  yourTurn() { playSample('yourturn', .4, { rate: 1 }); },
+  matchFound() { playSample('matchfound', .55, { rate: 1 }); },
+  tick() { playSample('tick', .55, { rate: 1 }); },
+  invalid() { playSample('invalid', .45, { rate: 1 }); },
   dice() { if (!playSample('dice', .8, { dur: .62 })) for (let i = 0; i < 7; i++) knock(i * .065 + Math.random() * .03, 2600 + Math.random() * 1200, .35 + Math.random() * .3, .035); },
-  win() { const a = audio(); if (!a) return; [523, 659, 784, 1046].forEach((f, i) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, a.currentTime + i * .12); g.gain.exponentialRampToValueAtTime(.18, a.currentTime + i * .12 + .02); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + i * .12 + .5); o.connect(g).connect(a.destination); o.start(a.currentTime + i * .12); o.stop(a.currentTime + i * .12 + .55); }); }
+  win() { if (playSample('win', .55, { rate: 1 })) return; const a = audio(); if (!a) return; [523, 659, 784, 1046].forEach((f, i) => { const o = a.createOscillator(), g = a.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(.0001, a.currentTime + i * .12); g.gain.exponentialRampToValueAtTime(.18, a.currentTime + i * .12 + .02); g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + i * .12 + .5); o.connect(g).connect(a.destination); o.start(a.currentTime + i * .12); o.stop(a.currentTime + i * .12 + .55); }); }
 };
 const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch {} };
 
@@ -849,7 +856,12 @@ wrap.addEventListener('pointerdown', e => {
   const [bx, by] = toBoard(e), r = regionAt(bx, by);
   if (G.sel && r && moveFor(G.sel, r)) { humanPlay(moveFor(G.sel, r)); return; }
   const isSrc = r && legalNow.some(m => srcKeyOf(m) === r);
-  if (!isSrc) { if (G.sel) { G.sel = null; refreshHints(); } return; }
+  if (!isSrc) {
+    const top = r && locs[r] && locs[r][locs[r].length - 1];
+    if (top && +top.dataset.p === G.p && !G.sel) { sfx.invalid(); buzz(30); }   // own checker, but it has no legal move
+    if (G.sel) { G.sel = null; refreshHints(); }
+    return;
+  }
   const was = G.sel === r; G.sel = r; refreshHints();
   const arr = locs[r];
   drag = { id: e.pointerId, el: arr[arr.length - 1], x: e.clientX, y: e.clientY, on: false, was };
@@ -915,7 +927,7 @@ function gameOver(w) {
   G.phase = 'over';
   const pts = N.resultPoints(G.s, w); G.score[w] += pts; hud();
   if (G.opp !== 'local') { stats.played++; if (w === 0) stats.won++; store.set('stats', stats); }
-  if (!isBot(w)) sfx.win();
+  if (!isBot(w)) sfx.win(); else sfx.lose();
   const nm = names(), title = G.opp === 'local' ? `${nm[w]} wins` : w === 0 ? 'You win' : 'Bot wins';
   later(() => sheet(`<h2>${title}</h2><p>${pts === 2 ? 'Mars: the other side bore off nothing, so this game counts double.' : 'A clean win.'}</p>
     <p style="font-family:var(--font-display);font-size:26px;color:var(--text)">${G.score[0]} : ${G.score[1]}</p>
@@ -1226,7 +1238,7 @@ function findMatch(stake, tier) {
       if (!r.game && r.queued === false && mm.on) r = await api('queue', { variant: v, stake });
       const t = $('mmText'); if (t && !r.game) t.textContent = `Looking for an opponent… ${Math.round((Date.now() - t0) / 1000)}s`;
     }
-    if (mm.on && r.game) { mm.on = false; startOnline(r.game); }
+    if (mm.on && r.game) { mm.on = false; sfx.matchFound(); startOnline(r.game); }
   })();
 }
 
@@ -1245,7 +1257,7 @@ async function createInvite() {
     await new Promise(res => setTimeout(res, 2500));
     if (!inv.on) return;
     const { data } = await NET.sb.from('games').select('*').eq('id', inv.id).maybeSingle();
-    if (data && data.status === 'active') { inv.on = false; return startOnline(data); }
+    if (data && data.status === 'active') { inv.on = false; sfx.matchFound(); return startOnline(data); }
     if (data && data.status === 'cancelled') { inv.on = false; return sheet(`<h2>Invite expired</h2><button class="list-btn" data-act="close">Close</button>`); }
   }
 }
@@ -1380,6 +1392,7 @@ async function applyRow(row) {
   G.p = row.turn;
   if (row.phase === 'roll') {
     G.phase = 'roll'; G.turn = null; G.busy = false; refreshHints();
+    if (row.turn === seat && o.chimeKey !== tt) { o.chimeKey = tt; sfx.yourTurn(); buzz(20); }
     if (row.turn !== seat) { diceEls.forEach(d => d.classList.add('used')); }
   } else if (row.phase === 'move' && row.dice) {
     const rk = row.turn + ':' + tt;
@@ -1397,7 +1410,7 @@ async function onlineRoll() {
   const o = G.online; if (!o) return;
   G.phase = 'rolling'; hud();
   const r = await api('roll', { game_id: o.id });
-  if (r.error) { toast(errText(r.error)); return resync(); }
+  if (r.error) { sfx.invalid(); toast(errText(r.error)); return resync(); }
   receive(r.game);
 }
 async function submitTurn() {
@@ -1405,7 +1418,7 @@ async function submitTurn() {
   const moves = G.turn.history.map(h => ({ from: h.move.from, to: h.move.to, die: h.move.die }));
   G.phase = 'sending'; hud();
   const r = await api('move', { game_id: o.id, moves });
-  if (r.error) { toast(errText(r.error)); return resync(); }
+  if (r.error) { sfx.invalid(); toast(errText(r.error)); return resync(); }
   o.turnKey = 't' + (r.game.state.turnsTaken[0] + r.game.state.turnsTaken[1]);   // already shown locally
   receive(r.game);
 }
@@ -1426,6 +1439,8 @@ function tickTimer() {
   el.style.setProperty('--t', Math.max(0, Math.min(1, left / 60)).toFixed(3));
   const st = $('stats' + (g.turn ^ FLIP)), base = `${N.pips(G.s, g.turn)} pips · ${G.s.off[g.turn]} off`;
   st.textContent = base + ` · ${Math.max(0, Math.ceil(left))}s`;
+  const sec = Math.ceil(left);
+  if (g.turn === o.seat && sec <= 10 && sec >= 1 && o.lastTick !== sec) { o.lastTick = sec; sfx.tick(); }
   if (left < -2 && g.turn !== o.seat && !o.claimed) {
     o.claimed = true;
     api('claim_timeout', { game_id: o.id }).then(r => { if (r.game) receive(r.game); else o.claimed = false; });
@@ -1436,7 +1451,7 @@ function onlineOver(row) {
   clearInterval(NET.tick); clearInterval(NET.poll);
   for (const e of [0, 1]) $('bar' + e).classList.remove('timed', 'low');
   const won = row.winner === o.seat, opp = names()[1 - o.seat];
-  if (won) sfx.win();
+  if (won) sfx.win(); else sfx.lose();
   const why = row.end_reason === 'resign' ? (won ? `${opp} resigned.` : 'You resigned.')
     : row.end_reason === 'timeout' ? (won ? `${opp} ran out of time.` : 'You ran out of time.')
     : row.points === 2 ? 'Mars: no checkers were borne off by the loser.' : 'All fifteen checkers borne off.';
