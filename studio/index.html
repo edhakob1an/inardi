@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Each Pixel Matters</title>
+<meta name="description" content="Each Pixel Matters is a small game studio from Armenia. Our first game is iNardi, Armenian nardi on carved wooden boards.">
+<meta name="theme-color" content="#1A1A1A">
+<link rel="icon" href="img/icon.png">
+<meta property="og:title" content="Each Pixel Matters">
+<meta property="og:description" content="Each Pixel Matters is a small game studio from Armenia. Our first game is iNardi, Armenian nardi on carved wooden boards.">
+<meta property="og:image" content="img/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@600;700&family=Saira:wght@400;500&family=Silkscreen&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="mark" href="index.html" aria-label="Each Pixel Matters home"><img src="img/mark.svg" alt="EPM"></a>
+  <nav><a href="index.html#games">Games</a><a href="index.html#about">About</a><a href="index.html#contact">Contact</a></nav>
+</div></header>
+
+<main>
+<section class="hero"><div class="wrap">
+  <img class="logo" src="img/logo.svg" alt="Each Pixel Matters logo">
+  <div>
+    <p class="label">Game studio · Armenia</p>
+    <h1>Crafted with care, down to the last <span class="px gold">pixel</span>.</h1>
+    <p>We make mobile games that feel good in your hands: beautiful boards, honest rules and smooth play, whether you have five minutes or a whole evening.</p>
+    <div class="btns"><a class="btn solid" href="../">Play iNardi</a><a class="btn ghost" href="#games">Our games</a></div>
+  </div>
+</div></section>
+
+<section class="game" id="games"><div class="wrap">
+  <div class="phones">
+    <img class="phone" src="img/shot-menu.webp" alt="iNardi main menu with a carved walnut board on a table" width="390" height="844">
+    <img class="phone" src="img/shot-game.webp" alt="iNardi game in progress on the Ararat walnut board" width="390" height="844" loading="lazy">
+  </div>
+  <div>
+    <p class="label">Our first game</p>
+    <h2>iNardi</h2>
+    <p>Armenian nardi, the way it is played at home: short and long nardi on carved walnut, oak and ebony boards, with dice you can almost hear.</p>
+    <ul class="facts">
+      <li>Short nardi and long nardi, with the real rules</li>
+      <li>Play friends online with an invite link, or join a coin table</li>
+      <li>Practise against the bot, or pass one phone between two players</li>
+      <li>Collect boards, checker sets and dice</li>
+    </ul>
+    <div class="btns"><a class="btn solid" href="../">Play in browser</a><span class="btn ghost" aria-disabled="true">Google Play <span class="soon">soon</span></span></div>
+  </div>
+</div></section>
+
+<section class="about" id="about"><div class="wrap">
+  <div class="pixel" aria-hidden="true"></div>
+  <div>
+    <p class="label">About the studio</p>
+    <h2>Every pixel matters</h2>
+    <p>Each Pixel Matters is a small independent game studio from <strong>Armenia</strong>. We believe the small things decide whether a game feels cheap or special: how a die lands, how a checker clicks into place, how a board looks in the evening light.</p>
+    <p>So we sweat the details, and we build games we would happily play ourselves.</p>
+  </div>
+</div></section>
+
+<section class="contact" id="contact"><div class="wrap">
+  <p class="label">Contact</p>
+  <h2>Questions, ideas or a bug to report?</h2>
+  <p><a class="mail" href="mailto:support@eachpixelmatters.com">support@eachpixelmatters.com</a><button class="copy" type="button" data-copy="support@eachpixelmatters.com">Copy</button></p>
+</div></section>
+</main>
+<script>
+document.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => {
+  const t = b.dataset.copy;
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { b.textContent = 'Copied'; }, () => { const r = document.createRange(); r.selectNodeContents(b.previousElementSibling); const s = getSelection(); s.removeAllRanges(); s.addRange(r); });
+  setTimeout(() => b.textContent = 'Copy', 1600);
+}));
+</script>
+<footer><div class="wrap">
+  <img src="img/logo.svg" alt="Each Pixel Matters">
+  <nav><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms</a><a href="delete-account.html">Delete account</a><a href="index.html#contact">Contact</a></nav>
+  <div>© 2026 Each Pixel Matters</div>
+</div></footer>
+</body>
+</html>
