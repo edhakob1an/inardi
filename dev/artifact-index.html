@@ -82,7 +82,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .dtile.now { border-color: var(--gold); background: linear-gradient(180deg, #3a2814, #22170d); box-shadow: 0 0 0 1px var(--gold), 0 0 18px rgba(216,168,95,.3); }
 .dtile.now small { color: var(--gold-hi); }
 /* XP after a game */
-.xpline { width: 100%; padding: 10px 12px; border-radius: 12px; background: #1b130c; border: 1px solid var(--line); }
+.xpline { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 12px; background: #1b130c; border: 1px solid var(--line); }
 .xpline:empty { display: none; }
 .xpline .xt { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 7px; }
 .xpline .xt b { color: var(--gold-hi); }
@@ -406,6 +406,8 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   border: 7px solid #ffe3a3; background: radial-gradient(circle, rgba(255,240,200,.65), rgba(255,210,130,.3) 70%);
   box-shadow: 0 0 0 3px rgba(40,18,4,.8), 0 0 26px 8px rgba(255,205,110,.9); animation: tg 1s ease-in-out infinite; }
 .target.hit { border-color: #ff9b78; box-shadow: 0 0 0 3px rgba(40,10,4,.85), 0 0 26px 8px rgba(255,120,80,.85); }
+.target.combo::after { content: attr(data-n); position: absolute; right: -20px; top: -20px; min-width: 38px; height: 38px; padding: 0 8px; box-sizing: border-box; border-radius: 19px; display: grid; place-items: center; background: #2a1a0c; border: 3px solid #ffd27a; color: #ffe2a8; font: 800 21px/1 system-ui, sans-serif; box-shadow: 0 2px 6px rgba(0,0,0,.6); }
+.target.offz.combo::after { right: 50%; margin-right: -19px; top: -24px; }
 .target.offz { width: 44px; height: 240px; margin: 0; border-radius: 12px; border-width: 5px; background: rgba(255,214,140,.32); }
 .lane { position: absolute; pointer-events: none; z-index: 5; border-radius: 8px; animation: lane 1s ease-in-out infinite; }
 @keyframes lane { 50% { opacity: .55; } }
@@ -1005,8 +1007,40 @@ function refreshHints() {
       }
       board.appendChild(t);
     }
-  } else G.sel = null;
+    // one checker using several dice in a row (5 then 2 = 7): extra targets with the total on them
+    G.combo = {};
+    const direct = new Set(legalNow.filter(m => srcKeyOf(m) === G.sel).map(m => m.to === 24 ? 'off' + G.p : locKey(G.p, m.to)));
+    const dfs = (path, sum) => {
+      const last = path[path.length - 1];
+      if (path.length > 1) { const k = last.to === 24 ? 'off' + G.p : locKey(G.p, last.to); if (!direct.has(k) && (!G.combo[k] || G.combo[k].path.length > path.length)) G.combo[k] = { path: path.slice(), sum, hit: last.hit }; }
+      if (last.to === 24 || G.turn.done()) return;
+      for (const m of G.turn.legal()) {
+        if (m.from !== last.to) continue;
+        G.turn.play(m); path.push(m); dfs(path, sum + m.die); path.pop(); G.turn.undo();
+      }
+    };
+    for (const m of legalNow.filter(m => srcKeyOf(m) === G.sel)) { G.turn.play(m); dfs([m], m.die); G.turn.undo(); }
+    for (const [k, c] of Object.entries(G.combo)) {
+      const t = document.createElement('div'); t.dataset.n = c.sum;
+      if (k[0] === 'o') { const [x, y0, dir] = offZone(G.p); t.className = 'target offz combo'; t.style.left = (x - 22) + 'px'; t.style.top = (dir > 0 ? y0 - 6 : y0 - 234) + 'px'; }
+      else { const n = c.hit ? 0 : locs[k].length, [x, y] = slotPos(k, n, n + 1); t.className = 'target combo' + (c.hit ? ' hit' : ''); t.style.left = x + 'px'; t.style.top = y + 'px'; }
+      board.appendChild(t);
+    }
+  } else { G.sel = null; G.combo = {}; }
 }
+// play a combined move step by step, as if each die had been played by hand
+function playPath(path) {
+  let i = 0;
+  const step = () => {
+    const want = path[i++], m = G.turn && G.phase === 'move' && G.turn.legal().find(x => x.from === want.from && x.to === want.to && x.die === want.die);
+    if (!m) { G.busy = false; refreshHints(); return; }
+    const last = i >= path.length;
+    G.busy = false; humanPlay(m);
+    if (!last) { G.busy = true; refreshHints(); later(step, 340); }
+  };
+  G.busy = true; step();
+}
+const comboFor = r => G.sel && G.combo && G.combo[r] ? G.combo[r].path : null;
 function regionAt(bx, by) {
   if (bx >= FIELD.L[1] && bx <= FIELD.R[0]) return 'bar' + G.p;
   if (bx > FIELD.R[1] || bx < FIELD.L[0]) {
@@ -1039,6 +1073,7 @@ wrap.addEventListener('pointerdown', e => {
   if (G.phase !== 'move' || !canAct(G.p) || G.busy) return;
   const [bx, by] = toBoard(e), r = regionAt(bx, by);
   if (G.sel && r && moveFor(G.sel, r)) { humanPlay(moveFor(G.sel, r)); return; }
+  if (r && comboFor(r)) { playPath(comboFor(r)); return; }
   const isSrc = r && legalNow.some(m => srcKeyOf(m) === r);
   if (!isSrc) {
     const top = r && locs[r] && locs[r][locs[r].length - 1];
@@ -1061,8 +1096,8 @@ function endDrag(e) {
   const d = drag; drag = null;
   if (d.on) {
     d.el.classList.remove('dragging');
-    const [bx, by] = toBoard(e), r = regionAt(bx, by - 30), m = r && G.sel && moveFor(G.sel, r);
-    if (m) humanPlay(m); else layout();
+    const [bx, by] = toBoard(e), r = regionAt(bx, by - 30), m = r && G.sel && moveFor(G.sel, r), path = !m && r && comboFor(r);
+    if (m) humanPlay(m); else if (path) { layout(); playPath(path); } else layout();
   } else if (d.was) { G.sel = null; refreshHints(); }
 }
 wrap.addEventListener('pointerup', endDrag);
