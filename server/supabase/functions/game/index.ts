@@ -87,6 +87,7 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
     const p = await profile(uid);
     if (a.kind === 'skins' && p.owned_skins.includes(a.id)) p.equip.skin = a.id;
     else if (a.kind === 'sets' && p.owned_sets.includes(a.id)) p.equip.set = a.id;
+    else if (a.kind === 'dice' && (p.owned_dice || []).includes(a.id)) p.equip.dice = a.id;
     else throw new Fail('not_owned');
     await db.from('profiles').update({ equip: p.equip }).eq('id', uid);
     return { profile: await profile(uid) };

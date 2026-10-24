@@ -146,7 +146,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .mini-in { position: absolute; left: 0; top: 0; transform-origin: 0 0; background: center / 100% 100% no-repeat; }
 .mini-in img, .mini-in i { position: absolute; display: block; }
 .mini-in i { border-radius: 50%; background-size: cover; box-shadow: 0 3px 5px rgba(0,0,0,.55); }
-.tabs { display: grid; grid-template-columns: 1fr 1fr; margin-top: 14px; height: 42px; padding: 4px; box-sizing: border-box; border-radius: 21px; flex: none;
+.tabs { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin-top: 14px; height: 42px; padding: 4px; box-sizing: border-box; border-radius: 21px; flex: none;
   background: rgba(8,5,2,.65); box-shadow: inset 0 2px 6px rgba(0,0,0,.75), 0 1px 0 rgba(255,220,160,.1); }
 .tabs button { border: 0; background: none; border-radius: 17px; font-weight: 700; font-size: 13px; letter-spacing: .14em; color: var(--muted); }
 .tabs button[aria-pressed="true"] { background: url(assets/btn_brass.webp) center / cover; color: #2b1906; box-shadow: 0 2px 6px rgba(0,0,0,.6); }
@@ -169,8 +169,10 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .ibtn.equip { background: #1b130c; border: 1px solid var(--gold); color: var(--gold-hi); }
 .ibtn.done { background: transparent; color: var(--gold); padding: 0; }
 .ibtn.done::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px var(--gold); }
-.ithumb.mini { position: relative; cursor: pointer; }
-.ithumb.mini::after { content: "3D"; position: absolute; right: 5px; bottom: 5px; padding: 3px 6px; border-radius: 6px; background: rgba(10,6,3,.82); border: 1px solid var(--gold); color: var(--gold-hi); font: 700 10px/1 system-ui, sans-serif; letter-spacing: .06em; }
+.ithumb[data-view] { position: relative; cursor: pointer; }
+.ithumb .tdice { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.ithumb .tdice .die3 { position: relative; z-index: auto; }
+.ithumb[data-view]::after { content: "3D"; position: absolute; right: 5px; bottom: 5px; padding: 3px 6px; border-radius: 6px; background: rgba(10,6,3,.82); border: 1px solid var(--gold); color: var(--gold-hi); font: 700 10px/1 system-ui, sans-serif; letter-spacing: .06em; }
 /* 3D board viewer */
 #viewer { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; background: radial-gradient(120% 70% at 50% 42%, #3a2616 0%, #1a110a 48%, #070403 100%); color: var(--text); }
 #viewer[hidden] { display: none !important; }
@@ -453,7 +455,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 <!-- ============ SHOP ============ -->
 <section id="shop" class="screen mscreen" hidden>
   <div class="mtop"><button class="back" id="shopBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Shop</h2><div class="coins"><img src="assets/coin.webp" alt=""><span class="coinval">1,000</span><button class="plus" data-go="coins" aria-label="Get coins">+</button></div></div>
-  <div class="tabs" id="shopTabs"><button data-t="boards" aria-pressed="true">BOARDS</button><button data-t="sets" aria-pressed="false">CHECKERS</button></div>
+  <div class="tabs" id="shopTabs"><button data-t="boards" aria-pressed="true">BOARDS</button><button data-t="sets" aria-pressed="false">CHECKERS</button><button data-t="dice" aria-pressed="false">DICE</button></div>
   <div class="shoplist" id="shopList"></div>
 </section>
 <section id="viewer" hidden aria-label="3D board preview">
@@ -518,6 +520,12 @@ const SETS = {
   bone:    { name: 'Bone & Walnut', desc: 'Cream bone with a walnut rim, and dark walnut.', price: 200, ring: false },
   pearl:   { name: 'Pearl & Garnet', desc: 'Mother-of-pearl and garnet lacquer, gold rims.', price: 500, ring: true },
 };
+const DICE = {
+  ivory: { name: 'Bronze Ivory', desc: 'Ivory dice, dark pips and a bronze eternity sign on the one.', price: 0 },
+  wood:  { name: 'Walnut & Bone', desc: 'Dark walnut dice with bone pips and a carved bone eternity sign.', price: 250 },
+  pearl: { name: 'Pearl & Gold', desc: 'Mother-of-pearl dice with gold pips and a gold eternity sign.', price: 600 },
+};
+const CAT = { skins: SKINS, sets: SETS, dice: DICE }, EQK = { skins: 'skin', sets: 'set', dice: 'dice' }, TAB_KIND = { boards: 'skins', sets: 'sets', dice: 'dice' };
 const A = (skin, part) => `assets/skins/${skin}/${part}.webp`, SA = (set, part) => `assets/sets/${set}/${part}.webp`;
 let SK, BW = 848, BH = 1264, C = 46, FIELD, TOPY, BOTY, MIDY, PTLEN, BARX, COLW, MAXLEN, EMB, OFFX;
 const colX = c => c < 6 ? FIELD.L[0] + (c + .5) * COLW : FIELD.R[0] + (c - 6 + .5) * COLW;
@@ -529,6 +537,8 @@ const store = {
   set(k, v) { try { localStorage.setItem('nardi.' + k, JSON.stringify(v)); } catch {} }
 };
 let owned = store.get('owned', { skins: ['walnut'], sets: ['classic'] }), equip = store.get('equip', { skin: 'walnut', set: 'classic' });
+if (!owned.dice) owned.dice = ['ivory', ...(owned.skins.includes('oak') ? ['wood'] : []), ...(owned.skins.includes('ebony') ? ['pearl'] : [])];
+if (!DICE[equip.dice]) equip.dice = (SKINS[equip.skin] || SKINS.walnut).dice;
 if (!SKINS[equip.skin]) equip.skin = 'walnut'; if (!SETS[equip.set]) equip.set = 'classic';
 let prefs = { scene: store.get('scene', 'auto'), variant: store.get('variant', 'short'), opp: store.get('opp', 'normal'), sound: store.get('sound', true) };
 
@@ -723,7 +733,7 @@ const PIPS = { 1: [], 2: [[.31, .31], [.69, .69]], 3: [[.31, .31], [.5, .5], [.6
   5: [[.31, .31], [.69, .31], [.5, .5], [.31, .69], [.69, .69]], 6: [[.31, .3], [.69, .3], [.31, .5], [.69, .5], [.31, .7], [.69, .7]] };
 const rr = (a, b) => a + Math.random() * (b - a);
 const faceTf = (v, rx, ry, z) => `rotateZ(${z}deg) rotateX(${FACE_ROT[v][0] + rx}deg) rotateY(${FACE_ROT[v][1] + ry}deg)`;
-const diceTheme = () => (SKINS[equip.skin] || SKINS.walnut).dice;
+const diceTheme = () => DICE[equip.dice] ? equip.dice : 'ivory';
 function makeDie(size, v, theme) {
   const w = document.createElement('div'); w.className = 'die3 ' + theme;
   w.style.width = w.style.height = size + 'px'; w.style.setProperty('--s', size + 'px');
@@ -1101,27 +1111,30 @@ function renderMini(host, skinId, setId) {
 let shopTab = 'boards', pendingBuy = null;
 function renderShop() {
   $('shopTabs').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === shopTab));
-  const boards = shopTab === 'boards', list = $('shopList'), items = Object.entries(boards ? SKINS : SETS);
+  const kind = TAB_KIND[shopTab], list = $('shopList');
   list.innerHTML = '';
-  for (const [id, it] of items) {
-    const own = owned[boards ? 'skins' : 'sets'].includes(id), eq = (boards ? equip.skin : equip.set) === id;
+  for (const [id, it] of Object.entries(CAT[kind])) {
+    const eq = equip[EQK[kind]] === id;
     const card = document.createElement('div'); card.className = 'item' + (eq ? ' eq' : '');
-    card.innerHTML = `<div class="ithumb ${boards ? 'mini' : 'pair'}"></div><div class="iinfo"><b>${it.name}</b><span>${it.desc}</span>
-      <button class="ibtn ${eq ? 'done' : own ? 'equip' : 'buy'}" data-kind="${boards ? 'skins' : 'sets'}" data-id="${id}" ${eq ? 'disabled' : ''}>${eq ? 'EQUIPPED' : own ? 'EQUIP' : `<img src="assets/coin.webp" alt="">${fmt(it.price)}`}</button></div>`;
+    card.innerHTML = `<div class="ithumb ${kind === 'skins' ? 'mini' : 'pair'}"></div><div class="iinfo"><b>${it.name}</b><span>${it.desc}</span>${shopBtnHTML(kind, id)}</div>`;
     list.appendChild(card);
     const th = card.querySelector('.ithumb');
-    if (boards) renderMini(th, id, equip.set);
-    else th.innerHTML = `<div class="swatch" style="background-image:url(${A(equip.skin, 'board')})"></div><i class="${it.ring ? 'ring' : ''}" style="background-image:url(${SA(id, 'light')})"></i><i style="background-image:url(${SA(id, 'dark')})"></i>`;
-    if (boards) { th.dataset.view = id; th.setAttribute('role', 'button'); th.setAttribute('aria-label', `Preview ${it.name} in 3D`); }
+    if (kind === 'skins') renderMini(th, id, equip.set);
+    else if (kind === 'sets') th.innerHTML = `<div class="swatch" style="background-image:url(${A(equip.skin, 'board')})"></div><i class="${it.ring ? 'ring' : ''}" style="background-image:url(${SA(id, 'light')})"></i><i style="background-image:url(${SA(id, 'dark')})"></i>`;
+    else {
+      th.innerHTML = `<div class="swatch" style="background-image:url(${A(equip.skin, 'board')})"></div><div class="tdice"></div>`;
+      [[1, -14, 22, -12], [6, -16, -20, 14]].forEach(([v, rx, ry, z]) => { const w = makeDie(32, v, id); w.querySelector('.cube').style.transform = faceTf(v, rx, ry, z); th.lastChild.appendChild(w); });
+    }
+    th.dataset.view = kind + ':' + id; th.setAttribute('role', 'button'); th.setAttribute('aria-label', `Preview ${it.name} in 3D`);
   }
   if (typeof V3 !== 'undefined' && V3.id) V3.button();
 }
 function shopBtnHTML(kind, id) {
-  const it = (kind === 'skins' ? SKINS : SETS)[id], own = owned[kind].includes(id), eq = (kind === 'skins' ? equip.skin : equip.set) === id;
+  const it = CAT[kind][id], own = owned[kind].includes(id), eq = equip[EQK[kind]] === id;
   return `<button class="ibtn ${eq ? 'done' : own ? 'equip' : 'buy'}" data-kind="${kind}" data-id="${id}" ${eq ? 'disabled' : ''}>${eq ? 'EQUIPPED' : own ? 'EQUIP' : `<img src="assets/coin.webp" alt="">${fmt(it.price)}`}</button>`;
 }
 function shopAction(kind, id) {
-  const it = (kind === 'skins' ? SKINS : SETS)[id];
+  const it = CAT[kind][id];
   if (owned[kind].includes(id)) return doEquip(kind, id);
   if (coins < it.price) return sheet(`<h2>Not enough coins</h2><p>${it.name} costs ${fmt(it.price)} coins. You have ${fmt(coins)}.</p>
     <button class="cta" data-act="coins">GET COINS</button><button class="list-btn" data-act="close">Close</button>`);
@@ -1131,19 +1144,19 @@ function shopAction(kind, id) {
 }
 function doEquip(kind, id) {
   if (NET.ok) api('equip', { kind, id }).then(r => r.profile && applyProfile(r.profile));
-  equip[kind === 'skins' ? 'skin' : 'set'] = id; store.set('equip', equip); setVars(); renderShop();
+  equip[EQK[kind]] = id; store.set('equip', equip); setVars(); renderShop();
 }
 $('shopTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; shopTab = b.dataset.t; renderShop(); });
 $('shopList').addEventListener('click', e => {
-  const v = e.target.closest('[data-view]'); if (v) { audio(); return V3.open(v.dataset.view); }
+  const v = e.target.closest('[data-view]'); if (v) { audio(); const [k, id] = v.dataset.view.split(':'); return V3.open(k, id); }
   const b = e.target.closest('.ibtn'); if (!b || b.disabled) return; audio();
   shopAction(b.dataset.kind, b.dataset.id);
 });
 $('shopBack').onclick = () => showScreen('menu');
 // ---------- 3D board preview (three.js, loaded on first use) ----------
 const V3 = (() => {
-  const S = { id: null };
-  let T, renderer, scene, camera, root, lid, pieces, ground, raf = 0, loadP = null, built = null;
+  const S = { id: null, kind: 'skins' };
+  let T, renderer, scene, camera, root, lid, pieces, ground, raf = 0, loadP = null, built = null, tweens = [], toss = [], PT = .08;
   const HW = 1, TH = .09, CASE_LEN = 2.1;                    // half width (one half of the open board = 1 unit = 424 px) and thickness per half
   let L = 1264 / 424;
   const view = { yaw: 0, pitch: .95, dist: 6, zoom: 1, vy: 0, vp: 0, tv: .3, th: .15 };
@@ -1175,7 +1188,7 @@ const V3 = (() => {
     }
     for (const f of [sk.L, sk.R]) x.drawImage(emb, (f[0] + f[1]) / 2 - em / 2, mid - em / 2, em, em);
     const half = k => { const [h, hx] = canvas(sk.W / 2, sk.H); hx.drawImage(c, -k * sk.W / 2, 0); return h; };
-    return { left: half(0), right: half(1), sk, cw, mid };
+    return { left: half(0), right: half(1), full: c, sk, cw, fw, mid };
   }
   // wood for the case sides: average colour of the lid rim with fine grain
   function sideWood(lidImg) {
@@ -1199,25 +1212,77 @@ const V3 = (() => {
     T = window.THREE;
     renderer = new T.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
-    renderer.outputEncoding = T.sRGBEncoding; renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
+    renderer.outputEncoding = T.sRGBEncoding; renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = .92;
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
     $('v3d').appendChild(renderer.domElement);
     scene = new T.Scene();
     camera = new T.PerspectiveCamera(32, 1, .05, 60);
-    scene.add(new T.HemisphereLight(0xfff0dc, 0x2a1a10, .75));
-    const key = new T.DirectionalLight(0xfff1de, 1.55); key.position.set(2.4, 5.5, 3.2); key.castShadow = true;
+    scene.add(new T.HemisphereLight(0xfff0dc, 0x2a1a10, .55));
+    const key = new T.DirectionalLight(0xfff1de, 1.3); key.position.set(2.4, 5.5, 3.2); key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3, near: .5, far: 15 }); key.shadow.bias = -.0004; key.shadow.radius = 4;
     scene.add(key);
-    const rim = new T.DirectionalLight(0xffc68a, .7); rim.position.set(-3.5, 2.2, -4); scene.add(rim);
+    const rim = new T.DirectionalLight(0xffc68a, .55); rim.position.set(-3.5, 2.2, -4); scene.add(rim);
     const fill = new T.DirectionalLight(0xd8e4ff, .25); fill.position.set(-3, 1.5, 3); scene.add(fill);
     ground = new T.Mesh(new T.PlaneGeometry(14, 14), new T.ShadowMaterial({ opacity: .5 })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
     bindInput();
   }
   function disposeTree(o) { o.traverse(n => { if (n.geometry) n.geometry.dispose(); if (n.material) [].concat(n.material).forEach(m => { for (const k of ['map', 'roughnessMap']) if (m[k]) m[k].dispose(); m.dispose(); }); }); }
-  async function build(skinId) {
-    const sk = SKINS[skinId], set = equip.set, theme = sk.dice;
+  function clearScene() { if (root) { scene.remove(root); disposeTree(root); } tweens = []; toss = []; lid = null; pieces = null; }
+  async function build(kind, id) {
+    if (kind === 'skins') return buildCase(id);
+    // checkers and dice sit on a square cut from the equipped board, around its medallion
+    const sk = SKINS[equip.skin], set = kind === 'sets' ? id : equip.set, theme = kind === 'dice' ? id : diceTheme();
+    const [surf, lidImg, cl, cd, face, sign] = await Promise.all([surface(equip.skin), img(A(equip.skin, 'lid')), img(SA(set, 'light')), img(SA(set, 'dark')), img(`assets/dice/${theme}/face.webp`), img(`assets/dice/${theme}/sign.webp`)]);
+    clearScene(); root = new T.Group(); scene.add(root);
+    const sz = surf.fw * 1.08, [c, x] = canvas(512, 512);
+    x.drawImage(surf.full, (sk.R[0] + sk.R[1]) / 2 - sz / 2, surf.mid - sz / 2, sz, sz, 0, 0, 512, 512);
+    const sideM = new T.MeshStandardMaterial({ map: tex(sideWood(lidImg)), roughness: .5 }), darkM = new T.MeshStandardMaterial({ color: 0x140c07, roughness: .8 });
+    const W = 1.5; PT = .08;
+    const plat = new T.Mesh(new T.BoxGeometry(W, PT, W), [sideM, sideM, new T.MeshStandardMaterial({ map: tex(c), roughness: .55 }), darkM, sideM, sideM]);
+    plat.position.y = PT / 2; plat.receiveShadow = plat.castShadow = true; root.add(plat);
+    if (kind === 'sets') {
+      const D = .42, H = D * .24, cg = new T.CylinderGeometry(D / 2, D / 2, H, 48);
+      const mats = [cl, cd].map(im => [new T.MeshStandardMaterial({ color: imgEdge(im), roughness: .4 }), new T.MeshStandardMaterial({ map: tex(im), roughness: .3 }), darkM]);
+      const put = (p, x, z, k) => { const m = new T.Mesh(cg, mats[p]); m.position.set(x + (Math.random() - .5) * .012, PT + H / 2 + k * H, z + (Math.random() - .5) * .012); m.rotation.y = Math.random() * 6.28; m.castShadow = m.receiveShadow = true; root.add(m); return m; };
+      for (let k = 0; k < 4; k++) { put(0, -.33, -.3, k); put(1, .33, -.3, k); }
+      toss = [put(0, -.24, .3, 0), put(1, .26, .32, 0)];
+      toss.forEach(m => m.userData = { y: m.position.y });
+    } else {
+      const dS = .23, dg = new T.BoxGeometry(dS, dS, dS);
+      const fm = {}; for (let v = 1; v <= 6; v++) fm[v] = new T.MeshStandardMaterial({ map: tex(dieFace(face, sign, theme, v)), roughness: .3 });
+      toss = [[1, -.22, .08, -.3], [6, .22, -.12, .45]].map(([v, x, z, yaw]) => {
+        const m = new T.Mesh(dg, [fm[3], fm[4], fm[1], fm[6], fm[2], fm[5]]); m.rotation.order = 'YXZ';
+        const u = UP[v]; m.rotation.set(u[0], yaw, u[2]); m.position.set(x, PT + dS / 2, z); m.castShadow = true; m.userData = { y: PT + dS / 2 }; root.add(m); return m;
+      });
+    }
+    built = kind + id;
+  }
+  // rotations (x, -, z) that turn the face with this value to the top, for the die material order [3, 4, 1, 6, 2, 5]
+  const UP = { 1: [0, 0, 0], 6: [Math.PI, 0, 0], 2: [-Math.PI / 2, 0, 0], 5: [Math.PI / 2, 0, 0], 3: [0, 0, Math.PI / 2], 4: [0, 0, -Math.PI / 2] };
+  function flipCheckers() {
+    if (tweens.length) return;
+    const t0 = performance.now(); sfx.tap();
+    toss.forEach((m, i) => { const r0 = m.rotation.x, y0 = m.userData.y, dir = i ? -1 : 1;
+      tweens.push({ t0: t0 + i * 90, dur: 820, f: k => { const e = ease(k); m.position.y = y0 + 4 * .42 * k * (1 - k); m.rotation.x = r0 + dir * Math.PI * 2 * e; }, done: () => { m.rotation.x = r0; if (i) sfx.place(); } }); });
+  }
+  function rollDice() {
+    if (tweens.length) return;
+    const t0 = performance.now(); sfx.dice();
+    let spots; do { spots = [0, 1].map(() => [(Math.random() - .5) * .8, (Math.random() - .5) * .7]); } while (Math.hypot(spots[0][0] - spots[1][0], spots[0][1] - spots[1][1]) < .36);
+    toss.forEach((m, i) => {
+      const v = 1 + Math.floor(Math.random() * 6), u = UP[v], from = { x: m.position.x, z: m.position.z, r: [m.rotation.x, m.rotation.y, m.rotation.z] };
+      const spinX = (2 + Math.floor(Math.random() * 2)) * Math.PI * 2 * (Math.random() < .5 ? -1 : 1), spinZ = (1 + Math.floor(Math.random() * 2)) * Math.PI * 2 * (Math.random() < .5 ? -1 : 1);
+      const to = [u[0] + spinX, from.r[1] + (Math.random() - .5) * 3, u[2] + spinZ], [tx, tz] = spots[i], y0 = m.userData.y;
+      tweens.push({ t0: t0 + i * 70, dur: 1000, f: k => { const e = 1 - Math.pow(1 - k, 3);
+        m.position.set(from.x + (tx - from.x) * e, y0 + Math.max(0, 4 * .55 * k * (1 - k) * (1 - k * .4)), from.z + (tz - from.z) * e);
+        m.rotation.set(from.r[0] + (to[0] - from.r[0]) * e, from.r[1] + (to[1] - from.r[1]) * e, from.r[2] + (to[2] - from.r[2]) * e); },
+        done: () => { m.rotation.set(u[0], to[1], u[2]); if (i) sfx.land(); } });
+    });
+  }
+  async function buildCase(skinId) {
+    const sk = SKINS[skinId], set = equip.set, theme = diceTheme();
     const [surf, lidImg, cl, cd, face, sign] = await Promise.all([surface(skinId), img(A(skinId, 'lid')), img(SA(set, 'light')), img(SA(set, 'dark')), img(`assets/dice/${theme}/face.webp`), img(`assets/dice/${theme}/sign.webp`)]);
-    if (root) { scene.remove(root); disposeTree(root); }
+    clearScene();
     L = CASE_LEN; const K = L / (sk.H / (sk.W / 2));   // the case is shorter than the phone board art, so the art is scaled along its length
     root = new T.Group(); scene.add(root);
     const side = tex(sideWood(lidImg)), sideM = new T.MeshStandardMaterial({ map: side, roughness: .5 });
@@ -1271,7 +1336,7 @@ const V3 = (() => {
       const fx = (sk.R[0] + sk.R[1]) / 2 + (k ? 34 : -30), [x, z] = px2(fx, surf.mid + (k ? 30 : -36));
       m.position.set(x, TH + dS / 2, z); m.rotation.y = k ? .5 : -.35; m.castShadow = true; m.userData = { y: TH + dS / 2, d: .5 + k * .1 }; pieces.add(m);
     });
-    built = skinId; openT = openTo = 0; dropT = -1; pose();
+    built = 'skins' + skinId; openT = openTo = 0; dropT = -1; pose();
   }
   function imgEdge(im) { const [c, x] = canvas(16, 16); x.drawImage(im, 0, 0, 16, 16); const d = x.getImageData(1, 8, 1, 1).data; return new T.Color(`rgb(${d[0]},${d[1]},${d[2]})`); }
   // lid angle and centring for an open fraction f (0 closed, 1 open)
@@ -1289,6 +1354,7 @@ const V3 = (() => {
   }
   // distance that keeps the whole case on screen for the current angle and lid position
   function fitDist() {
+    if (S.kind !== 'skins') { const r = .78; return Math.max(r / view.th, (r * Math.sin(view.pitch) + .3 * Math.cos(view.pitch)) / view.tv) * 1.15 + .3; }
     const ex = HW * (.5 + .5 * ease(openT)), ez = L / 2, cy = Math.abs(Math.cos(view.yaw)), sy = Math.abs(Math.sin(view.yaw));
     const hx = cy * ex + sy * ez, hz = (sy * ex + cy * ez) * Math.sin(view.pitch) + TH * 2 * Math.cos(view.pitch);
     return Math.max(hx / view.th, hz / view.tv) * 1.22 + ez * .2;
@@ -1296,7 +1362,7 @@ const V3 = (() => {
   function frame(t) {
     raf = requestAnimationFrame(frame);
     const dt = Math.min(.05, (t - (lastT || t)) / 1000); lastT = t;
-    if (openT !== openTo) {
+    if (S.kind === 'skins' && openT !== openTo) {
       openT = Math.min(1, Math.max(0, openFrom + (openTo > openFrom ? 1 : -1) * (t - openStart) / 1100));
       if ((openTo === 1 && openT >= 1) || (openTo === 0 && openT <= 0)) { openT = openTo; if (openTo === 1) { sfx.place(); dropT = t; pieces.visible = true; } }
       pose();
@@ -1311,14 +1377,17 @@ const V3 = (() => {
       }
       if (done) dropT = -1;
     }
+    tweens = tweens.filter(w => { const k = Math.max(0, Math.min(1, (t - w.t0) / w.dur)); w.f(k); if (k >= 1) { w.done && w.done(); return false; } return true; });
     if (spin && !drag) view.yaw += dt * .35;
     if (!drag) { view.yaw += view.vy; view.pitch = clampP(view.pitch + view.vp); view.vy *= .92; view.vp *= .9; }
-    view.dist += (fitDist() - view.dist) * Math.min(1, dt * 6); const d = view.dist / view.zoom, cy = TH * (1 - .5 * ease(openT));
+    view.dist += (fitDist() - view.dist) * Math.min(1, dt * 6); const d = view.dist / view.zoom, cy = S.kind === 'skins' ? TH * (1 - .5 * ease(openT)) : PT + .06;
     camera.position.set(Math.sin(view.yaw) * Math.cos(view.pitch) * d, cy + Math.sin(view.pitch) * d, Math.cos(view.yaw) * Math.cos(view.pitch) * d);
     camera.lookAt(0, cy, 0);
     renderer.render(scene, camera);
   }
   const clampP = p => Math.max(.12, Math.min(1.5, p));
+  const HINT = { sets: 'Tap to flip · Drag to turn · Pinch to zoom', dice: 'Tap to roll · Drag to turn · Pinch to zoom' };
+  function tapAction() { if (S.kind === 'sets') flipCheckers(); else if (S.kind === 'dice') rollDice(); else toggle(); }
   function toggle() {
     if (openT !== openTo) return;
     openFrom = openT; openTo = openTo ? 0 : 1; openStart = performance.now();
@@ -1340,23 +1409,23 @@ const V3 = (() => {
       view.vy = -dx * .009; view.vp = dy * .006; view.yaw += view.vy; view.pitch = clampP(view.pitch + view.vp);
     });
     const up = e => { if (!ptr.has(e.pointerId)) return; ptr.delete(e.pointerId);
-      if (ptr.size === 0) { drag = false; if (moved < 9 && performance.now() - downAt < 400) { view.vy = view.vp = 0; toggle(); } }
+      if (ptr.size === 0) { drag = false; if (moved < 9 && performance.now() - downAt < 400) { view.vy = view.vp = 0; tapAction(); } }
       else { const [p] = ptr.values(); last = p.slice(); } };
     el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
     el.addEventListener('wheel', e => { e.preventDefault(); spin = false; view.zoom = Math.max(.7, Math.min(2.6, view.zoom * Math.exp(-e.deltaY * .0015))); }, { passive: false });
     addEventListener('resize', () => { if (S.id) fit(); });
   }
-  function reset() { Object.assign(view, { yaw: 0, pitch: .95, zoom: 1, vy: 0, vp: 0 }); }
-  S.button = () => { if (!S.id) return; $('vBtn').innerHTML = shopBtnHTML('skins', S.id); };
-  S.open = async id => {
+  function reset() { Object.assign(view, { yaw: 0, pitch: S.kind === 'skins' ? .95 : .72, zoom: 1, vy: 0, vp: 0 }); }
+  S.button = () => { if (!S.id) return; $('vBtn').innerHTML = shopBtnHTML(S.kind, S.id); };
+  S.open = async (kind, id) => {
     if (!webglOK()) return mtoast('3D preview is not supported on this device');
-    S.id = id; const it = SKINS[id];
+    S.id = id; S.kind = kind; const it = CAT[kind][id];
     $('vName').textContent = it.name; $('vDesc').textContent = it.desc; S.button();
-    $('vHint').textContent = 'Tap the case to open it'; $('vload').hidden = false; $('viewer').hidden = false; sfx.popup();
+    $('vHint').textContent = HINT[kind] || 'Tap the case to open it'; $('vload').hidden = false; $('viewer').hidden = false; sfx.popup();
     try {
       await loadThree(); if (!renderer) init();
       renderer.domElement.style.visibility = 'hidden';
-      await build(id); if (S.id !== id) return;
+      await build(kind, id); if (S.id !== id || S.kind !== kind) return;
     } catch (e) { S.close(); return mtoast('Could not open the 3D preview'); }
     reset(); spin = true; fit(); view.dist = fitDist(); $('vload').hidden = true; renderer.domElement.style.visibility = '';
     cancelAnimationFrame(raf); lastT = 0; raf = requestAnimationFrame(frame);
@@ -1478,8 +1547,8 @@ async function api(action, args = {}) {
   } catch (e) { return { error: 'network' }; }
 }
 function applyProfile(p) {
-  NET.profile = p; coins = p.coins; owned = { skins: [...p.owned_skins], sets: [...p.owned_sets] };
-  equip = { skin: SKINS[p.equip.skin] ? p.equip.skin : 'walnut', set: SETS[p.equip.set] ? p.equip.set : 'classic' };
+  NET.profile = p; coins = p.coins; owned = { skins: [...p.owned_skins], sets: [...p.owned_sets], dice: [...(p.owned_dice || ['ivory'])] };
+  equip = { skin: SKINS[p.equip.skin] ? p.equip.skin : 'walnut', set: SETS[p.equip.set] ? p.equip.set : 'classic', dice: DICE[p.equip.dice] ? p.equip.dice : (DICE[equip.dice] && owned.dice.includes(equip.dice) ? equip.dice : 'ivory') };
   stats = { played: p.played, won: p.won };
   store.set('equip', equip);
   $('meName').textContent = p.name;
@@ -1760,7 +1829,7 @@ const EPM_LOGO = {"W":272,"H":371.2691690180153,"mono":{"E":"M0 0H33V253H0ZM0 0H
     <g fill="${GOLD}">${cellSvg}</g><path class="a-pix" fill="${GOLD}" d="${L.pixel.outline}"/>
     <g fill="${INK}">${mat}</g></svg>`;
   const sk = SKINS[equip.skin] || SKINS.walnut;
-  const urls = [`assets/scenes/${sceneNow()}.webp`, sk.hero3d || A(sk.id, 'board'), 'assets/coin.webp', 'assets/btn_brass.webp', 'assets/btn_wood.webp', `assets/dice/${sk.dice}/face.webp`];
+  const urls = [`assets/scenes/${sceneNow()}.webp`, sk.hero3d || A(sk.id, 'board'), 'assets/coin.webp', 'assets/btn_brass.webp', 'assets/btn_wood.webp', `assets/dice/${diceTheme()}/face.webp`];
   let n = 0; const bar = $('stBar'), total = urls.length + 1;
   const tick = () => { n++; bar.style.transform = `scaleX(${Math.min(1, n / total)})`; };
   const loads = urls.map(u => new Promise(res => { const im = new Image(); im.onload = im.onerror = () => { tick(); res(); }; im.src = u; }));

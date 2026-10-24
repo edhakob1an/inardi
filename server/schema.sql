@@ -12,7 +12,8 @@ create table if not exists public.profiles (
   coins       integer not null default 1000 check (coins >= 0),
   owned_skins text[] not null default '{walnut}',
   owned_sets  text[] not null default '{classic}',
-  equip       jsonb  not null default '{"skin":"walnut","set":"classic"}',
+  owned_dice  text[] not null default '{ivory}',
+  equip       jsonb  not null default '{"skin":"walnut","set":"classic","dice":"ivory"}',
   played      integer not null default 0,
   won         integer not null default 0,
   last_ad_at  timestamptz,
@@ -53,7 +54,7 @@ create trigger on_auth_user_created after insert on auth.users
 
 -- ---------------------------------------------------------------- shop prices (server is the source of truth)
 create table if not exists public.shop_items (
-  kind  text not null check (kind in ('skins', 'sets')),
+  kind  text not null check (kind in ('skins', 'sets', 'dice')),
   id    text not null,
   price integer not null check (price >= 0),
   primary key (kind, id)
@@ -63,7 +64,8 @@ drop policy if exists "anyone reads prices" on public.shop_items;
 create policy "anyone reads prices" on public.shop_items for select to anon, authenticated using (true);
 insert into public.shop_items values
   ('skins', 'walnut', 0), ('skins', 'oak', 400), ('skins', 'ebony', 900),
-  ('sets', 'classic', 0), ('sets', 'bone', 200), ('sets', 'pearl', 500)
+  ('sets', 'classic', 0), ('sets', 'bone', 200), ('sets', 'pearl', 500),
+  ('dice', 'ivory', 0), ('dice', 'wood', 250), ('dice', 'pearl', 600)
 on conflict (kind, id) do update set price = excluded.price;
 
 -- app switches (e.g. preview_mode lets testers add free coin packs; turn it off before launch)
@@ -193,13 +195,15 @@ begin
   select price into v_price from shop_items where kind = p_kind and id = p_id;
   if not found then return jsonb_build_object('error', 'no_such_item'); end if;
   select * into v_p from profiles where id = p_user for update;
-  if (p_kind = 'skins' and p_id = any (v_p.owned_skins)) or (p_kind = 'sets' and p_id = any (v_p.owned_sets)) then
+  if (p_kind = 'skins' and p_id = any (v_p.owned_skins)) or (p_kind = 'sets' and p_id = any (v_p.owned_sets))
+     or (p_kind = 'dice' and p_id = any (v_p.owned_dice)) then
     return jsonb_build_object('error', 'already_owned');
   end if;
   if v_p.coins < v_price then return jsonb_build_object('error', 'not_enough_coins'); end if;
   update profiles set coins = coins - v_price,
          owned_skins = case when p_kind = 'skins' then array_append(owned_skins, p_id) else owned_skins end,
-         owned_sets  = case when p_kind = 'sets'  then array_append(owned_sets, p_id)  else owned_sets  end
+         owned_sets  = case when p_kind = 'sets'  then array_append(owned_sets, p_id)  else owned_sets  end,
+         owned_dice  = case when p_kind = 'dice'  then array_append(owned_dice, p_id)  else owned_dice  end
    where id = p_user;
   if v_price > 0 then insert into coin_ledger (user_id, delta, reason) values (p_user, -v_price, 'buy:' || p_kind || ':' || p_id); end if;
   return jsonb_build_object('ok', true);
