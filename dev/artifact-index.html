@@ -1130,7 +1130,7 @@ $('shopBack').onclick = () => showScreen('menu');
 const V3 = (() => {
   const S = { id: null };
   let T, renderer, scene, camera, root, lid, pieces, ground, raf = 0, loadP = null, built = null;
-  const HW = 1, TH = .085;                    // half width (one half of the open board = 1 unit = 424 px) and thickness per half
+  const HW = 1, TH = .09, CASE_LEN = 2.1;                    // half width (one half of the open board = 1 unit = 424 px) and thickness per half
   let L = 1264 / 424;
   const view = { yaw: 0, pitch: .95, dist: 6, zoom: 1, vy: 0, vp: 0, tv: .3, th: .15 };
   let openT = 0, openTo = 0, openStart = 0, openFrom = 0, spin = true, lastT = 0, dropT = -1;
@@ -1204,7 +1204,7 @@ const V3 = (() => {
     const sk = SKINS[skinId], set = equip.set, theme = sk.dice;
     const [surf, lidImg, cl, cd, face, sign] = await Promise.all([surface(skinId), img(A(skinId, 'lid')), img(SA(set, 'light')), img(SA(set, 'dark')), img(`assets/dice/${theme}/face.webp`), img(`assets/dice/${theme}/sign.webp`)]);
     if (root) { scene.remove(root); disposeTree(root); }
-    L = sk.H / (sk.W / 2);
+    L = CASE_LEN; const K = L / (sk.H / (sk.W / 2));   // the case is shorter than the phone board art, so the art is scaled along its length
     root = new T.Group(); scene.add(root);
     const side = tex(sideWood(lidImg)), sideM = new T.MeshStandardMaterial({ map: side, roughness: .5 });
     const darkM = new T.MeshStandardMaterial({ color: 0x140c07, roughness: .8 });
@@ -1234,8 +1234,8 @@ const V3 = (() => {
     }
     // checkers in the short-nardi start, and a pair of dice; shown once the case is open
     pieces = new T.Group(); pieces.visible = false; root.add(pieces);
-    const px2 = (x, y) => [(x - sk.W / 2) / (sk.W / 2), (y - sk.H / 2) / (sk.W / 2)];
-    const cDiam = surf.cw * .9 / (sk.W / 2), cH = cDiam * .24, cxp = i => i < 6 ? sk.L[0] + (i + .5) * surf.cw : sk.R[0] + (i - 6 + .5) * surf.cw;
+    const px2 = (x, y) => [(x - sk.W / 2) / (sk.W / 2), (y - sk.H / 2) / (sk.W / 2) * K];
+    const cDiam = surf.cw * .9 / (sk.W / 2) * K, cH = cDiam * .24, cxp = i => i < 6 ? sk.L[0] + (i + .5) * surf.cw : sk.R[0] + (i - 6 + .5) * surf.cw;
     const cg = new T.CylinderGeometry(cDiam / 2, cDiam / 2, cH, 40);
     const ringCol = imgEdge(cl), ringColD = imgEdge(cd);
     const mats = [[new T.MeshStandardMaterial({ color: ringCol, roughness: .4 }), new T.MeshStandardMaterial({ map: tex(cl), roughness: .32 }), darkM],
