@@ -188,6 +188,22 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .netdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #6b5a45; margin-right: 6px; vertical-align: 1px; }
 .netdot.on { background: #6fd18b; box-shadow: 0 0 6px #6fd18b; }
+
+/* ---------- studio intro: Each Pixel Matters ---------- */
+.studio { position: fixed; inset: 0; z-index: 200; background: #0b0a0c; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; transition: opacity .5s ease; cursor: pointer; }
+.studio.out { opacity: 0; pointer-events: none; }
+.st-mark { display: grid; grid-template-columns: repeat(3, 24px); gap: 6px; }
+.st-mark b { width: 24px; height: 24px; border-radius: 4px; background: #ece8e1; opacity: 0; transform: scale(.3) translateY(-10px); animation: stpx .42s cubic-bezier(.3,1.6,.5,1) forwards; }
+.st-mark b.gold { background: #f2c14e; animation: stpx .5s cubic-bezier(.3,1.8,.5,1) forwards, stglow 1.4s ease-out forwards; }
+@keyframes stpx { to { opacity: 1; transform: none; } }
+@keyframes stglow { 0% { box-shadow: 0 0 0 0 rgba(242,193,78,.75); } 100% { box-shadow: 0 0 0 16px rgba(242,193,78,0), 0 0 24px 5px rgba(242,193,78,.5); } }
+.st-name { font: 700 14px/1 var(--font-body); letter-spacing: .36em; padding-left: .36em; color: #ece8e1; text-transform: uppercase; opacity: 0; animation: stname .9s ease-out 1.05s forwards; white-space: nowrap; }
+@keyframes stname { from { opacity: 0; letter-spacing: .7em; padding-left: .7em; } to { opacity: 1; letter-spacing: .36em; padding-left: .36em; } }
+.st-sub { font: 500 11px/1 var(--font-body); letter-spacing: .32em; padding-left: .32em; color: #8a857d; text-transform: uppercase; opacity: 0; animation: stfade .6s ease-out 1.5s forwards; margin-top: -8px; }
+@keyframes stfade { to { opacity: 1; } }
+.st-load { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 56px); width: 120px; height: 2px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden; }
+.st-load i { display: block; height: 100%; background: #f2c14e; transform-origin: left; transform: scaleX(0); transition: transform .35s ease; }
+@media (prefers-reduced-motion: reduce) { .st-mark b, .st-name, .st-sub { animation: none; opacity: 1; transform: none; } }
 #mtoast { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 64px); transform: translate(-50%, -10px); opacity: 0; pointer-events: none; z-index: 60;
   background: rgba(23,16,11,.94); border: 1px solid var(--gold); color: var(--gold-hi); padding: 10px 18px; border-radius: 999px; font-weight: 600; font-size: 14px; white-space: nowrap; transition: opacity .25s, transform .25s; }
 #mtoast.show { opacity: 1; transform: translate(-50%, 0); }
@@ -354,6 +370,14 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .list-btn { border: 1px solid var(--line); background: #1b130c; border-radius: 12px; padding: 13px; font-size: 15px; font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .checker, .die { transition: none; } .target, .lane, .checker::before, #rollBtn.pulse, .tilt, .btn-brass::after { animation: none; } .die3 { transition: none; } }
 </style>
+
+<!-- ============ STUDIO INTRO ============ -->
+<div class="studio" id="studio" role="img" aria-label="Each Pixel Matters presents iNardi">
+  <div class="st-mark" id="stMark"></div>
+  <div class="st-name" id="stName">Each Pixel Matters</div>
+  <div class="st-sub">presents</div>
+  <div class="st-load"><i id="stBar"></i></div>
+</div>
 </head>
 <body>
 <!-- ============ MENU ============ -->
@@ -1365,6 +1389,31 @@ function onlineOver(row) {
 }
 
 setVars(); syncMenu(); heroBoard(); heroDice(); requestAnimationFrame(placeHero);
+
+// ---------- studio intro: shows while the menu's images load (at least 3 s, at most 6.5 s; tap to skip) ----------
+(function studioIntro() {
+  const el = $('studio'); if (!el) return;
+  const mark = $('stMark'), order = [0, 4, 8, 2, 6, 1, 5, 3, 7], GOLD = 7;   // the last pixel to land is the gold one
+  for (let i = 0; i < 9; i++) {
+    const b = document.createElement('b'), d = 120 + order.indexOf(i) * 75;
+    if (i === GOLD) { b.className = 'gold'; b.style.animationDelay = `${d + 60}ms, ${d + 260}ms`; } else b.style.animationDelay = d + 'ms';
+    mark.appendChild(b);
+  }
+  const sk = SKINS[equip.skin] || SKINS.walnut;
+  const urls = [`assets/scenes/${sceneNow()}.webp`, sk.hero3d || A(sk.id, 'board'), 'assets/coin.webp', 'assets/btn_brass.webp', 'assets/btn_wood.webp', `assets/dice/${sk.dice}/face.webp`];
+  let n = 0; const bar = $('stBar'), total = urls.length + 1;
+  const tick = () => { n++; bar.style.transform = `scaleX(${Math.min(1, n / total)})`; };
+  const loads = urls.map(u => new Promise(res => { const im = new Image(); im.onload = im.onerror = () => { tick(); res(); }; im.src = u; }));
+  loads.push((document.fonts ? document.fonts.ready : Promise.resolve()).then(tick, tick));
+  let finished = false;
+  const finish = () => {
+    if (finished) return; finished = true;
+    el.classList.add('out'); setTimeout(() => el.remove(), 550);
+    if (!$('menu').hidden) showScreen('menu');   // replay the menu's entrance animations now that it's visible
+  };
+  Promise.race([Promise.all([Promise.all(loads), new Promise(r => setTimeout(r, 3000))]), new Promise(r => setTimeout(r, 6500))]).then(finish);
+  el.addEventListener('click', finish);
+})();
 // connect in the background; resume a running game or open an invite link
 function joinFromLink(me) {
   const m = /^#join-([A-Z0-9]{6})$/i.exec(location.hash);
