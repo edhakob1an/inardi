@@ -1188,7 +1188,7 @@ function shopAction(kind, id) {
 }
 function doEquip(kind, id) {
   if (NET.ok) api('equip', { kind, id }).then(r => r.profile && applyProfile(r.profile));
-  equip[EQK[kind]] = id; store.set('equip', equip); setVars(); renderShop();
+  equip[EQK[kind]] = id; store.set('equip', equip); preloadImgs(gameArt()); setVars(); renderShop();
 }
 $('shopTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; shopTab = b.dataset.t; renderShop(); });
 $('shopList').addEventListener('click', e => {
@@ -1521,7 +1521,18 @@ function syncMenu() {
   syncCoins();
 }
 $('mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; audio(); prefs.variant = b.classList.contains('sw') ? (prefs.variant === 'short' ? 'long' : 'short') : b.dataset.v; store.set('variant', prefs.variant); syncMenu(); });
-function startGame(opp) { prefs.opp = opp; store.set('opp', opp); showScreen('game'); requestAnimationFrame(() => newGame(false)); }
+// game art (board, points, checkers, dice) is loaded and decoded ahead of time and kept in memory,
+// so the board appears complete instead of filling in piece by piece
+const artCache = new Map();
+function preloadImgs(list) {
+  return Promise.all(list.map(u => {
+    if (!artCache.has(u)) { const im = new Image(); im.src = u; artCache.set(u, (im.decode ? im.decode() : new Promise(r => { im.onload = im.onerror = r; })).catch(() => {}).then(() => im)); }
+    return artCache.get(u);
+  }));
+}
+const gameArt = () => [...['board', 'point_light', 'point_dark', 'emblem'].map(p => A(equip.skin, p)), SA(equip.set, 'light'), SA(equip.set, 'dark'), `assets/dice/${diceTheme()}/face.webp`, `assets/dice/${diceTheme()}/sign.webp`];
+const artReady = () => Promise.race([preloadImgs(gameArt()), new Promise(r => setTimeout(r, 2500))]);
+async function startGame(opp) { prefs.opp = opp; store.set('opp', opp); await artReady(); showScreen('game'); requestAnimationFrame(() => newGame(false)); }
 $('onlineBtn').onclick = () => { audio(); showScreen('rooms'); };
 $('roomsBack').onclick = () => showScreen('menu');
 $('botBtn').onclick = () => { audio(); sheet(`<h2>Play the bot</h2><p>${prefs.variant === 'short' ? 'Short' : 'Long'} nardi, no coins at stake.</p>
@@ -1716,7 +1727,7 @@ async function startOnline(row) {
   G.online = { id: row.id, seat, g: row, applied: -1, chain: Promise.resolve(), turnKey: null, rollKey: null, claimed: false };
   FLIP = seat;
   G.s = row.state; G.turn = null; G.sel = null; G.busy = false; G.ops = []; G.p = row.turn ?? 0; G.phase = 'opening'; diceEls = [];
-  showScreen('game'); applySkin(); buildStatic(); placeAll(); hud(); fit();
+  await artReady(); showScreen('game'); applySkin(); buildStatic(); placeAll(); hud(); fit();
   const o = G.online;
   NET.chan = NET.sb.channel('game-' + row.id)
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'games', filter: 'id=eq.' + row.id }, pl => receive(pl.new))
@@ -1876,6 +1887,7 @@ const EPM_LOGO = {"W":272,"H":371.2691690180153,"mono":{"E":"M0 0H33V253H0ZM0 0H
   const loads = urls.map(u => new Promise(res => { const im = new Image(); im.onload = im.onerror = () => { tick(); res(); }; im.src = u; }));
   loads.push((document.fonts ? document.fonts.ready : Promise.resolve()).then(tick, tick));
   let finished = false, sting = null;
+  setTimeout(() => preloadImgs(gameArt()), 300);   // warm up the game board while the intro plays
   // studio sound: browsers only allow sound once the page may play audio (always in the installed app;
   // on the web often only after a first tap), so it plays when allowed and stays in sync with the animation
   const t0 = performance.now(), a = audio();
