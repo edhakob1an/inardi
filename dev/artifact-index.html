@@ -292,6 +292,17 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .iconbtn { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: #1b130c; display: grid; place-items: center; flex: none; }
 .iconbtn:disabled { opacity: .35; }
 #chatBtn[aria-expanded="true"] { border-color: var(--gold); }
+#rollBtn { position: relative; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+#rollBtn:disabled { pointer-events: none; }
+#rollBtn.auto::after { content: "AUTO"; position: absolute; top: -7px; right: -5px; padding: 2px 5px; border-radius: 6px; background: #2a1a0c; border: 1px solid var(--gold); color: var(--gold-hi); font: 700 9px/1 system-ui, sans-serif; letter-spacing: .08em; }
+#rollBtn.holding:not(:disabled) { transform: scale(.96); transition: transform .4s; }
+#autoPop { position: fixed; z-index: 45; width: 230px; padding: 14px 16px; border-radius: 16px; background: linear-gradient(180deg, #2c1e13, #1b130c); border: 1px solid var(--gold); box-shadow: 0 18px 40px rgba(0,0,0,.6); animation: apop .18s ease-out both; }
+#autoPop[hidden] { display: none !important; }
+@keyframes apop { from { opacity: 0; transform: translateY(8px) scale(.96); } }
+#autoPop b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 20px; color: var(--gold-hi); }
+#autoPop p { margin: 4px 0 12px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+.aswitch { width: 100%; height: 42px; border-radius: 21px; border: 1px solid var(--line); background: #1b130c; color: var(--text); font-weight: 700; font-size: 14px; letter-spacing: .08em; }
+.aswitch[aria-checked="true"] { background: linear-gradient(180deg, var(--gold-hi), var(--gold)); color: #2a1a0c; border-color: transparent; }
 @media (max-width: 440px) { #bar0 { gap: 7px; padding-inline: 8px; } #bar0 .iconbtn { width: 38px; } #rollBtn { min-width: 92px; padding: 0 12px; } }
 /* quick chat */
 #chatPop { position: fixed; z-index: 45; left: 50%; width: min(360px, calc(100vw - 24px)); transform: translateX(-50%); padding: 12px; border-radius: 18px; background: linear-gradient(180deg, #2c1e13, #1b130c); border: 1px solid var(--gold); box-shadow: 0 18px 40px rgba(0,0,0,.6); animation: cpop .18s ease-out both; }
@@ -493,6 +504,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   </div>
 </section>
 
+<div id="autoPop" hidden><b>Auto-roll</b><p>Roll the dice automatically when your turn starts.</p><button class="aswitch" id="autoSw" role="switch"></button></div>
 <div id="chatPop" hidden><div class="cemo"></div><div class="cphr"></div></div>
 <div class="overlay" id="overlay" hidden><div class="sheet" id="sheet"></div></div>
 
@@ -547,7 +559,7 @@ let owned = store.get('owned', { skins: ['walnut'], sets: ['classic'] }), equip 
 if (!owned.dice) owned.dice = ['ivory', ...(owned.skins.includes('oak') ? ['wood'] : []), ...(owned.skins.includes('ebony') ? ['pearl'] : [])];
 if (!DICE[equip.dice]) equip.dice = (SKINS[equip.skin] || SKINS.walnut).dice;
 if (!SKINS[equip.skin]) equip.skin = 'walnut'; if (!SETS[equip.set]) equip.set = 'classic';
-let prefs = { scene: store.get('scene', 'auto'), variant: store.get('variant', 'short'), opp: store.get('opp', 'normal'), sfxVol: store.get('sfxVol', store.get('sound', true) ? 1 : 0), musicVol: store.get('musicVol', .6), chatMute: store.get('chatMute', false) };
+let prefs = { scene: store.get('scene', 'auto'), variant: store.get('variant', 'short'), opp: store.get('opp', 'normal'), sfxVol: store.get('sfxVol', store.get('sound', true) ? 1 : 0), musicVol: store.get('musicVol', .6), autoRoll: store.get('autoRoll', false), chatMute: store.get('chatMute', false) };
 
 // ---------- sound (synthesized) ----------
 let ac = null;
@@ -858,6 +870,7 @@ function hud() {
     $('bar' + e).classList.toggle('online', G.opp === 'online');
   }
   const rb = $('rollBtn'), canRoll = G.phase === 'roll' && canAct(G.p);
+  rb.classList.toggle('auto', !!prefs.autoRoll); autoRollCheck(canRoll);
   if (G.opp === 'online') {
     const opp = nm[1 - G.online.seat].replace(' (you)', '');
     rb.disabled = !canRoll; rb.classList.toggle('pulse', canRoll); rb.style.fontSize = canRoll ? '' : '13px';
@@ -989,7 +1002,7 @@ $('undoBtn').onclick = () => {
   if (!G.turn || !G.ops.length || G.busy) return;
   G.turn.undo(); undoAnim(G.ops.pop()); G.sel = null; refreshDiceUsed(); refreshHints(); hud();
 };
-$('rollBtn').onclick = () => { audio(); if (G.phase !== 'roll' || !canAct(G.p)) return; G.opp === 'online' ? onlineRoll() : startTurn(); };
+$('rollBtn').onclick = () => { if (rollHeld) { rollHeld = false; return; } audio(); if (G.phase !== 'roll' || !canAct(G.p)) return; G.opp === 'online' ? onlineRoll() : startTurn(); };
 
 // ---------- turn flow ----------
 const rnd = () => 1 + Math.floor(Math.random() * 6);
@@ -1526,6 +1539,36 @@ function chatReceive(p) { if (!G.online || p.s === G.online.seat || typeof p.k !
 $('chatBtn').onclick = e => { e.stopPropagation(); chatOpen($('chatPop').hidden); };
 $('chatPop').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (b) chatSend(+b.dataset.c); });
 document.addEventListener('pointerdown', e => { if (!$('chatPop').hidden && !e.target.closest('#chatPop, #chatBtn')) chatOpen(false); }, true);
+// ---------- auto-roll: hold ROLL to switch it on or off ----------
+var rollHeld = false, holdT = 0, holdAt = null, arT = 0;
+function autoRollCheck(can) {
+  if (!prefs.autoRoll || !can) { clearTimeout(arT); arT = 0; return; }
+  if (arT) return;
+  const go = () => {
+    if (!(prefs.autoRoll && G.phase === 'roll' && canAct(G.p) && !$('game').hidden)) { arT = 0; return; }
+    if (!$('overlay').hidden || !$('autoPop').hidden) { arT = setTimeout(go, 500); return; }   // wait while a menu is open
+    arT = 0; $('rollBtn').click();
+  };
+  arT = setTimeout(go, 650);
+}
+function autoPopOpen(on) {
+  const pop = $('autoPop'); pop.hidden = !on; if (!on) return;
+  const sw = $('autoSw'); sw.setAttribute('aria-checked', !!prefs.autoRoll); sw.textContent = prefs.autoRoll ? 'ON' : 'OFF';
+  const r = $('rollBtn').getBoundingClientRect(); pop.style.right = Math.max(8, innerWidth - r.right) + 'px'; pop.style.bottom = (innerHeight - r.top + 12) + 'px';
+}
+$('autoSw').onclick = () => { prefs.autoRoll = !prefs.autoRoll; store.set('autoRoll', prefs.autoRoll); autoPopOpen(true); hud(); };
+// the roll button may be disabled (not your turn), so the press is read from the bar under it
+$('bar0').addEventListener('pointerdown', e => {
+  const r = $('rollBtn').getBoundingClientRect();
+  if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
+  holdAt = [e.clientX, e.clientY]; $('rollBtn').classList.add('holding');
+  holdT = setTimeout(() => { holdT = 0; rollHeld = !$('rollBtn').disabled; $('rollBtn').classList.remove('holding'); buzz(20); sfx.popup(); autoPopOpen(true); }, 480);
+});
+const holdEnd = () => { clearTimeout(holdT); holdT = 0; $('rollBtn').classList.remove('holding'); };
+$('bar0').addEventListener('pointerup', holdEnd); $('bar0').addEventListener('pointercancel', holdEnd); $('bar0').addEventListener('pointerleave', holdEnd);
+$('bar0').addEventListener('pointermove', e => { if (holdT && holdAt && Math.hypot(e.clientX - holdAt[0], e.clientY - holdAt[1]) > 12) holdEnd(); });
+$('rollBtn').addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('pointerdown', e => { if (!$('autoPop').hidden && !e.target.closest('#autoPop')) { autoPopOpen(false); if (e.target.closest('#rollBtn')) rollHeld = true; } }, true);
 // ---------- main menu ----------
 let coins = store.get('coins', 1000), stats = store.get('stats', { played: 0, won: 0 });
 const fmt = n => n.toLocaleString('en-US');
@@ -1537,7 +1580,7 @@ let mtT;
 function mtoast(msg) { const t = $('mtoast'); t.textContent = msg; t.classList.add('show'); clearTimeout(mtT); mtT = setTimeout(() => t.classList.remove('show'), 1800); }
 function showScreen(id) {
   for (const sc of ['menu', 'rooms', 'shop', 'game']) $(sc).hidden = sc !== id;
-  if (typeof chatOpen === 'function') chatOpen(false);
+  if (typeof chatOpen === 'function') { chatOpen(false); autoPopOpen(false); }
   musicSync();
   if (id === 'menu') { setVars(); heroBoard(); heroDice(); syncMenu(); requestAnimationFrame(placeHero); }
   if (id === 'shop') renderShop();
