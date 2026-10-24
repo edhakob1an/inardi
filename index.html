@@ -169,6 +169,27 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .ibtn.equip { background: #1b130c; border: 1px solid var(--gold); color: var(--gold-hi); }
 .ibtn.done { background: transparent; color: var(--gold); padding: 0; }
 .ibtn.done::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+.ithumb.mini { position: relative; cursor: pointer; }
+.ithumb.mini::after { content: "3D"; position: absolute; right: 5px; bottom: 5px; padding: 3px 6px; border-radius: 6px; background: rgba(10,6,3,.82); border: 1px solid var(--gold); color: var(--gold-hi); font: 700 10px/1 system-ui, sans-serif; letter-spacing: .06em; }
+/* 3D board viewer */
+#viewer { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; background: radial-gradient(120% 70% at 50% 42%, #3a2616 0%, #1a110a 48%, #070403 100%); color: var(--text); }
+#viewer[hidden] { display: none !important; }
+#v3d { position: absolute; inset: 0; touch-action: none; cursor: grab; }
+#v3d:active { cursor: grabbing; }
+#v3d canvas { display: block; width: 100%; height: 100%; }
+.vtop { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 0; pointer-events: none; }
+.vtop > * { pointer-events: auto; }
+.vtop .vt { min-width: 0; }
+.vtop b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 1.1; }
+.vtop span { display: block; font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+.vreset { margin-left: auto; }
+.vreset svg, #viewer .back svg { width: 20px; height: 20px; fill: none; stroke: var(--gold-hi); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.vbot { position: relative; z-index: 1; margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 22px); pointer-events: none; }
+.vbot > * { pointer-events: auto; }
+.vhint { font-size: 12.5px; letter-spacing: .04em; color: var(--muted); text-align: center; text-shadow: 0 1px 2px #000; pointer-events: none !important; }
+.vbot .ibtn { height: 50px; padding: 0 30px; border-radius: 25px; font-size: 15px; margin: 0; }
+.vbot .ibtn.done { padding: 0 6px; }
+.vload { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); color: var(--muted); font-size: 13px; letter-spacing: .08em; }
 .packs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .pack { border: 1px solid var(--line); background: #1b130c; border-radius: 14px; padding: 12px 4px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .pack img { width: 34px; height: 34px; }
@@ -434,6 +455,14 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   <div class="mtop"><button class="back" id="shopBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Shop</h2><div class="coins"><img src="assets/coin.webp" alt=""><span class="coinval">1,000</span><button class="plus" data-go="coins" aria-label="Get coins">+</button></div></div>
   <div class="tabs" id="shopTabs"><button data-t="boards" aria-pressed="true">BOARDS</button><button data-t="sets" aria-pressed="false">CHECKERS</button></div>
   <div class="shoplist" id="shopList"></div>
+</section>
+<section id="viewer" hidden aria-label="3D board preview">
+  <div id="v3d"></div>
+  <div class="vload" id="vload">Loading 3D…</div>
+  <div class="vtop"><button class="back" id="vBack" aria-label="Close preview"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="vt"><b id="vName"></b><span id="vDesc"></span></div>
+    <button class="back vreset" id="vReset" aria-label="Reset view"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg></button></div>
+  <div class="vbot"><div class="vhint" id="vHint">Tap the case to open it</div><div id="vBtn"></div></div>
 </section>
 <div id="mtoast"></div>
 
@@ -1083,7 +1112,22 @@ function renderShop() {
     const th = card.querySelector('.ithumb');
     if (boards) renderMini(th, id, equip.set);
     else th.innerHTML = `<div class="swatch" style="background-image:url(${A(equip.skin, 'board')})"></div><i class="${it.ring ? 'ring' : ''}" style="background-image:url(${SA(id, 'light')})"></i><i style="background-image:url(${SA(id, 'dark')})"></i>`;
+    if (boards) { th.dataset.view = id; th.setAttribute('role', 'button'); th.setAttribute('aria-label', `Preview ${it.name} in 3D`); }
   }
+  if (typeof V3 !== 'undefined' && V3.id) V3.button();
+}
+function shopBtnHTML(kind, id) {
+  const it = (kind === 'skins' ? SKINS : SETS)[id], own = owned[kind].includes(id), eq = (kind === 'skins' ? equip.skin : equip.set) === id;
+  return `<button class="ibtn ${eq ? 'done' : own ? 'equip' : 'buy'}" data-kind="${kind}" data-id="${id}" ${eq ? 'disabled' : ''}>${eq ? 'EQUIPPED' : own ? 'EQUIP' : `<img src="assets/coin.webp" alt="">${fmt(it.price)}`}</button>`;
+}
+function shopAction(kind, id) {
+  const it = (kind === 'skins' ? SKINS : SETS)[id];
+  if (owned[kind].includes(id)) return doEquip(kind, id);
+  if (coins < it.price) return sheet(`<h2>Not enough coins</h2><p>${it.name} costs ${fmt(it.price)} coins. You have ${fmt(coins)}.</p>
+    <button class="cta" data-act="coins">GET COINS</button><button class="list-btn" data-act="close">Close</button>`);
+  pendingBuy = { kind, id, it };
+  sheet(`<h2>${it.name}</h2><p>${it.desc}</p><p style="font-family:var(--font-display);font-size:24px;color:var(--text)">${fmt(it.price)} coins</p>
+    <button class="cta" data-act="buy">BUY AND EQUIP</button><button class="list-btn" data-act="close">Cancel</button>`);
 }
 function doEquip(kind, id) {
   if (NET.ok) api('equip', { kind, id }).then(r => r.profile && applyProfile(r.profile));
@@ -1091,16 +1135,238 @@ function doEquip(kind, id) {
 }
 $('shopTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; shopTab = b.dataset.t; renderShop(); });
 $('shopList').addEventListener('click', e => {
+  const v = e.target.closest('[data-view]'); if (v) { audio(); return V3.open(v.dataset.view); }
   const b = e.target.closest('.ibtn'); if (!b || b.disabled) return; audio();
-  const kind = b.dataset.kind, id = b.dataset.id, it = (kind === 'skins' ? SKINS : SETS)[id];
-  if (owned[kind].includes(id)) return doEquip(kind, id);
-  if (coins < it.price) return sheet(`<h2>Not enough coins</h2><p>${it.name} costs ${fmt(it.price)} coins. You have ${fmt(coins)}.</p>
-    <button class="cta" data-act="coins">GET COINS</button><button class="list-btn" data-act="close">Close</button>`);
-  pendingBuy = { kind, id, it };
-  sheet(`<h2>${it.name}</h2><p>${it.desc}</p><p style="font-family:var(--font-display);font-size:24px;color:var(--text)">${fmt(it.price)} coins</p>
-    <button class="cta" data-act="buy">BUY AND EQUIP</button><button class="list-btn" data-act="close">Cancel</button>`);
+  shopAction(b.dataset.kind, b.dataset.id);
 });
 $('shopBack').onclick = () => showScreen('menu');
+// ---------- 3D board preview (three.js, loaded on first use) ----------
+const V3 = (() => {
+  const S = { id: null };
+  let T, renderer, scene, camera, root, lid, pieces, ground, raf = 0, loadP = null, built = null;
+  const HW = 1, TH = .085;                    // half width (one half of the open board = 1 unit = 424 px) and thickness per half
+  let L = 1264 / 424;
+  const view = { yaw: 0, pitch: .95, dist: 6, zoom: 1, vy: 0, vp: 0, tv: .3, th: .15 };
+  let openT = 0, openTo = 0, openStart = 0, openFrom = 0, spin = true, lastT = 0, dropT = -1;
+  const img = src => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('could not load ' + src)); i.src = src; });
+  const loadThree = () => loadP || (loadP = new Promise((ok, no) => {
+    if (window.THREE) return ok();
+    const s = document.createElement('script'); s.src = 'vendor/three.min.js'; s.onload = ok; s.onerror = () => { loadP = null; no(new Error('3D library failed to load')); }; document.head.appendChild(s);
+  }));
+  function webglOK() { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } }
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  function tex(src) {
+    const t = src instanceof HTMLCanvasElement ? new T.CanvasTexture(src) : new T.Texture(src);
+    t.encoding = T.sRGBEncoding; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); t.needsUpdate = true; return t;
+  }
+  function canvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; }
+  // the open playing surface, drawn the same way as the shop thumbnail (board + points + emblems)
+  async function surface(skinId) {
+    const sk = SKINS[skinId], fw = sk.L[1] - sk.L[0], cw = fw / 6, pl = Math.round((sk.bot - sk.top) * .4), em = Math.round(fw * .72), mid = (sk.top + sk.bot) / 2;
+    const cx = i => i < 6 ? sk.L[0] + (i + .5) * cw : sk.R[0] + (i - 6 + .5) * cw;
+    const [board, pd, plt, emb] = await Promise.all(['board', 'point_dark', 'point_light', 'emblem'].map(p => img(A(skinId, p))));
+    const [lc, lx] = canvas(plt.width, plt.height); lx.drawImage(plt, 0, 0);
+    if (sk.dim < 1) { lx.globalCompositeOperation = 'source-atop'; lx.fillStyle = `rgba(0,0,0,${1 - sk.dim})`; lx.fillRect(0, 0, lc.width, lc.height); }
+    const [c, x] = canvas(sk.W, sk.H); x.drawImage(board, 0, 0, sk.W, sk.H);
+    for (let a = 0; a < 24; a++) {
+      const top = a < 12, col = a % 12, dk = (col + (top ? 0 : 1)) % 2 === 0, im = dk ? pd : lc, w = cw * .94, left = cx(col) - cw * .47;
+      if (top) { x.save(); x.translate(left + w / 2, sk.top + pl / 2); x.rotate(Math.PI); x.drawImage(im, -w / 2, -pl / 2, w, pl); x.restore(); }
+      else x.drawImage(im, left, sk.bot - pl, w, pl);
+    }
+    for (const f of [sk.L, sk.R]) x.drawImage(emb, (f[0] + f[1]) / 2 - em / 2, mid - em / 2, em, em);
+    const half = k => { const [h, hx] = canvas(sk.W / 2, sk.H); hx.drawImage(c, -k * sk.W / 2, 0); return h; };
+    return { left: half(0), right: half(1), sk, cw, mid };
+  }
+  // wood for the case sides: average colour of the lid rim with fine grain
+  function sideWood(lidImg) {
+    const [s, sx] = canvas(32, 32); sx.drawImage(lidImg, 0, 0, lidImg.width * .04, lidImg.height, 0, 0, 32, 32);
+    const d = sx.getImageData(0, 0, 32, 32).data; let r = 0, g = 0, b = 0; for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+    const n = d.length / 4; r /= n; g /= n; b /= n;
+    const [c, x] = canvas(512, 64); x.fillStyle = `rgb(${r | 0},${g | 0},${b | 0})`; x.fillRect(0, 0, 512, 64);
+    for (let i = 0; i < 90; i++) { const y = Math.random() * 64, k = Math.random() < .5 ? 0 : 255; x.strokeStyle = `rgba(${k},${k},${k},${.03 + Math.random() * .06})`; x.lineWidth = .5 + Math.random() * 1.6; x.beginPath(); x.moveTo(0, y); for (let px = 0; px <= 512; px += 32) x.lineTo(px, y + Math.sin(px / 60 + i) * 1.6); x.stroke(); }
+    return c;
+  }
+  const DICE_PIPS = { 1: [[.5, .5]], 2: [[.28, .28], [.72, .72]], 3: [[.28, .28], [.5, .5], [.72, .72]], 4: [[.28, .28], [.72, .28], [.28, .72], [.72, .72]], 5: [[.28, .28], [.72, .28], [.5, .5], [.28, .72], [.72, .72]], 6: [[.28, .25], [.72, .25], [.28, .5], [.72, .5], [.28, .75], [.72, .75]] };
+  const PIP_C = { ivory: ['#050302', '#2e1b0c'], wood: ['#fffaea', '#b49562'], pearl: ['#fff3c9', '#8a5a17'] };
+  function dieFace(face, sign, theme, v) {
+    const [c, x] = canvas(256, 256); x.drawImage(face, 0, 0, 256, 256);
+    if (v === 1) { const m = 256 * .23; x.drawImage(sign, m, m, 256 - 2 * m, 256 - 2 * m); return c; }
+    const [a, b] = PIP_C[theme];
+    for (const [px, py] of DICE_PIPS[v]) { const g = x.createRadialGradient(px * 256, py * 256 - 6, 2, px * 256, py * 256, 22); g.addColorStop(0, a); g.addColorStop(1, b); x.fillStyle = g; x.beginPath(); x.arc(px * 256, py * 256, 21, 0, 7); x.fill(); }
+    return c;
+  }
+  function init() {
+    T = window.THREE;
+    renderer = new T.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    renderer.outputEncoding = T.sRGBEncoding; renderer.toneMapping = T.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = T.PCFSoftShadowMap;
+    $('v3d').appendChild(renderer.domElement);
+    scene = new T.Scene();
+    camera = new T.PerspectiveCamera(32, 1, .05, 60);
+    scene.add(new T.HemisphereLight(0xfff0dc, 0x2a1a10, .75));
+    const key = new T.DirectionalLight(0xfff1de, 1.55); key.position.set(2.4, 5.5, 3.2); key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3, near: .5, far: 15 }); key.shadow.bias = -.0004; key.shadow.radius = 4;
+    scene.add(key);
+    const rim = new T.DirectionalLight(0xffc68a, .7); rim.position.set(-3.5, 2.2, -4); scene.add(rim);
+    const fill = new T.DirectionalLight(0xd8e4ff, .25); fill.position.set(-3, 1.5, 3); scene.add(fill);
+    ground = new T.Mesh(new T.PlaneGeometry(14, 14), new T.ShadowMaterial({ opacity: .5 })); ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+    bindInput();
+  }
+  function disposeTree(o) { o.traverse(n => { if (n.geometry) n.geometry.dispose(); if (n.material) [].concat(n.material).forEach(m => { for (const k of ['map', 'roughnessMap']) if (m[k]) m[k].dispose(); m.dispose(); }); }); }
+  async function build(skinId) {
+    const sk = SKINS[skinId], set = equip.set, theme = sk.dice;
+    const [surf, lidImg, cl, cd, face, sign] = await Promise.all([surface(skinId), img(A(skinId, 'lid')), img(SA(set, 'light')), img(SA(set, 'dark')), img(`assets/dice/${theme}/face.webp`), img(`assets/dice/${theme}/sign.webp`)]);
+    if (root) { scene.remove(root); disposeTree(root); }
+    L = sk.H / (sk.W / 2);
+    root = new T.Group(); scene.add(root);
+    const side = tex(sideWood(lidImg)), sideM = new T.MeshStandardMaterial({ map: side, roughness: .5 });
+    const darkM = new T.MeshStandardMaterial({ color: 0x140c07, roughness: .8 });
+    const inR = new T.MeshStandardMaterial({ map: tex(surf.right), roughness: .55 }), inL = new T.MeshStandardMaterial({ map: tex(surf.left), roughness: .55 });
+    const lt = tex(lidImg); lt.center.set(.5, .5); lt.rotation = Math.PI;
+    const lidM = new T.MeshStandardMaterial({ map: lt, roughness: .34, metalness: .02 });
+    const brass = new T.MeshStandardMaterial({ color: 0xd2a650, metalness: .75, roughness: .3, emissive: 0x2a1a05 });
+    const geo = new T.BoxGeometry(HW, TH, L);
+    // base half (right side of the open board); faces: +x, -x, +y, -y, +z, -z
+    const base = new T.Mesh(geo, [sideM, sideM, inR, darkM, sideM, sideM]); base.position.set(HW / 2, TH / 2, 0); base.castShadow = base.receiveShadow = true; root.add(base);
+    // the lid half turns about the hinge line (x = 0, y = TH)
+    lid = new T.Group(); lid.position.set(0, TH, 0); root.add(lid);
+    const lm = new T.Mesh(geo, [sideM, sideM, inL, lidM, sideM, sideM]); lm.position.set(-HW / 2, -TH / 2, 0); lm.castShadow = lm.receiveShadow = true; lid.add(lm);
+    // brass hinges, latch and corner caps
+    const barrel = new T.CylinderGeometry(.026, .026, .34, 20);
+    for (const z of [-L * .3, L * .3]) {
+      const h = new T.Mesh(barrel, brass); h.rotation.x = Math.PI / 2; h.position.set(0, TH, z); h.castShadow = true; root.add(h);
+      for (const e of [-.18, .18]) { const cap = new T.Mesh(new T.SphereGeometry(.027, 14, 10), brass); cap.position.set(0, TH, z + e); root.add(cap); }
+    }
+    const plate = new T.Mesh(new T.BoxGeometry(.012, .05, .2), brass); plate.position.set(HW + .006, TH - .03, 0); root.add(plate);
+    const hasp = new T.Mesh(new T.BoxGeometry(.012, .055, .14), brass); hasp.position.set(-HW - .006, -.032, 0); lid.add(hasp);
+    const knob = new T.Mesh(new T.SphereGeometry(.018, 14, 10), brass); knob.position.set(-HW - .014, -.04, 0); lid.add(knob);
+    const capG = new T.BoxGeometry(.05, TH + .004, .05);
+    for (const z of [-L / 2 + .022, L / 2 - .022]) {
+      const c1 = new T.Mesh(capG, brass); c1.position.set(HW - .022, TH / 2, z); root.add(c1);
+      const c2 = new T.Mesh(capG, brass); c2.position.set(-HW + .022, -TH / 2, z); lid.add(c2);
+    }
+    // checkers in the short-nardi start, and a pair of dice; shown once the case is open
+    pieces = new T.Group(); pieces.visible = false; root.add(pieces);
+    const px2 = (x, y) => [(x - sk.W / 2) / (sk.W / 2), (y - sk.H / 2) / (sk.W / 2)];
+    const cDiam = surf.cw * .9 / (sk.W / 2), cH = cDiam * .24, cxp = i => i < 6 ? sk.L[0] + (i + .5) * surf.cw : sk.R[0] + (i - 6 + .5) * surf.cw;
+    const cg = new T.CylinderGeometry(cDiam / 2, cDiam / 2, cH, 40);
+    const ringCol = imgEdge(cl), ringColD = imgEdge(cd);
+    const mats = [[new T.MeshStandardMaterial({ color: ringCol, roughness: .4 }), new T.MeshStandardMaterial({ map: tex(cl), roughness: .32 }), darkM],
+                  [new T.MeshStandardMaterial({ color: ringColD, roughness: .4 }), new T.MeshStandardMaterial({ map: tex(cd), roughness: .32 }), darkM]];
+    const start = { 0: 2, 11: 5, 16: 3, 18: 5 }, cTop = surf.sk.top, cBot = surf.sk.bot, cpx = surf.cw * .9;
+    let n = 0;
+    for (const p of [0, 1]) for (const i in start) {
+      const abs = N.PATH.short[p][i], top = abs < 12, col = abs % 12;
+      for (let k = 0; k < start[i]; k++) {
+        const [x, z] = px2(cxp(col), top ? cTop + 3 + k * cpx + cpx / 2 : cBot - 3 - k * cpx - cpx / 2);
+        const m = new T.Mesh(cg, mats[p]); m.position.set(x, TH + cH / 2, z); m.rotation.y = Math.random() * 6.28; m.castShadow = true; m.receiveShadow = true;
+        m.userData = { y: TH + cH / 2, d: n++ * .028 }; pieces.add(m);
+      }
+    }
+    const dS = cDiam * .62, dg = new T.BoxGeometry(dS, dS, dS);
+    const faceTex = {}; for (let v = 1; v <= 6; v++) faceTex[v] = new T.MeshStandardMaterial({ map: tex(dieFace(face, sign, theme, v)), roughness: .3 });
+    [[6, 2, 3], [1, 3, 5]].forEach(([top, a, b], k) => {
+      const m = new T.Mesh(dg, [faceTex[a], faceTex[7 - a], faceTex[top], faceTex[7 - top], faceTex[b], faceTex[7 - b]]);
+      const fx = (sk.R[0] + sk.R[1]) / 2 + (k ? 34 : -30), [x, z] = px2(fx, surf.mid + (k ? 30 : -36));
+      m.position.set(x, TH + dS / 2, z); m.rotation.y = k ? .5 : -.35; m.castShadow = true; m.userData = { y: TH + dS / 2, d: .5 + k * .1 }; pieces.add(m);
+    });
+    built = skinId; openT = openTo = 0; dropT = -1; pose();
+  }
+  function imgEdge(im) { const [c, x] = canvas(16, 16); x.drawImage(im, 0, 0, 16, 16); const d = x.getImageData(1, 8, 1, 1).data; return new T.Color(`rgb(${d[0]},${d[1]},${d[2]})`); }
+  // lid angle and centring for an open fraction f (0 closed, 1 open)
+  function pose() {
+    const f = ease(openT);
+    lid.rotation.z = -Math.PI * (1 - f);
+    lid.position.y = TH + Math.sin(Math.PI * f) * .05;
+    root.position.x = -HW / 2 * (1 - f);
+  }
+  function fit() {
+    const el = $('v3d'), w = el.clientWidth, h = el.clientHeight; if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    const vf = camera.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+    view.tv = Math.tan(vf / 2); view.th = Math.tan(hf / 2);
+  }
+  // distance that keeps the whole case on screen for the current angle and lid position
+  function fitDist() {
+    const ex = HW * (.5 + .5 * ease(openT)), ez = L / 2, cy = Math.abs(Math.cos(view.yaw)), sy = Math.abs(Math.sin(view.yaw));
+    const hx = cy * ex + sy * ez, hz = (sy * ex + cy * ez) * Math.sin(view.pitch) + TH * 2 * Math.cos(view.pitch);
+    return Math.max(hx / view.th, hz / view.tv) * 1.22 + ez * .2;
+  }
+  function frame(t) {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min(.05, (t - (lastT || t)) / 1000); lastT = t;
+    if (openT !== openTo) {
+      openT = Math.min(1, Math.max(0, openFrom + (openTo > openFrom ? 1 : -1) * (t - openStart) / 1100));
+      if ((openTo === 1 && openT >= 1) || (openTo === 0 && openT <= 0)) { openT = openTo; if (openTo === 1) { sfx.place(); dropT = t; pieces.visible = true; } }
+      pose();
+    }
+    if (dropT >= 0) {
+      let done = true;
+      for (const m of pieces.children) {
+        const k = Math.max(0, Math.min(1, ((t - dropT) / 1000 - m.userData.d) / .32));
+        if (k < 1) done = false;
+        const b = 1 - Math.pow(1 - k, 3);
+        m.position.y = m.userData.y + (1 - b) * .7; m.visible = k > 0;
+      }
+      if (done) dropT = -1;
+    }
+    if (spin && !drag) view.yaw += dt * .35;
+    if (!drag) { view.yaw += view.vy; view.pitch = clampP(view.pitch + view.vp); view.vy *= .92; view.vp *= .9; }
+    view.dist += (fitDist() - view.dist) * Math.min(1, dt * 6); const d = view.dist / view.zoom, cy = TH * (1 - .5 * ease(openT));
+    camera.position.set(Math.sin(view.yaw) * Math.cos(view.pitch) * d, cy + Math.sin(view.pitch) * d, Math.cos(view.yaw) * Math.cos(view.pitch) * d);
+    camera.lookAt(0, cy, 0);
+    renderer.render(scene, camera);
+  }
+  const clampP = p => Math.max(.12, Math.min(1.5, p));
+  function toggle() {
+    if (openT !== openTo) return;
+    openFrom = openT; openTo = openTo ? 0 : 1; openStart = performance.now();
+    if (openTo === 0) { pieces.visible = false; dropT = -1; }
+    sfx.slide(); spin = false;
+    $('vHint').textContent = openTo ? 'Drag to turn · Pinch to zoom · Tap to close' : 'Tap the case to open it';
+  }
+  // input: drag rotates, pinch / wheel zooms, a short tap opens or closes
+  const ptr = new Map(); let drag = false, downAt = 0, moved = 0, pinch0 = 0, zoom0 = 1, last = null;
+  function bindInput() {
+    const el = $('v3d');
+    el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]); spin = false;
+      if (ptr.size === 1) { drag = true; downAt = performance.now(); moved = 0; last = [e.clientX, e.clientY]; view.vy = view.vp = 0; }
+      if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch0 = Math.hypot(a[0] - b[0], a[1] - b[1]); zoom0 = view.zoom; moved = 99; } });
+    el.addEventListener('pointermove', e => {
+      if (!ptr.has(e.pointerId)) return; ptr.set(e.pointerId, [e.clientX, e.clientY]);
+      if (ptr.size === 2) { const [a, b] = [...ptr.values()]; view.zoom = Math.max(.7, Math.min(2.6, zoom0 * Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch0)); return; }
+      const dx = e.clientX - last[0], dy = e.clientY - last[1]; last = [e.clientX, e.clientY]; moved += Math.abs(dx) + Math.abs(dy);
+      view.vy = -dx * .009; view.vp = dy * .006; view.yaw += view.vy; view.pitch = clampP(view.pitch + view.vp);
+    });
+    const up = e => { if (!ptr.has(e.pointerId)) return; ptr.delete(e.pointerId);
+      if (ptr.size === 0) { drag = false; if (moved < 9 && performance.now() - downAt < 400) { view.vy = view.vp = 0; toggle(); } }
+      else { const [p] = ptr.values(); last = p.slice(); } };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    el.addEventListener('wheel', e => { e.preventDefault(); spin = false; view.zoom = Math.max(.7, Math.min(2.6, view.zoom * Math.exp(-e.deltaY * .0015))); }, { passive: false });
+    addEventListener('resize', () => { if (S.id) fit(); });
+  }
+  function reset() { Object.assign(view, { yaw: 0, pitch: .95, zoom: 1, vy: 0, vp: 0 }); }
+  S.button = () => { if (!S.id) return; $('vBtn').innerHTML = shopBtnHTML('skins', S.id); };
+  S.open = async id => {
+    if (!webglOK()) return mtoast('3D preview is not supported on this device');
+    S.id = id; const it = SKINS[id];
+    $('vName').textContent = it.name; $('vDesc').textContent = it.desc; S.button();
+    $('vHint').textContent = 'Tap the case to open it'; $('vload').hidden = false; $('viewer').hidden = false; sfx.popup();
+    try {
+      await loadThree(); if (!renderer) init();
+      renderer.domElement.style.visibility = 'hidden';
+      await build(id); if (S.id !== id) return;
+    } catch (e) { S.close(); return mtoast('Could not open the 3D preview'); }
+    reset(); spin = true; fit(); view.dist = fitDist(); $('vload').hidden = true; renderer.domElement.style.visibility = '';
+    cancelAnimationFrame(raf); lastT = 0; raf = requestAnimationFrame(frame);
+  };
+  S.close = () => { S.id = null; cancelAnimationFrame(raf); raf = 0; $('viewer').hidden = true; };
+  $('vBack').onclick = () => { sfx.back(); S.close(); };
+  $('vReset').onclick = () => { reset(); };
+  $('vBtn').addEventListener('click', e => { const b = e.target.closest('.ibtn'); if (!b || b.disabled) return; audio(); shopAction(b.dataset.kind, b.dataset.id); });
+  return S;
+})();
 function coinSheet() {
   sheet(`<h2>Get coins</h2><div class="packs">${[1000, 5000, 12000].map(n => `<button class="pack" data-act="pack-${n}"><img src="assets/coin.webp" alt="">${fmt(n)}<small>Preview</small></button>`).join('')}</div>
     <p style="font-size:12px">In this preview, packs are added free. Real prices come with Google Play billing.</p>
