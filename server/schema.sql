@@ -74,7 +74,8 @@ insert into public.shop_items values
   ('skins', 'walnut', 0), ('skins', 'oak', 400), ('skins', 'ebony', 900),
   ('sets', 'classic', 0), ('sets', 'bone', 200), ('sets', 'pearl', 500),
   ('dice', 'ivory', 0), ('dice', 'wood', 250), ('dice', 'pearl', 600),
-  ('skins', 'tuff', 1200), ('sets', 'tuff', 700), ('dice', 'obsidian', 800)
+  ('skins', 'tuff', 1200), ('sets', 'tuff', 700), ('dice', 'obsidian', 800),
+  ('skins', 'garnet', 1500), ('sets', 'amber', 900), ('dice', 'lapis', 1000)
 on conflict (kind, id) do update set price = excluded.price;
 
 -- app switches (e.g. preview_mode lets testers add free coin packs; turn it off before launch)

@@ -439,6 +439,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .die3.ivory { --face: url(assets/dice/ivory/face.webp); --sign: url(assets/dice/ivory/sign.webp); --core-c: #c9b089; }
 .die3.wood { --face: url(assets/dice/wood/face.webp); --sign: url(assets/dice/wood/sign.webp); --core-c: #3a2414; }
 .die3.obsidian { --face: url(assets/dice/obsidian/face.webp); --sign: url(assets/dice/obsidian/sign.webp); --core-c: #0b0b0b; }
+.die3.lapis { --face: url(assets/dice/lapis/face.webp); --sign: url(assets/dice/lapis/sign.webp); --core-c: #1a2c78; }
 .die3.pearl { --face: url(assets/dice/pearl/face.webp); --sign: url(assets/dice/pearl/sign.webp); --core-c: #d9d5cc; }
 .die3 .sign { position: absolute; inset: 23%; background: var(--sign) center / contain no-repeat; filter: drop-shadow(0 calc(var(--s) * .01) calc(var(--s) * .015) rgba(0, 0, 0, .45)); }
 .die3 .core b:nth-child(1) { transform: translateZ(calc(var(--s) * .44)); }
@@ -454,6 +455,8 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   box-shadow: inset 0 0 0 calc(var(--s) * .012) rgba(30, 15, 4, .7), 0 1px 0 rgba(255, 255, 255, .25); }
 .die3.obsidian .f i { background: radial-gradient(circle at 42% 32%, #fff3c9 0 12%, #e7b24a 45%, #7e5210 85%);
   box-shadow: inset 0 0 0 calc(var(--s) * .01) rgba(0, 0, 0, .6), 0 1px 0 rgba(255, 255, 255, .2); }
+.die3.lapis .f i { background: radial-gradient(circle at 42% 32%, #ffffff 0 12%, #d5dbe4 45%, #6d7683 85%);
+  box-shadow: inset 0 0 0 calc(var(--s) * .01) rgba(0, 0, 20, .6), 0 1px 0 rgba(255, 255, 255, .25); }
 .die3.pearl .f i { background: radial-gradient(circle at 42% 32%, #fff3c9 0 12%, #e2ae4c 45%, #8a5a17 85%);
   box-shadow: inset 0 0 0 calc(var(--s) * .014) rgba(55, 32, 4, .85), 0 1px 0 rgba(255, 255, 255, .55); }
 .die3 .dsh { position: absolute; inset: 7%; border-radius: 30%; background: rgba(0, 0, 0, .62); filter: blur(calc(var(--s) * .1)); transform: translate(6%, 12%); }
@@ -607,19 +610,22 @@ const SKINS = {
   oak:    { name: 'Golden Oak', desc: 'Light oak, apricot-wood inlay and carved pomegranate branches.', price: 400, W: 848, H: 1264, L: [70, 397], top: 70, bot: 1206, dim: 1, dice: 'wood' },
   ebony:  { name: 'Pearl Ebony', desc: 'Black ebony inlaid with mother-of-pearl and gold.', price: 900, W: 848, H: 1264, L: [60, 392], top: 55, bot: 1196, dim: .86, dice: 'pearl' },
   tuff:   { name: 'Pink Tuff', desc: 'The rose-pink stone of Yerevan, carved lace and a black basalt bar.', price: 1200, W: 848, H: 1264, L: [66, 398], top: 64, bot: 1200, dim: 1, dice: 'obsidian' },
+  garnet: { name: 'Royal Garnet', desc: 'Garnet-red cherry under glossy lacquer, with gold-leaf lines and a golden pomegranate tree.', price: 1500, W: 848, H: 1264, L: [66, 398], top: 68, bot: 1196, dim: 1, dice: 'lapis' },
 };
 for (const k in SKINS) { const sk = SKINS[k]; sk.id = k; sk.R = [sk.W - sk.L[1], sk.W - sk.L[0]]; }
 const SETS = {
   classic: { name: 'Ivory & Mahogany', desc: 'The classic pair. Polished ivory and red mahogany.', price: 0, ring: true },
   bone:    { name: 'Bone & Walnut', desc: 'Cream bone with a walnut rim, and dark walnut.', price: 200, ring: false },
-  tuff:    { name: 'Tuff & Basalt', desc: 'Rose-pink tuff against polished black basalt, two Armenian stones.', price: 700, ring: true },
   pearl:   { name: 'Pearl & Garnet', desc: 'Mother-of-pearl and garnet lacquer, gold rims.', price: 500, ring: true },
+  tuff:    { name: 'Tuff & Basalt', desc: 'Rose-pink tuff against polished black basalt, two Armenian stones.', price: 700, ring: true },
+  amber:   { name: 'Amber & Onyx', desc: 'Honey amber against black onyx, both with thin gold rims.', price: 900, ring: true },
 };
 const DICE = {
   ivory: { name: 'Bronze Ivory', desc: 'Ivory dice, dark pips and a bronze eternity sign on the one.', price: 0 },
   wood:  { name: 'Walnut & Bone', desc: 'Dark walnut dice with bone pips and a carved bone eternity sign.', price: 250 },
-  obsidian: { name: 'Obsidian & Gold', desc: 'Black Armenian obsidian with gold pips and a gold eternity sign.', price: 800 },
   pearl: { name: 'Pearl & Gold', desc: 'Mother-of-pearl dice with gold pips and a gold eternity sign.', price: 600 },
+  obsidian: { name: 'Obsidian & Gold', desc: 'Black Armenian obsidian with gold pips and a gold eternity sign.', price: 800 },
+  lapis: { name: 'Lapis & Silver', desc: 'Deep blue lapis lazuli with gold flecks, silver pips and a silver eternity sign.', price: 1000 },
 };
 const CAT = { skins: SKINS, sets: SETS, dice: DICE }, EQK = { skins: 'skin', sets: 'set', dice: 'dice' }, TAB_KIND = { boards: 'skins', sets: 'sets', dice: 'dice' };
 const A = (skin, part) => `assets/skins/${skin}/${part}.webp`, SA = (set, part) => `assets/sets/${set}/${part}.webp`;
@@ -1373,7 +1379,7 @@ const V3 = (() => {
     return c;
   }
   const DICE_PIPS = { 1: [[.5, .5]], 2: [[.28, .28], [.72, .72]], 3: [[.28, .28], [.5, .5], [.72, .72]], 4: [[.28, .28], [.72, .28], [.28, .72], [.72, .72]], 5: [[.28, .28], [.72, .28], [.5, .5], [.28, .72], [.72, .72]], 6: [[.28, .25], [.72, .25], [.28, .5], [.72, .5], [.28, .75], [.72, .75]] };
-  const PIP_C = { ivory: ['#050302', '#2e1b0c'], wood: ['#fffaea', '#b49562'], pearl: ['#fff3c9', '#8a5a17'], obsidian: ['#fff0c0', '#9a6a1c'] };
+  const PIP_C = { ivory: ['#050302', '#2e1b0c'], wood: ['#fffaea', '#b49562'], pearl: ['#fff3c9', '#8a5a17'], obsidian: ['#fff0c0', '#9a6a1c'], lapis: ['#ffffff', '#7a8494'] };
   function dieFace(face, sign, theme, v) {
     const [c, x] = canvas(256, 256); x.drawImage(face, 0, 0, 256, 256);
     if (v === 1) { const m = 256 * .23; x.drawImage(sign, m, m, 256 - 2 * m, 256 - 2 * m); return c; }
