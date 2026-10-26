@@ -772,6 +772,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   animation: shin .32s cubic-bezier(.2,1.3,.4,1) both; max-height: calc(100dvh - 40px); overflow-y: auto; }
 @keyframes shin { from { opacity: 0; transform: scale(.92) translateY(10px); } }
 .sheet h2 { font-size: 29px; text-shadow: 0 0 18px rgba(255,200,110,.25); }
+.mmhint{margin:10px 0 4px;padding:10px 12px;border-radius:14px;background:rgba(255,215,140,.10);border:1px solid rgba(255,215,140,.35);font-size:13px;line-height:1.4}.mmhint .cta{margin-top:8px}
 .sheet .xbtn { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(232,190,110,.3); background: rgba(255,236,200,.06); display: grid; place-items: center; padding: 0; z-index: 2; }
 .sheet .xbtn svg { width: 14px; height: 14px; stroke: #e8cf9a; stroke-width: 2.2; stroke-linecap: round; fill: none; }
 .sheet .xbtn:active { background: rgba(255,214,140,.18); }
@@ -2265,9 +2266,21 @@ function findMatch(stake, tier) {
       r = await api('queue_ping');
       if (!r.game && r.queued === false && mm.on) r = await api('queue', { variant: v, stake });
       const t = $('mmText'); if (t && !r.game) t.textContent = `Looking for an opponent… ${Math.round((Date.now() - t0) / 1000)}s`;
+      mmHint(r.waiting, v, stake);
     }
     if (mm.on && r.game) { mm.on = false; sfx.matchFound(); startOnline(r.game); }
   })();
+}
+
+// someone is waiting in the other mode or at another table: offer a one-tap switch
+const TIERS = { 100: 'Bronze', 500: 'Silver', 1000: 'Gold', 5000: 'Diamond', 10000: 'Royal' };
+function mmHint(waiting, v, stake) {
+  const h = $('mmHint'), box = h || document.createElement('div');
+  const w = (waiting || []).find(x => !(x.variant === v && x.stake === stake) && x.stake <= coins);
+  if (!w) { if (h) h.remove(); return; }
+  if (!h) { const t = $('mmText'); if (!t) return; box.id = 'mmHint'; box.className = 'mmhint'; t.after(box); }
+  box.innerHTML = `A player is waiting at <b>${TIERS[w.stake]}</b> · ${w.variant === 'short' ? 'Short' : 'Long'} nardi
+    <button class="cta" data-act="mm-switch" data-v="${w.variant}" data-s="${w.stake}">JOIN THEM</button>`;
 }
 
 // ---- friend invites
@@ -2316,7 +2329,7 @@ async function resumeActive() {
 }
 
 // returns true when it handled the sheet action
-function onlineAct(act) {
+function onlineAct(act, e) {
   if (act === 'inv-create') { if (!NET.ok) offlineSheet(); else createInvite(); return true; }
   if (act === 'inv-join') { if (!NET.ok) offlineSheet(); else joinSheet(); return true; }
   if (act === 'do-join') { const c = ($('codeIn').value || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (c.length !== 6) { $('codeErr').textContent = 'The code has 6 letters and numbers.'; return true; } joinCode(c); return true; }
@@ -2328,6 +2341,9 @@ function onlineAct(act) {
     return true;
   }
   if (act === 'inv-cancel') { if (NET.inv) { NET.inv.on = false; api('invite_cancel', { game_id: NET.inv.id }); } closeSheet(); return true; }
+  if (act === 'mm-switch') { const b = e && e.target.closest('[data-act]'); if (!b) return true; if (NET.mm) NET.mm.on = false;
+    const nv = b.dataset.v, ns = +b.dataset.s; prefs.variant = nv; store.set('variant', nv); syncMenu();
+    api('queue_cancel').then(() => findMatch(ns, TIERS[ns])); return true; }
   if (act === 'mm-cancel') { if (NET.mm) NET.mm.on = false; api('queue_cancel'); closeSheet(); return true; }
   if (act === 'resign') { sheet(`<h2>Resign?</h2><p>${G.online && G.online.g.stake ? `You lose your ${fmt(G.online.g.stake)} coin stake.` : 'Your opponent wins this game.'}</p>
     <button class="cta" data-act="resign-yes">RESIGN</button><button class="list-btn" data-act="close">Keep playing</button>`); return true; }

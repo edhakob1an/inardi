@@ -393,7 +393,10 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
       .gte('created_at', new Date(Date.now() - 120000).toISOString()).limit(1);
     if (data && data[0]) return { game: data[0] };
     const { data: q } = await db.from('match_queue').select('user_id').eq('user_id', uid).maybeSingle();
-    return { queued: !!q };
+    // who else is waiting at another table or mode, so the client can offer a switch
+    const { data: w } = await db.from('match_queue').select('variant,stake').neq('user_id', uid)
+      .gte('seen_at', new Date(Date.now() - 20000).toISOString()).limit(20);
+    return { queued: !!q, waiting: w || [] };
   },
 
   async queue_cancel(uid) { await db.from('match_queue').delete().eq('user_id', uid); return { ok: true }; },
