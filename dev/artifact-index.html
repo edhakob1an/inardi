@@ -626,6 +626,53 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .vol input { width: 100%; accent-color: var(--gold); height: 28px; margin: 0; }
 .vol b { font-size: 13px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 .list-btn { border: 1px solid var(--line); background: #1b130c; border-radius: 12px; padding: 13px; font-size: 15px; font-weight: 600; }
+/* ---- glass popups ---- */
+.overlay { background: rgba(6,4,2,.55); -webkit-backdrop-filter: blur(10px) saturate(1.1); backdrop-filter: blur(10px) saturate(1.1); animation: ovin .22s ease-out both; }
+@keyframes ovin { from { opacity: 0; } }
+.sheet { position: relative; border-radius: 26px; padding: 26px 20px 20px;
+  background: radial-gradient(120% 60% at 50% 0%, rgba(255,205,120,.16), transparent 60%), linear-gradient(180deg, rgba(255,236,200,.09), rgba(255,236,200,.02)), rgba(24,16,9,.82);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3); backdrop-filter: blur(22px) saturate(1.3);
+  border: 1px solid rgba(232,190,110,.45); box-shadow: inset 0 1px 0 rgba(255,240,210,.18), 0 30px 70px rgba(0,0,0,.65), 0 0 40px rgba(255,190,100,.08);
+  animation: shin .32s cubic-bezier(.2,1.3,.4,1) both; max-height: calc(100dvh - 40px); overflow-y: auto; }
+@keyframes shin { from { opacity: 0; transform: scale(.92) translateY(10px); } }
+.sheet h2 { font-size: 29px; text-shadow: 0 0 18px rgba(255,200,110,.25); }
+.sheet .xbtn { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(232,190,110,.3); background: rgba(255,236,200,.06); display: grid; place-items: center; padding: 0; z-index: 2; }
+.sheet .xbtn svg { width: 14px; height: 14px; stroke: #e8cf9a; stroke-width: 2.2; stroke-linecap: round; fill: none; }
+.sheet .xbtn:active { background: rgba(255,214,140,.18); }
+.sheet .list-btn, .sheet .vol { background: rgba(255,236,200,.05); border: 1px solid rgba(232,190,110,.22); border-radius: 16px; color: var(--text); transition: background .15s, border-color .15s; }
+.sheet .list-btn:active { background: rgba(255,214,140,.14); border-color: rgba(255,214,140,.6); }
+.sheet .cta { border-radius: 16px; box-shadow: 0 8px 22px rgba(216,168,95,.3), inset 0 1px 0 rgba(255,255,255,.4), inset 0 -3px 0 rgba(0,0,0,.18); }
+/* option rows: icon · title + subtitle · arrow */
+.orow { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; padding: 13px 14px !important; }
+.orow .oic { flex: none; width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; background: radial-gradient(circle at 40% 30%, rgba(255,214,140,.22), rgba(255,214,140,.05)); border: 1px solid rgba(232,190,110,.3); }
+.orow .oic svg { width: 22px; height: 22px; stroke: #f0cf8a; stroke-width: 1.7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.orow .ot { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.orow .ot b { font-weight: 600; font-size: 15.5px; color: var(--text); }
+.orow .ot small { font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.orow .oar { flex: none; width: 16px; height: 16px; stroke: rgba(232,190,110,.7); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.orow.main { border-color: rgba(255,214,140,.75) !important; background: linear-gradient(180deg, rgba(255,214,140,.18), rgba(255,214,140,.06)) !important; box-shadow: 0 0 22px rgba(255,200,110,.18); }
+.orow.main .oic { background: linear-gradient(180deg, var(--gold-hi), var(--gold)); border: 0; }
+.orow.main .oic svg { stroke: #2a1a0c; }
+/* bot difficulty cards */
+.sheet .opts { gap: 12px; }
+.sheet .opt { position: relative; background: rgba(255,236,200,.05); border: 1px solid rgba(232,190,110,.25); border-radius: 20px; padding: 18px 10px 14px; gap: 6px; transition: transform .15s, border-color .15s, box-shadow .15s; }
+.sheet .opt:active { transform: scale(.97); border-color: #ffd98a; box-shadow: 0 0 24px rgba(255,200,110,.3); }
+.sheet .opt .bic { width: 54px; height: 54px; margin-bottom: 2px; }
+.sheet .opt .bic svg { width: 100%; height: 100%; }
+.sheet .opt .dots { display: flex; gap: 5px; margin: 2px 0 2px; }
+.sheet .opt .dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(232,190,110,.2); }
+.sheet .opt .dots i.on { background: var(--gold-hi); box-shadow: 0 0 6px rgba(255,205,110,.7); }
+.sheet .opt.hard { border-color: rgba(255,214,140,.55); background: linear-gradient(180deg, rgba(255,214,140,.12), rgba(255,214,140,.03)); }
+/* settings rows */
+.sheet .vol { grid-template-columns: 30px 1fr 44px; gap: 12px; padding: 12px 14px; }
+.sheet .vol .vic { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,214,140,.12); }
+.sheet .vol .vic svg { width: 18px; height: 18px; stroke: #f0cf8a; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.sheet .vol .vt { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.sheet .vol .vt span { font-size: 14.5px; font-weight: 600; }
+.sheet .vol input { -webkit-appearance: none; appearance: none; height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--gold) 0 var(--v, 50%), rgba(255,236,200,.12) var(--v, 50%)); outline: none; }
+.sheet .vol input::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 38% 32%, #fff3cf, #e7bd6a 55%, #9c6a26); box-shadow: 0 0 0 3px rgba(255,214,140,.18), 0 0 10px rgba(255,200,110,.6); border: 0; }
+.sheet .vol input::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle at 38% 32%, #fff3cf, #e7bd6a 55%, #9c6a26); box-shadow: 0 0 10px rgba(255,200,110,.6); border: 0; }
+.sheet .vol b { font-size: 13px; color: var(--gold-hi); }
 @media (prefers-reduced-motion: reduce) { .checker, .die { transition: none; } .target, .lane, .checker::before, #rollBtn.pulse, .tilt, .btn-brass::after { animation: none; } .die3 { transition: none; } }
 </style>
 
@@ -858,11 +905,11 @@ document.addEventListener('visibilitychange', () => {
   if (!music.el) return;
   if (document.hidden) { music.el.pause(); music.playing = false; } else musicStart();
 });
-const volHTML = () => `<label class="vol"><span>Music</span><input type="range" min="0" max="100" step="5" data-vol="musicVol" value="${Math.round(prefs.musicVol * 100)}"><b>${Math.round(prefs.musicVol * 100)}</b></label>
-  <label class="vol"><span>Sounds</span><input type="range" min="0" max="100" step="5" data-vol="sfxVol" value="${Math.round(prefs.sfxVol * 100)}"><b>${Math.round(prefs.sfxVol * 100)}</b></label>`;
+const volHTML = () => `<label class="vol"><span class="vic"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></span><span class="vt"><span>Music</span><input type="range" min="0" max="100" step="5" data-vol="musicVol" value="${Math.round(prefs.musicVol * 100)}"></span><b>${Math.round(prefs.musicVol * 100)}%</b></label>
+  <label class="vol"><span class="vic"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></span><span class="vt"><span>Sounds</span><input type="range" min="0" max="100" step="5" data-vol="sfxVol" value="${Math.round(prefs.sfxVol * 100)}"></span><b>${Math.round(prefs.sfxVol * 100)}%</b></label>`;
 document.addEventListener('input', e => {
   const r = e.target.closest('[data-vol]'); if (!r) return;
-  const k = r.dataset.vol, v = r.value / 100; prefs[k] = v; store.set(k, v); r.nextElementSibling.textContent = r.value;
+  const k = r.dataset.vol, v = r.value / 100; prefs[k] = v; store.set(k, v); r.closest('.vol').querySelector('b').textContent = r.value + '%'; r.style.setProperty('--v', r.value + '%');
   if (k === 'musicVol') musicSync(); else if (sfxBus) sfxBus.gain.value = v;
 });
 document.addEventListener('change', e => { const r = e.target.closest('[data-vol="sfxVol"]'); if (r) sfx.tap(); });
@@ -1385,7 +1432,11 @@ function newGame(keepScore) {
 // ---------- menus & sheets ----------
 let sheetLocked = false;
 let lastClose = 0, lastBtnSound = 0;
-function sheet(html, locked) { sheetLocked = !!locked; $('sheet').innerHTML = html; if ($('overlay').hidden && performance.now() - lastClose > 40) sfx.popup(); $('overlay').hidden = false; }
+const XSVG = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function sheet(html, locked) { sheetLocked = !!locked; $('sheet').innerHTML = html;
+  const sh = $('sheet'), plain = [...sh.querySelectorAll(':scope > .list-btn[data-act="close"]')].filter(b => /^(close|cancel)$/i.test(b.textContent.trim()));
+  if (plain.length) { plain.forEach(b => b.remove()); sh.insertAdjacentHTML('afterbegin', `<button class="xbtn" data-act="close" aria-label="Close">${XSVG}</button>`); }
+  sh.querySelectorAll('.vol input').forEach(i => i.style.setProperty('--v', i.value + '%')); if ($('overlay').hidden && performance.now() - lastClose > 40) sfx.popup(); $('overlay').hidden = false; }
 function closeSheet() {
   const was = !$('overlay').hidden; $('overlay').hidden = true; sheetLocked = false; lastClose = performance.now();
   // the close whoosh only when the sheet really goes away, and not right after an action button already made its sound
@@ -1940,12 +1991,12 @@ async function startGame(opp) { prefs.opp = opp; store.set('opp', opp); await ar
 $('onlineBtn').onclick = () => { audio(); showScreen('rooms'); };
 $('roomsBack').onclick = () => showScreen('menu');
 $('botBtn').onclick = () => { audio(); sheet(`<h2>Play the bot</h2><p>${prefs.variant === 'short' ? 'Short' : 'Long'} nardi, no coins at stake.</p>
-  <div class="opts"><button class="opt" data-act="bot-easy"><b>Easy</b><span>Relaxed. Makes mistakes.</span></button><button class="opt" data-act="bot-hard"><b>Hard</b><span>Plays to win.</span></button></div>
+  <div class="opts"><button class="opt" data-act="bot-easy"><span class="bic"><svg viewBox="0 0 64 64"><defs><linearGradient id="bge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6dc"/><stop offset="1" stop-color="#d9c08e"/></linearGradient></defs><rect x="8" y="8" width="48" height="48" rx="12" fill="url(#bge)" stroke="#8a6a35" stroke-width="2"/><circle cx="24" cy="27" r="4" fill="#3a2410"/><circle cx="40" cy="27" r="4" fill="#3a2410"/><path d="M22 39q10 9 20 0" stroke="#3a2410" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg></span><b>Easy</b><span class="dots"><i class="on"></i><i></i><i></i></span><span>Relaxed. Makes mistakes.</span></button><button class="opt hard" data-act="bot-hard"><span class="bic"><svg viewBox="0 0 64 64"><defs><linearGradient id="bgh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a2a1c"/><stop offset="1" stop-color="#150d07"/></linearGradient><linearGradient id="gdh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1b8"/><stop offset="1" stop-color="#c8902a"/></linearGradient></defs><path d="M18 14l6 6 8-10 8 10 6-6 2 10H16z" fill="url(#gdh)"/><rect x="10" y="22" width="44" height="36" rx="11" fill="url(#bgh)" stroke="url(#gdh)" stroke-width="2.5"/><path d="M20 34l8 3M44 34l-8 3" stroke="#ffd98a" stroke-width="3.5" stroke-linecap="round"/><circle cx="25" cy="40" r="3" fill="#ffd98a"/><circle cx="39" cy="40" r="3" fill="#ffd98a"/><path d="M25 50h14" stroke="#ffd98a" stroke-width="3" stroke-linecap="round"/></svg></span><b>Hard</b><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i></span><span>Plays to win.</span></button></div>
   <button class="list-btn" data-act="close">Cancel</button>`); };
 $('friendBtn').onclick = () => { audio(); sheet(`<h2>Play a friend</h2><p>${prefs.variant === 'short' ? 'Short' : 'Long'} nardi, no coins at stake.</p>
-  <button class="cta" data-act="inv-create">INVITE ONLINE</button>
-  <button class="list-btn" data-act="inv-join">Join with a code</button>
-  <button class="list-btn" data-act="local">Two players on this phone</button>
+  <button class="list-btn orow main" data-act="inv-create"><span class="oic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span><span class="ot"><b>Invite online</b><small>Send a link or a code</small></span><svg class="oar" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button class="list-btn orow" data-act="inv-join"><span class="oic"><svg viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg></span><span class="ot"><b>Join with a code</b><small>Enter your friend’s 6-letter code</small></span><svg class="oar" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button class="list-btn orow" data-act="local"><span class="oic"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg></span><span class="ot"><b>Two players, one phone</b><small>Pass and play, side by side</small></span><svg class="oar" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
   <button class="list-btn" data-act="close">Cancel</button>`); };
 $('inviteBtn').onclick = () => { audio(); onlineAct('inv-create'); };
 document.querySelectorAll('.room').forEach(r => r.onclick = () => {
@@ -1972,7 +2023,7 @@ document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', 
     <p class="stnote">Next level pays ${fmt(levelReward(pr.level + 1))} coins. Change your avatar and frame in the Shop.</p>
     ${NET.ok ? `<input class="namein" id="nameIn" maxlength="16" value="${esc(NET.profile.name)}" aria-label="Your name"><div class="err" id="nameErr"></div><button class="cta" data-act="rename">SAVE NAME</button>` : ''}
     <button class="list-btn" data-act="close">Close</button>`); }
-  if (go === 'settings') sheet(`<h2>Settings</h2>${volHTML()}<button class="list-btn" data-act="rules">How to play</button><button class="list-btn" data-act="close">Close</button>`);
+  if (go === 'settings') sheet(`<h2>Settings</h2>${volHTML()}<button class="list-btn orow" data-act="rules"><span class="oic"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7M8 11h7"/></svg></span><span class="ot"><b>How to play</b><small>Rules of short and long nardi</small></span><svg class="oar" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button><button class="list-btn" data-act="close">Close</button>`);
 }));
 
 // ---------- online play (Supabase) ----------
