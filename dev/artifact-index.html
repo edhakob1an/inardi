@@ -146,6 +146,22 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 #caseFx { position: fixed; inset: 0; z-index: 75; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; background: radial-gradient(70% 50% at 50% 42%, rgba(60,40,18,.85), rgba(4,3,2,.96)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); animation: ovin .25s both; }
 #caseFx[hidden] { display: none !important; }
 #caseFx .cbox { width: 190px; height: 190px; position: relative; }
+/* case opening stage: closed and open pictures stacked, light rays and glow behind */
+.cstage { position: relative; width: min(78vw, 300px); aspect-ratio: 1; flex: none; transition: width .6s cubic-bezier(.3,.8,.3,1), margin .6s; --cg: #ffd27a; }
+.cstage.small { width: min(40vw, 150px); }
+.cstage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.cstage .co { opacity: 0; }
+.cstage .chest { position: absolute; inset: 0; transform-origin: 50% 88%; }
+.cstage .rays { position: absolute; inset: -55%; border-radius: 50%; opacity: 0; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--cg) 55%, transparent) 0 6deg, transparent 6deg 20deg);
+  -webkit-mask: radial-gradient(circle, #000 12%, transparent 62%); mask: radial-gradient(circle, #000 12%, transparent 62%); animation: frspin 14s linear infinite; }
+.cstage .halo { position: absolute; inset: -10%; border-radius: 50%; opacity: .25; pointer-events: none; background: radial-gradient(closest-side, color-mix(in srgb, var(--cg) 70%, transparent), transparent 70%); transition: opacity .3s; }
+.cstage .beam { position: absolute; left: 22%; right: 22%; bottom: 46%; height: 120%; opacity: 0; pointer-events: none; transform-origin: 50% 100%;
+  background: linear-gradient(0deg, color-mix(in srgb, var(--cg) 90%, white), color-mix(in srgb, var(--cg) 40%, transparent) 45%, transparent);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent); mask: linear-gradient(90deg, transparent, #000 30%, #000 70%, transparent); filter: blur(6px); }
+.cstage .shadow { position: absolute; left: 14%; right: 14%; bottom: 6%; height: 10%; border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.7), transparent); }
+.cfl { position: fixed; inset: 0; z-index: 76; pointer-events: none; background: radial-gradient(circle at 50% 42%, #fff, color-mix(in srgb, var(--cg) 80%, white) 18%, transparent 62%); }
+#caseFx .reelwrap { transition: opacity .4s; }
 #caseFx .cbox img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 16px 24px rgba(0,0,0,.7)); }
 #caseFx .cbox.shake img { animation: cshake .14s linear infinite; }
 #caseFx .cbox.pop img { animation: cpop .45s ease-in forwards; }
@@ -2707,22 +2723,47 @@ function fakeTile(k) {
 const tileHTML = (t, win) => `<div class="rtile ${win ? 'win-slot' : ''}" style="--rc:${t.rc}"><span class="ri">${t.ic}</span><span>${t.t}</span></div>`;
 const wait = ms => new Promise(r => setTimeout(r, ms));
 async function openCase(k) {
-  const fx = $('caseFx'), c = CASEDEF[k];
-  fx.innerHTML = `<div class="cbox shake"><img src="assets/cases/${k}.webp" alt=""></div><div class="cres"><span>Opening ${c.name}…</span></div>`;
-  fx.hidden = false; buzz(20);
-  const t0 = performance.now(), shakeSnd = setInterval(() => sfx.tap(), 180);
-  const r = await api('case_open', { kind: k });
-  await wait(Math.max(0, 1100 - (performance.now() - t0))); clearInterval(shakeSnd);
+  const fx = $('caseFx'), c = CASEDEF[k], cg = { bronze: '#ff9a4a', silver: '#a8d8ff', gold: '#ffd27a' }[k];
+  fx.innerHTML = `<div class="cstage" style="--cg:${cg}"><div class="rays"></div><div class="halo"></div><div class="shadow"></div><div class="beam"></div>
+    <div class="chest"><img class="cc" src="assets/cases/${k}_c.webp" alt=""><img class="co" src="assets/cases/${k}_o.webp" alt=""></div></div>
+    <div class="cres"><span>${c.name}</span></div>`;
+  fx.hidden = false;
+  const st = fx.querySelector('.cstage'), chest = st.querySelector('.chest'), cc = st.querySelector('.cc'), co = st.querySelector('.co'),
+    rays = st.querySelector('.rays'), halo = st.querySelector('.halo'), beam = st.querySelector('.beam');
+  // 1. the chest drops in and lands
+  chest.animate([{ transform: 'translateY(-70%) scale(.7)', opacity: 0 }, { transform: 'translateY(4%) scale(1.04,.94)', opacity: 1, offset: .7 }, { transform: 'none' }], { duration: 520, easing: 'cubic-bezier(.3,.6,.4,1)' });
+  setTimeout(() => { sfx.land(); buzz(15); }, 360);
+  const req = api('case_open', { kind: k });
+  await wait(600);
+  // 2. it shakes harder and harder while light leaks out of the seam
+  halo.style.transition = 'opacity 1.2s'; halo.style.opacity = '.9';
+  const shake = chest.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-3deg) translateX(-2%)' }, { transform: 'rotate(3deg) translateX(2%)' }, { transform: 'rotate(0)' }], { duration: 220, iterations: Infinity });
+  cc.animate([{ filter: 'brightness(1)' }, { filter: `brightness(1.5) drop-shadow(0 0 18px ${cg})` }], { duration: 1300, fill: 'forwards' });
+  let n = 0; const tick = setInterval(() => { sfx.tap(); shake.playbackRate = 1 + n++ * .18; }, 150);
+  const t0 = performance.now(), r = await req;
+  await wait(Math.max(0, 1300 - (performance.now() - t0)));
+  clearInterval(tick); shake.cancel();
   if (!r.reward) { fx.hidden = true; return mtoast(errText(r.error || 'network')); }
   if (r.profile) applyProfile(r.profile);
-  const box = fx.querySelector('.cbox'); box.classList.remove('shake'); box.classList.add('pop');
-  fx.insertAdjacentHTML('afterbegin', '<div class="flash"></div>'); sfx.dice(); buzz([30, 30, 60]);
-  await wait(380);
+  // 3. squash, then it bursts open: flash, rays, a beam of light and sparks
+  await chest.animate([{ transform: 'none' }, { transform: 'scale(1.06,.9) translateY(4%)' }], { duration: 140, easing: 'ease-in', fill: 'forwards' }).finished;
+  const fl = document.createElement('div'); fl.className = 'cfl'; fl.style.setProperty('--cg', cg); document.body.appendChild(fl);
+  fl.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 650, easing: 'ease-out' }).onfinish = () => fl.remove();
+  cc.style.opacity = '0'; co.style.opacity = '1';
+  chest.animate([{ transform: 'scale(1.06,.9) translateY(4%)' }, { transform: 'scale(.96,1.12) translateY(-6%)', offset: .35 }, { transform: 'none' }], { duration: 520, easing: 'cubic-bezier(.2,1.4,.4,1)', fill: 'forwards' });
+  rays.animate([{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 600, easing: 'ease-out', fill: 'forwards' });
+  beam.animate([{ opacity: 0, transform: 'scaleY(.2)' }, { opacity: .95, transform: 'scaleY(1)', offset: .3 }, { opacity: .55, transform: 'scaleY(1)' }], { duration: 1100, easing: 'ease-out', fill: 'forwards' });
+  const sr = st.getBoundingClientRect(); fxSparks(sr.left + sr.width / 2, sr.top + sr.height * .42, k === 'gold' ? 46 : 32);
+  sfx.dice(); setTimeout(() => sfx.matchFound(), 120); buzz([30, 30, 70]);
+  await wait(1150);
+  // 4. the open chest moves up and the prize reel slides in
+  st.classList.add('small'); beam.animate([{ opacity: .55 }, { opacity: 0 }], { duration: 400, fill: 'forwards' });
   const N = 42, WIN = 36, tiles = [];
   for (let i = 0; i < N; i++) tiles.push(i === WIN ? rewardTile(r.reward) : fakeTile(k));
-  fx.querySelector('.cres').innerHTML = `<span>${c.name}</span>`;
-  box.outerHTML = `<div class="reelwrap"><div class="reel">${tiles.map((t, i) => tileHTML(t, i === WIN)).join('')}</div></div>`;
-  const reel = fx.querySelector('.reel'), wrap = fx.querySelector('.reelwrap'), wt = reel.children[WIN], tw = reel.children[1].offsetLeft - reel.children[0].offsetLeft;
+  st.insertAdjacentHTML('afterend', `<div class="reelwrap" style="opacity:0"><div class="reel">${tiles.map((t, i) => tileHTML(t, i === WIN)).join('')}</div></div>`);
+  await wait(250);
+  const reel = fx.querySelector('.reel'), wrap = fx.querySelector('.reelwrap'); wrap.style.opacity = '1';
+  const wt = reel.children[WIN], tw = reel.children[1].offsetLeft - reel.children[0].offsetLeft;
   const stop = -(wt.offsetLeft + wt.offsetWidth / 2 - wrap.clientWidth / 2), end = stop + (Math.random() - .5) * tw * .6;
   const dur = 4200, start = performance.now(); let lastIdx = -1;
   await new Promise(done => {
@@ -2734,14 +2775,13 @@ async function openCase(k) {
     };
     requestAnimationFrame(step);
   });
-  // settle exactly on the prize
   reel.style.transition = 'transform .35s ease-out'; reel.style.transform = `translateX(${stop}px)`;
   await wait(380);
-  const win = reel.children[WIN]; win.classList.add('win');
-  const rw = r.reward, t = rewardTile(rw), [rn, rc] = RARITY[rw.tier];
+  reel.children[WIN].classList.add('win');
+  const rw = r.reward, [rn, rc] = RARITY[rw.tier];
   const what = rw.item ? (CAT[rw.item[0]][rw.item[1]] || {}).name : rw.coins ? `${fmt(rw.coins)} coins` : `${fmt(rw.pearls)} pearls`;
   const sub = rw.item ? (rw.dup ? `You already have it, so you get ${fmt(rw.pearls)} pearls instead.` : `New ${({ skins: 'board', sets: 'checker set', dice: 'dice set', avatars: 'avatar', frames: 'frame' })[rw.item[0]]}. Equip it in the Shop.`) : 'Added to your balance.';
-  if (rw.tier === 'legendary' || rw.tier === 'epic') fxBanner(rn.toUpperCase(), what.toUpperCase(), rw.tier === 'legendary' ? '' : '');
+  if (rw.tier === 'legendary' || rw.tier === 'epic') fxBanner(rn.toUpperCase(), what.toUpperCase());
   sfx.win(); if (rw.coins) fxCoins(rw.coins); syncCoins(true);
   const more = caseCount(k);
   fx.querySelector('.cres').innerHTML = `<small style="color:${rc}">${rn.toUpperCase()}</small><b>${esc(what)}</b><span>${sub}</span>
