@@ -611,6 +611,7 @@ const SKINS = {
   ebony:  { name: 'Pearl Ebony', desc: 'Black ebony inlaid with mother-of-pearl and gold.', price: 900, W: 848, H: 1264, L: [60, 392], top: 55, bot: 1196, dim: .86, dice: 'pearl' },
   tuff:   { name: 'Pink Tuff', desc: 'The rose-pink stone of Yerevan, carved lace and a black basalt bar.', price: 1200, W: 848, H: 1264, L: [66, 398], top: 64, bot: 1200, dim: 1, dice: 'obsidian' },
   garnet: { name: 'Royal Garnet', desc: 'Garnet-red cherry under glossy lacquer, with gold-leaf lines and a golden pomegranate tree.', price: 1500, W: 848, H: 1264, L: [66, 398], top: 68, bot: 1196, dim: 1, dice: 'lapis' },
+  pearl_walnut: { name: 'Pearl Walnut', desc: 'Dark Caucasian walnut with mother-of-pearl knotwork and eternity-sign medallions.', price: 1800, W: 848, H: 1264, L: [84, 396], top: 98, bot: 1168, dim: 1, dice: 'pearl' },
 };
 for (const k in SKINS) { const sk = SKINS[k]; sk.id = k; sk.R = [sk.W - sk.L[1], sk.W - sk.L[0]]; }
 const SETS = {
@@ -619,6 +620,7 @@ const SETS = {
   pearl:   { name: 'Pearl & Garnet', desc: 'Mother-of-pearl and garnet lacquer, gold rims.', price: 500, ring: true },
   tuff:    { name: 'Tuff & Basalt', desc: 'Rose-pink tuff against polished black basalt, two Armenian stones.', price: 700, ring: true },
   amber:   { name: 'Amber & Onyx', desc: 'Honey amber against black onyx, both with thin gold rims.', price: 900, ring: true },
+  nacre:   { name: 'Nacre & Walnut', desc: 'Iridescent mother-of-pearl against dark walnut, each with an inlaid ring.', price: 600, ring: false },
 };
 const DICE = {
   ivory: { name: 'Bronze Ivory', desc: 'Ivory dice, dark pips and a bronze eternity sign on the one.', price: 0 },
