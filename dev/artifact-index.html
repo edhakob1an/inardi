@@ -451,6 +451,12 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 /* menu background: dark ornament wall with a spotlight; the board sits in the light */
 #menu::before { background: url(assets/scenes/studio.webp) center top / cover no-repeat; }
 #menu::after { background: linear-gradient(180deg, transparent 0, transparent 55%, rgba(10,8,6,.5) 70%, rgba(10,8,6,.85) 100%); }
+#dust { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+#menu .tilt, #menu .board3d { display: none !important; }
+#menu .hdice { left: 50% !important; transform: translate(-50%, -50%) !important; gap: 16px; animation: dfloat 5s ease-in-out infinite; }
+#menu .hdice .die3:nth-child(2) { animation: dfloat2 6s ease-in-out infinite; }
+@keyframes dfloat { 50% { translate: 0 -9px; } }
+@keyframes dfloat2 { 50% { translate: 0 7px; } }
 @media (max-height: 700px) { #menu .wordmark h1 { font-size: 56px; } #menu .modedesc { display: none; } .mode2 { margin-top: 8px; } }
 
 @media (max-height: 700px) { .wordmark { margin-top: -10px; } .modedesc { display: none; } .btn-brass { height: 64px; } .btn-wood { height: 52px; } .mnav { margin-top: 10px; } .wordmark h1 { font-size: 50px; } }
@@ -619,6 +625,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 
 <!-- ============ MENU ============ -->
 <section id="menu" class="screen mscreen">
+  <canvas id="dust" aria-hidden="true"></canvas>
   <div class="mtop">
     <div class="me" data-go="profile" role="button" aria-label="Your profile"><div class="ava"><span class="avslot" id="meAv"></span><span class="alv" id="meLvl" title="Level">1</span></div><div class="mi"><b><span id="meName">Guest</span></b><div class="xpbar"><i id="meXp"></i></div><small id="meStats" hidden>Ready for a game</small></div></div>
     <div class="rgrp"><button class="gift" data-go="daily" aria-label="Daily bonus"><svg viewBox="0 0 24 24"><rect x="3.5" y="9" width="17" height="11.5" rx="1.5"/><path d="M2.5 9h19v-1.5a1 1 0 0 0-1-1h-17a1 1 0 0 0-1 1z"/><path d="M12 6.5v14"/><path d="M12 6.5C10.8 3.6 7 3 7 5.2c0 1.6 3 1.3 5 1.3zM12 6.5c1.2-2.9 5-3.5 5-1.3 0 1.6-3 1.3-5 1.3z"/></svg><i class="dot" hidden></i></button><div class="coins"><img src="assets/coin.webp" alt=""><span class="coinval">1,000</span><button class="plus" data-go="coins" aria-label="Get coins">+</button></div></div>
@@ -1890,8 +1897,8 @@ function heroBoard() {
 function heroDice() {
   const h = $('hdice'); h.innerHTML = '';
   [[6, -16, 24, -14], [5, -14, -22, 12]].forEach(([v, rx, ry, z], i) => {
-    const w = makeDie(50, v, diceTheme()); w.querySelector('.cube').style.transform = faceTf(v, rx, ry, z);
-    if (i) w.style.marginTop = '14px';
+    const w = makeDie(62, v, diceTheme()); w.querySelector('.cube').style.transform = faceTf(v, rx, ry, z);
+    if (i) w.style.marginTop = '22px';
     h.appendChild(w); throwDie(w, v, [rr(-30, 30), -280], 650 + i * 130, 900);
   });
 }
@@ -2658,6 +2665,43 @@ function afterStart(me) {
   if (pz) { sfx.win(); return sheet(`<img class="bigcoin" src="assets/coin.webp" alt=""><h2>Weekly prize</h2><p>You finished <b>#${pz.rank}</b> on last week’s leaderboard.</p><p style="font-family:var(--font-display);font-size:26px;color:var(--gold-hi)">+${fmt(pz.coins)} coins</p><button class="cta" data-act="prizes-ok">COLLECT</button>`, true); }
   const d = dailyNow(); if (d && d.available) dailySheet();
 }
+
+// ---------- menu: golden dust drifting in the spotlight ----------
+(function dust() {
+  const cv = $('dust'), cx = cv.getContext('2d'), P = [];
+  let w = 0, h = 0, dpr = 1, last = 0;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function size() { dpr = Math.min(devicePixelRatio || 1, 2); w = innerWidth; h = innerHeight; cv.width = w * dpr; cv.height = h * dpr; }
+  // the light beam: narrow at the top centre, wider lower down, fading out around 60% of the height
+  const beam = y => { const t = y / h; return { c: w / 2, hw: w * (.12 + t * .28) }; };
+  function spawn(anyY) {
+    const y = anyY ? Math.random() * h * .62 : -6, b = beam(Math.max(0, y)), g = (Math.random() + Math.random() + Math.random()) / 3 - .5;
+    return { x: b.c + g * 2 * b.hw, y, r: .5 + Math.random() * 1.6, vy: 4 + Math.random() * 10, vx: (Math.random() - .5) * 4, ph: Math.random() * 6.28, sp: .6 + Math.random() * 1.6, a: .35 + Math.random() * .65 };
+  }
+  function frame(t) {
+    requestAnimationFrame(frame);
+    if ($('menu').hidden || document.hidden) { last = t; return; }
+    const dt = Math.min(.05, (t - (last || t)) / 1000); last = t;
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0); cx.clearRect(0, 0, w, h);
+    for (let i = 0; i < P.length; i++) {
+      const p = P[i];
+      p.y += p.vy * dt; p.x += (p.vx + Math.sin(t / 1400 + p.ph) * 5) * dt;
+      const b = beam(p.y), inside = 1 - Math.min(1, Math.abs(p.x - b.c) / (b.hw * 1.15)), fade = Math.max(0, 1 - p.y / (h * .62));
+      const tw = .55 + .45 * Math.sin(t / 1000 * p.sp + p.ph);
+      const al = p.a * tw * inside * fade;
+      if (p.y > h * .65 || al <= 0 && p.y > h * .3) { P[i] = spawn(false); continue; }
+      cx.globalAlpha = Math.max(0, al);
+      const gr = cx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
+      gr.addColorStop(0, '#fff3c8'); gr.addColorStop(.35, 'rgba(255,205,120,.9)'); gr.addColorStop(1, 'rgba(255,190,90,0)');
+      cx.fillStyle = gr; cx.beginPath(); cx.arc(p.x, p.y, p.r * 3, 0, 6.283); cx.fill();
+    }
+    cx.globalAlpha = 1;
+  }
+  size(); addEventListener('resize', size);
+  for (let i = 0; i < (reduce ? 25 : 70); i++) P.push(spawn(true));
+  if (reduce) { P.forEach(p => { p.vy = 0; p.vx = 0; }); }
+  requestAnimationFrame(frame);
+})();
 
 setVars(); syncMenu(); heroBoard(); heroDice(); requestAnimationFrame(placeHero);
 
