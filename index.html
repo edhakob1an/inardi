@@ -474,6 +474,8 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 #menu::before { background: url(assets/scenes/damask.webp) center top / cover no-repeat; }
 #menu::after { background: linear-gradient(180deg, transparent 0, transparent 55%, rgba(10,8,6,.5) 70%, rgba(10,8,6,.85) 100%); }
 #menu .wordmark::before { content: ""; position: absolute; left: 50%; top: 50%; width: 130%; height: 190%; transform: translate(-50%, -50%); z-index: -1; pointer-events: none; background: radial-gradient(closest-side, rgba(8,5,3,.72), rgba(8,5,3,.35) 60%, transparent); }
+#menu .wordmark h1 { background: none; filter: none; font-size: 0; line-height: 0; }
+#menu .wordmark .logo { width: min(78vw, 330px); height: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,.75)) drop-shadow(0 0 16px rgba(255,200,110,.25)); }
 #dust { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 #menu .tilt, #menu .board3d, #menu .hdice, #menu .modedesc { display: none !important; }
 #menu .hdice { left: 50% !important; transform: translate(-50%, -50%) !important; gap: 16px; animation: dfloat 5s ease-in-out infinite; }
@@ -658,7 +660,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
     <div class="tilt"><div class="hb mini" id="heroBoard" role="img" aria-label="Nardi board"></div><div class="sheen"></div></div><img class="board3d" id="board3d" alt="Nardi board" hidden>
     <div class="hdice" id="hdice"></div>
   </div>
-  <div class="wordmark"><h1>iNardi</h1></div>
+  <div class="wordmark"><h1><img class="logo" src="assets/logo_inardi.webp" alt="iNardi"></h1></div>
   <div class="mode2" id="mode" data-v="short"><button class="lbl" data-v="short" aria-pressed="true">SHORT</button><button class="sw" aria-label="Switch between short and long"><span class="knob"></span></button><button class="lbl" data-v="long" aria-pressed="false">LONG</button></div>
   <p class="modedesc" id="modeDesc"></p>
   <div class="actions">
@@ -2745,7 +2747,7 @@ const EPM_LOGO = {"W":272,"H":371.2691690180153,"mono":{"E":"M0 0H33V253H0ZM0 0H
     <g fill="${GOLD}">${cellSvg}</g><path class="a-pix" fill="${GOLD}" d="${L.pixel.outline}"/>
     <g fill="${INK}">${mat}</g></svg>`;
   const sk = SKINS[equip.skin] || SKINS.walnut;
-  const urls = ['assets/scenes/damask.webp', sk.hero3d || A(sk.id, 'board'), 'assets/coin.webp', 'assets/btn_brass.webp', 'assets/btn_wood.webp', `assets/dice/${diceTheme()}/face.webp`];
+  const urls = ['assets/scenes/damask.webp', sk.hero3d || A(sk.id, 'board'), 'assets/coin.webp', 'assets/logo_inardi.webp', 'assets/btn_brass.webp', 'assets/btn_wood.webp', `assets/dice/${diceTheme()}/face.webp`];
   let n = 0; const bar = $('stBar'), total = urls.length + 1;
   const tick = () => { n++; bar.style.transform = `scaleX(${Math.min(1, n / total)})`; };
   const loads = urls.map(u => new Promise(res => { const im = new Image(); im.onload = im.onerror = () => { tick(); res(); }; im.src = u; }));
