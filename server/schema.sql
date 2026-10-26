@@ -36,6 +36,19 @@ alter table public.profiles add column if not exists mars_wins integer not null 
 alter table public.profiles add column if not exists coins_won_total integer not null default 0;
 alter table public.profiles add column if not exists bot_played integer not null default 0;
 alter table public.profiles add column if not exists bot_won integer not null default 0;
+-- achievements: counters the server keeps, and the tier reached per achievement {"champion": 2, ...}
+alter table public.profiles add column if not exists ach jsonb not null default '{}';
+alter table public.profiles add column if not exists comebacks integer not null default 0;
+alter table public.profiles add column if not exists perfect_doubles integer not null default 0;
+alter table public.profiles add column if not exists untouched_wins integer not null default 0;
+alter table public.profiles add column if not exists fast_wins integer not null default 0;
+alter table public.profiles add column if not exists short_wins integer not null default 0;
+alter table public.profiles add column if not exists long_wins integer not null default 0;
+alter table public.profiles add column if not exists high_rooms text[] not null default '{}';
+alter table public.profiles add column if not exists royal_wins integer not null default 0;
+alter table public.profiles add column if not exists gg_count integer not null default 0;
+alter table public.profiles add column if not exists rematches integer not null default 0;
+alter table public.profiles add column if not exists daily7 integer not null default 0;
 alter table public.profiles enable row level security;
 drop policy if exists "read own profile" on public.profiles;
 create policy "read own profile" on public.profiles for select to authenticated using (id = auth.uid());
@@ -132,6 +145,11 @@ alter table public.games add column if not exists invited uuid references auth.u
 alter table public.games add column if not exists rematch_of uuid;
 alter table public.games add column if not exists p0_level smallint;
 alter table public.games add column if not exists p1_level smallint;
+-- per-game tracking for achievements: 6-6 rolls, hits made, the most pips each player was behind, "good game" sent
+alter table public.games add column if not exists sixes smallint[] not null default '{0,0}';
+alter table public.games add column if not exists hits smallint[] not null default '{0,0}';
+alter table public.games add column if not exists behind smallint[] not null default '{0,0}';
+alter table public.games add column if not exists gg smallint[] not null default '{0,0}';
 create index if not exists games_p0 on public.games (p0, status);
 create index if not exists games_invited on public.games (invited, status);
 create index if not exists games_rematch on public.games (rematch_of);
@@ -293,7 +311,7 @@ begin
   if v_p.daily_last = v_today then return jsonb_build_object('error', 'already_claimed'); end if;
   v_day := case when v_p.daily_last = v_today - 1 then v_p.daily_streak % 7 + 1 else 1 end;
   v_reward := (array[100, 150, 200, 300, 400, 500, 1000])[v_day];
-  update profiles set coins = coins + v_reward, daily_streak = v_day, daily_last = v_today where id = p_user;
+  update profiles set coins = coins + v_reward, daily_streak = v_day, daily_last = v_today, daily7 = daily7 + case when v_day = 7 then 1 else 0 end where id = p_user;
   insert into coin_ledger (user_id, delta, reason) values (p_user, v_reward, 'daily:' || v_day);
   return jsonb_build_object('ok', true, 'day', v_day, 'reward', v_reward);
 end $$;
@@ -372,10 +390,27 @@ begin
   return jsonb_build_object('waiting', r.id);
 end $$;
 
+-- ---------------------------------------------------------------- achievements: grant one tier exactly once
+create or replace function public.ach_grant(p_user uuid, p_id text, p_tier int, p_coins int, p_kind text, p_item text)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare v_p profiles;
+begin
+  select * into v_p from profiles where id = p_user for update;
+  if not found or coalesce((v_p.ach ->> p_id)::int, 0) >= p_tier then return false; end if;
+  update profiles set ach = ach || jsonb_build_object(p_id, p_tier), coins = coins + p_coins,
+         owned_avatars = case when p_kind = 'avatars' and not (p_item = any (owned_avatars)) then array_append(owned_avatars, p_item) else owned_avatars end,
+         owned_frames  = case when p_kind = 'frames'  and not (p_item = any (owned_frames))  then array_append(owned_frames, p_item)  else owned_frames end
+   where id = p_user;
+  if p_coins > 0 then insert into coin_ledger (user_id, delta, reason) values (p_user, p_coins, 'ach:' || p_id || ':' || p_tier); end if;
+  return true;
+end $$;
+revoke all on function public.ach_grant(uuid, text, int, int, text, text) from public, anon, authenticated;
+grant execute on function public.ach_grant(uuid, text, int, int, text, text) to service_role;
+
 -- Finish a game exactly once and pay the pot to the winner.
 create or replace function public.settle_game(p_game uuid, p_winner smallint, p_reason text, p_points smallint)
 returns jsonb language plpgsql security definer set search_path = public as $$
-declare g games; v_winner uuid; v_loser uuid; v_pot int; v_turns int; v_week date := public.week_start(now());
+declare g games; v_winner uuid; v_loser uuid; v_pot int; v_turns int; v_pw int; v_week date := public.week_start(now());
 begin
   update games set status = 'finished', winner = p_winner, end_reason = p_reason, points = p_points,
          deadline = null, phase = null, move_no = move_no + 1, updated_at = now()
@@ -397,6 +432,21 @@ begin
   v_turns := coalesce((g.state->'turnsTaken'->>0)::int, 0) + coalesce((g.state->'turnsTaken'->>1)::int, 0);
   if v_winner is not null then perform add_xp(v_winner, case when p_reason <> 'win' and v_turns < 8 then 10 else 50 + case when p_points = 2 then 25 else 0 end end); end if;
   update profiles set streak = 0 where id = v_loser and v_loser is not null;
+  -- achievement counters
+  if v_winner is not null then
+    v_pw := p_winner;
+    update profiles set
+      short_wins = short_wins + case when g.variant = 'short' then 1 else 0 end,
+      long_wins  = long_wins  + case when g.variant = 'long'  then 1 else 0 end,
+      comebacks  = comebacks  + case when p_reason = 'win' and g.behind[v_pw + 1] >= 40 then 1 else 0 end,
+      untouched_wins = untouched_wins + case when p_reason = 'win' and g.variant = 'short' and g.hits[2 - v_pw] = 0 then 1 else 0 end,
+      fast_wins  = fast_wins  + case when p_reason = 'win' and now() - g.created_at < interval '5 minutes' then 1 else 0 end,
+      royal_wins = royal_wins + case when g.stake = 10000 then 1 else 0 end,
+      high_rooms = case when g.stake in (1000, 5000, 10000) and not (g.stake::text = any (high_rooms)) then array_append(high_rooms, g.stake::text) else high_rooms end
+     where id = v_winner;
+  end if;
+  update profiles set perfect_doubles = perfect_doubles + 1 where (id = g.p0 and g.sixes[1] >= 3) or (id = g.p1 and g.sixes[2] >= 3);
+  if g.rematch_of is not null then update profiles set rematches = rematches + 1 where id in (g.p0, g.p1); end if;
   if v_loser is not null then perform add_xp(v_loser, case when p_reason = 'win' then 20 when v_turns < 8 then 0 else 5 end); end if;
   -- weekly leaderboard: only games played for coins count
   if g.stake > 0 then

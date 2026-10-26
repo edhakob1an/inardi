@@ -91,6 +91,65 @@ async function isFriendRow(a: string, b: string) {
   return !!data;
 }
 
+// ---------------------------------------------------------------- achievements
+// stat -> thresholds per tier, coins per tier, optional exclusive item unlocked at a tier
+type Tier = { n: number; coins: number; unlock?: [string, string] };
+const ACH: { id: string; stat: string; tiers: Tier[] }[] = [
+  { id: 'first_win', stat: 'won', tiers: [{ n: 1, coins: 100 }] },
+  { id: 'champion', stat: 'won', tiers: [{ n: 10, coins: 300 }, { n: 50, coins: 1000 }, { n: 250, coins: 3000 }] },
+  { id: 'streak', stat: 'best_streak', tiers: [{ n: 3, coins: 200 }, { n: 5, coins: 600 }, { n: 10, coins: 2000 }] },
+  { id: 'mars', stat: 'mars_wins', tiers: [{ n: 1, coins: 150 }, { n: 10, coins: 800 }, { n: 50, coins: 2500 }] },
+  { id: 'comeback', stat: 'comebacks', tiers: [{ n: 1, coins: 200 }, { n: 5, coins: 800 }, { n: 20, coins: 2500 }] },
+  { id: 'doubles', stat: 'perfect_doubles', tiers: [{ n: 1, coins: 300 }] },
+  { id: 'untouchable', stat: 'untouched_wins', tiers: [{ n: 1, coins: 200 }, { n: 5, coins: 800 }, { n: 20, coins: 2500 }] },
+  { id: 'speed', stat: 'fast_wins', tiers: [{ n: 1, coins: 150 }, { n: 5, coins: 600 }, { n: 20, coins: 2000 }] },
+  { id: 'both', stat: 'both', tiers: [{ n: 3, coins: 200 }, { n: 10, coins: 800 }, { n: 30, coins: 2500 }] },
+  { id: 'high_roller', stat: 'high_rooms', tiers: [{ n: 1, coins: 500 }, { n: 2, coins: 1500 }, { n: 3, coins: 4000 }] },
+  { id: 'fortune', stat: 'coins_won_total', tiers: [{ n: 10000, coins: 500 }, { n: 100000, coins: 3000 }, { n: 1000000, coins: 15000 }] },
+  { id: 'royal', stat: 'royal_wins', tiers: [{ n: 1, coins: 5000, unlock: ['avatars', 'crown'] }] },
+  { id: 'friendly', stat: 'friends', tiers: [{ n: 1, coins: 100 }, { n: 5, coins: 400 }, { n: 20, coins: 1500 }] },
+  { id: 'good_sport', stat: 'gg_count', tiers: [{ n: 5, coins: 100 }, { n: 25, coins: 400 }, { n: 100, coins: 1500 }] },
+  { id: 'rematch', stat: 'rematches', tiers: [{ n: 1, coins: 100 }, { n: 10, coins: 500 }, { n: 50, coins: 2000 }] },
+  { id: 'daily', stat: 'daily7', tiers: [{ n: 1, coins: 300 }, { n: 5, coins: 1500 }, { n: 20, coins: 5000 }] },
+  { id: 'veteran', stat: 'level', tiers: [{ n: 5, coins: 500 }, { n: 10, coins: 1500 }, { n: 25, coins: 5000 }] },
+  { id: 'collector', stat: 'owned', tiers: [{ n: 5, coins: 300 }, { n: 10, coins: 1000 }, { n: 20, coins: 3000 }] },
+  { id: 'top10', stat: 'top10', tiers: [{ n: 1, coins: 1000, unlock: ['frames', 'laurel'] }, { n: 5, coins: 3000 }, { n: 20, coins: 8000 }] },
+  { id: 'number_one', stat: 'number_one', tiers: [{ n: 1, coins: 5000, unlock: ['avatars', 'ara_gold'] }] },
+];
+async function achStats(uid: string, p: Game) {
+  const [{ count: f1 }, prizes] = await Promise.all([
+    db.from('friends').select('friend_id', { count: 'exact', head: true }).eq('user_id', uid),
+    db.from('weekly_prizes').select('rank').eq('user_id', uid),
+  ]);
+  const { data: mine } = await db.from('friends').select('friend_id').eq('user_id', uid);
+  let friends = 0;
+  if (mine && mine.length) {
+    const { count } = await db.from('friends').select('user_id', { count: 'exact', head: true }).eq('friend_id', uid).in('user_id', mine.map((x: any) => x.friend_id));
+    friends = count || 0;
+  }
+  const owned = (p.owned_skins.length - 1) + (p.owned_sets.length - 1) + ((p.owned_dice || []).length - 1) + ((p.owned_avatars || []).length - 1) + ((p.owned_frames || []).length - 1);
+  const pr = prizes.data || [];
+  return { won: p.won, best_streak: p.best_streak, mars_wins: p.mars_wins, comebacks: p.comebacks, perfect_doubles: p.perfect_doubles,
+    untouched_wins: p.untouched_wins, fast_wins: p.fast_wins, both: Math.min(p.short_wins, p.long_wins), high_rooms: (p.high_rooms || []).length,
+    coins_won_total: p.coins_won_total, royal_wins: p.royal_wins, friends, gg_count: p.gg_count, rematches: p.rematches, daily7: p.daily7,
+    level: p.level, owned, top10: pr.filter((x: any) => x.rank <= 10).length, number_one: pr.filter((x: any) => x.rank === 1).length, _f: f1 } as Record<string, number>;
+}
+// grant every tier the player has reached but not yet received; returns what was new
+async function checkAch(uid: string) {
+  let p = await profile(uid);
+  const st = await achStats(uid, p), got: { id: string; tier: number; coins: number; unlock?: [string, string] }[] = [];
+  for (const a of ACH) {
+    const have = Number(p.ach?.[a.id] || 0), reach = a.tiers.filter(t => (st[a.stat] || 0) >= t.n).length;
+    for (let t = have + 1; t <= reach; t++) {
+      const T = a.tiers[t - 1];
+      const { data } = await db.rpc('ach_grant', { p_user: uid, p_id: a.id, p_tier: t, p_coins: T.coins, p_kind: T.unlock?.[0] || '', p_item: T.unlock?.[1] || '' });
+      if (data === true) got.push({ id: a.id, tier: t, coins: T.coins, unlock: T.unlock });
+    }
+  }
+  if (got.length) p = await profile(uid);
+  return { profile: p, ach_new: got, ach_stats: st };
+}
+
 async function finish(g: Game, winner: number, reason: string, points: number) {
   await rpc('settle_game', { p_game: g.id, p_winner: winner, p_reason: reason, p_points: points });
   return await loadGame(g.id);
@@ -100,8 +159,8 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
   // ---------------------------------------------------------------- account
   async me(uid) {
     await touch(uid);
-    const p = await profile(uid);
-    return { profile: p, game: await activeGame(uid), daily: dailyStatus(p), prizes: await unseenPrizes(uid), invites: await pendingInvites(uid) };
+    const { profile: p, ach_new, ach_stats } = await checkAch(uid);
+    return { ach_new, ach_stats, profile: p, game: await activeGame(uid), daily: dailyStatus(p), prizes: await unseenPrizes(uid), invites: await pendingInvites(uid) };
   },
 
   // called every ~45 s while the app is open: keeps "online" status fresh and picks up invites
@@ -110,8 +169,8 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
   // ---------------------------------------------------------------- daily bonus, XP, weekly prizes
   async claim_daily(uid) {
     const r = await rpc('claim_daily', { p_user: uid });
-    const p = await profile(uid);
-    return { ...r, profile: p, daily: dailyStatus(p) };
+    const { profile: p, ach_new } = await checkAch(uid);
+    return { ...r, profile: p, daily: dailyStatus(p), ach_new };
   },
 
   async ack_prizes(uid) { await db.from('weekly_prizes').update({ seen: true }).eq('user_id', uid).eq('seen', false); return { ok: true }; },
@@ -124,13 +183,14 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
     const xp = a.won ? (a.mars ? 30 : 20) : 8;
     await db.from('profiles').update({ bot_played: p.bot_played + 1, bot_won: p.bot_won + (a.won ? 1 : 0) }).eq('id', uid);
     const r = await rpc('add_xp', { p_user: uid, p_xp: xp });
-    return { xp: r, profile: await profile(uid) };
+    const c = await checkAch(uid);
+    return { xp: r, profile: c.profile, ach_new: c.ach_new };
   },
 
   // public card of a player: what an opponent sees when tapping their name
   async player(_uid, a) {
     if (!isUuid(a.user_id)) throw new Fail('bad_user');
-    const { data: p } = await db.from('profiles').select('id,name,level,xp,played,won,streak,best_streak,mars_wins,coins_won_total,bot_played,bot_won,equip,created_at,last_seen').eq('id', a.user_id).maybeSingle();
+    const { data: p } = await db.from('profiles').select('id,name,level,xp,played,won,streak,best_streak,mars_wins,coins_won_total,bot_played,bot_won,equip,created_at,last_seen,ach').eq('id', a.user_id).maybeSingle();
     if (!p) throw new Fail('no_profile', 404);
     return { player: { ...p, avatar: p.equip?.avatar || 'default', frame: p.equip?.frame || 'none', equip: undefined,
       online: !!p.last_seen && Date.parse(p.last_seen) > Date.now() - 75e3, last_seen: undefined } };
@@ -148,7 +208,29 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
     if ((count || 0) >= 200) throw new Fail('too_many_friends');
     const { error } = await db.from('friends').upsert({ user_id: uid, friend_id: a.user_id }, { onConflict: 'user_id,friend_id', ignoreDuplicates: true });
     if (error) throw error;
-    return { friends: await rpc('friends_list', { p_user: uid }) };
+    const c = await checkAch(uid);
+    return { friends: await rpc('friends_list', { p_user: uid }), ach_new: c.ach_new, profile: c.profile };
+  },
+
+  // "Good game" / "Well played" sent to the opponent: counts once per game
+  async gg(uid, a) {
+    const g = await loadGame(a.game_id), me = seat(g, uid);
+    if (me < 0) throw new Fail('not_your_game');
+    if (!(g.status === 'active' || (g.status === 'finished' && Date.parse(g.updated_at) > Date.now() - 600e3))) throw new Fail('not_active');
+    if (g.gg[me]) return { ok: true };
+    const gg = [...g.gg]; gg[me] = 1;
+    await db.from('games').update({ gg }).eq('id', g.id);
+    const p = await profile(uid);
+    await db.from('profiles').update({ gg_count: p.gg_count + 1 }).eq('id', uid);
+    const c = await checkAch(uid);
+    return { ok: true, ach_new: c.ach_new, profile: c.profile };
+  },
+
+  async achievements(uid, a) {
+    const id = isUuid(a.user_id) ? a.user_id : uid;
+    if (id === uid) { const c = await checkAch(uid); return { ach: c.profile.ach, stats: c.ach_stats, ach_new: c.ach_new, profile: c.profile }; }
+    const p = await profile(id);
+    return { ach: p.ach, stats: await achStats(id, p) };
   },
 
   async friend_remove(uid, a) {
@@ -181,7 +263,8 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
 
   async buy(uid, a) {
     await rpc('buy_item', { p_user: uid, p_kind: a.kind, p_id: a.id });
-    return ACTIONS.equip(uid, a);
+    const r: any = await ACTIONS.equip(uid, a), c = await checkAch(uid);
+    return { ...r, profile: c.profile, ach_new: c.ach_new };
   },
 
   async equip(uid, a) {
@@ -275,10 +358,11 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
     if (me !== g.turn) throw new Fail('not_your_turn');
     if (g.phase !== 'roll') throw new Fail('already_rolled');
     const d = [die(), die()], t = new N.Turn(g.state, me, d[0], d[1]);
+    const sixes = [...(g.sixes || [0, 0])]; if (d[0] === 6 && d[1] === 6) sixes[me]++;
     if (t.total === 0) {   // nothing playable: the turn passes
-      return { game: await save(g, { state: t.finish(), turn: 1 - me, phase: 'roll', dice: null, last_moves: [], last_player: me, last_dice: d, deadline: later(TURN_SECONDS) }) };
+      return { game: await save(g, { sixes, state: t.finish(), turn: 1 - me, phase: 'roll', dice: null, last_moves: [], last_player: me, last_dice: d, deadline: later(TURN_SECONDS) }) };
     }
-    return { game: await save(g, { phase: 'move', dice: d }) };
+    return { game: await save(g, { sixes, phase: 'move', dice: d }) };
   },
 
   // the whole turn is sent at once; the server replays it move by move
@@ -296,7 +380,11 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
     }
     if (!t.done()) throw new Fail('turn_incomplete');
     const ns = t.finish(), w = N.winner(ns);
-    const base = { state: ns, last_moves: played, last_player: me, last_dice: g.dice, dice: null };
+    const hits = [...(g.hits || [0, 0])], behind = [...(g.behind || [0, 0])];
+    hits[me] += played.filter((m: any) => m.hit).length;
+    const pp = [N.pips(ns, 0), N.pips(ns, 1)];
+    for (const s of [0, 1]) behind[s] = Math.max(behind[s], pp[s] - pp[1 - s]);
+    const base = { state: ns, last_moves: played, last_player: me, last_dice: g.dice, dice: null, hits, behind };
     if (w >= 0) {
       const g2 = await save(g, { ...base, phase: 'roll' });
       return { game: await finish(g2, w, 'win', N.resultPoints(ns, w)) };

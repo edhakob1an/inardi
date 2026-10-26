@@ -259,6 +259,9 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .av.fr-garnet { box-shadow: 0 0 0 calc(var(--t) + 1.5px) #e8b54a, 0 0 10px 2px rgba(214,58,74,.4); }
 .av.fr-lapis::before { background: conic-gradient(#0f1f6b, #4a6bf0, #1a2f8f, #b5c4ff, #0b1757, #3d5bd9, #0f1f6b); }
 .av.fr-lapis { box-shadow: 0 0 0 calc(var(--t) + 1.5px) #e8b54a, 0 0 10px 2px rgba(61,91,217,.45); }
+.av.fr-laurel::before { -webkit-mask: none; mask: none; inset: -34%; background: url(assets/ach/laurel.webp) center / contain no-repeat; filter: drop-shadow(0 0 6px rgba(255,205,110,.5)); }
+.ibtn.lockd { color: var(--muted) !important; font-size: 11.5px; letter-spacing: .02em; }
+.ibtn.lockd::before { display: none; }
 .av.fr-diamond::before { background: conic-gradient(#e8f6ff, #9fd8ff, #ffffff, #ffc8f0, #c8fff1, #ffffff, #b9c8ff, #e8f6ff); animation: frspin 3.2s linear infinite; }
 .av.fr-diamond { box-shadow: 0 0 14px 3px rgba(190,230,255,.6); }
 .av.fr-diamond::after { content: ""; position: absolute; inset: -30%; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, transparent 52%, rgba(255,255,255,.0) 53%, rgba(220,240,255,.35) 60%, transparent 70%); animation: frpulse 2.4s ease-in-out infinite; }
@@ -273,6 +276,42 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .stgrid b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 21px; color: var(--gold-hi); line-height: 1.1; font-variant-numeric: tabular-nums; }
 .stgrid small { display: block; font-size: 10.5px; color: var(--muted); font-weight: 600; margin-top: 3px; line-height: 1.2; }
 .stnote { font-size: 11.5px !important; }
+/* achievements */
+.achgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-height: 46vh; overflow-y: auto; padding: 4px 2px; }
+.achtile { border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; color: var(--text); }
+.achtile small { font-size: 10px; line-height: 1.15; color: var(--muted); text-align: center; font-weight: 600; }
+.achic { position: relative; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #3a2818, #160e08); }
+.achic img { width: 74%; height: 74%; object-fit: contain; }
+.achic::before { content: ""; position: absolute; inset: -3px; border-radius: 50%; background: #3a2c20; -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px)); }
+.achic.t0 img { filter: grayscale(1) brightness(.45); opacity: .7; }
+.achic.t1::before { background: conic-gradient(#7a4319, #e9ad74, #8a4f22, #f0be8c, #7a4319); }
+.achic.t2::before { background: conic-gradient(#7b848f, #f7f9fb, #8d96a1, #ffffff, #7b848f); }
+.achic.t3::before { background: conic-gradient(#a9781f, #fff1b8, #b8862a, #ffe08a, #a9781f); }
+.achic.t3 { box-shadow: 0 0 14px rgba(255,205,110,.45); }
+.achic .pips { position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%); display: flex; gap: 2px; }
+.achic .pips i { width: 6px; height: 6px; border-radius: 50%; background: #3a2c20; box-shadow: 0 0 0 1.5px #160e08; }
+.achic .pips i.on { background: var(--gold-hi); }
+.achbig { width: 96px; height: 96px; margin: 0 auto 4px; }
+.achbig::before { inset: -5px; }
+.achtiers { display: grid; gap: 6px; }
+.achtiers div { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; border-radius: 12px; background: #1b130c; border: 1px solid var(--line); font-size: 13.5px; }
+.achtiers div.ok { border-color: var(--gold); }
+.achtiers div.ok b::after { content: " ✓"; color: #6fd18b; }
+.achtiers span { color: var(--gold-hi); font-weight: 700; display: flex; align-items: center; gap: 4px; }
+.achtiers span img { width: 16px; height: 16px; }
+.achtop { display: flex; justify-content: center; gap: 12px; }
+.achtop .achic { width: 46px; height: 46px; }
+.achtoast { position: fixed; z-index: 80; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 12px); width: min(360px, calc(100vw - 24px)); transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; border-radius: 20px;
+  background: linear-gradient(180deg, rgba(60,42,22,.96), rgba(28,19,10,.96)); border: 1px solid var(--gold); box-shadow: 0 12px 30px rgba(0,0,0,.55), 0 0 22px rgba(255,205,110,.25); animation: achin .5s cubic-bezier(.2,1.4,.4,1) both; }
+.achtoast.out { animation: achout .4s ease-in both; }
+.achtoast .achic { width: 48px; height: 48px; flex: none; }
+.achtoast div { flex: 1; min-width: 0; }
+.achtoast small { display: block; font-size: 10.5px; letter-spacing: .16em; font-weight: 700; color: var(--gold); }
+.achtoast b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 19px; line-height: 1.15; }
+.achtoast em { font-style: normal; font-weight: 700; color: var(--gold-hi); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.achtoast em img { width: 18px; height: 18px; }
+@keyframes achin { from { transform: translate(-50%, -140%); } }
+@keyframes achout { to { transform: translate(-50%, -140%); opacity: 0; } }
 /* win effects */
 .fxban { position: fixed; inset: 0; z-index: 70; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; animation: fxfade 2s ease-in both; }
 .fxban::before { content: ""; position: absolute; width: 150vmin; height: 150vmin; border-radius: 50%; background: repeating-conic-gradient(rgba(255,214,130,.16) 0 7deg, transparent 7deg 18deg); -webkit-mask: radial-gradient(circle, #000 10%, transparent 62%); mask: radial-gradient(circle, #000 10%, transparent 62%); animation: frspin 9s linear infinite; }
@@ -739,6 +778,8 @@ const AVATARS = {
   eternity:    { name: 'Eternity Stone', desc: 'The eternity sign carved in pink tuff.', price: 600, img: 'assets/skins/tuff/emblem.webp' },
   garnet:      { name: 'Golden Branch', desc: 'A gold-leaf pomegranate branch on garnet lacquer.', price: 600, img: 'assets/skins/garnet/emblem.webp' },
   goldsign:    { name: 'Gold Eternity', desc: 'A polished gold eternity sign on black obsidian.', price: 800, img: 'assets/dice/obsidian/sign.webp', bg: 'radial-gradient(circle, #2a2a2a, #050505)' },
+  crown:       { name: 'Royal Crown', desc: 'Only for winners of the Royal 10,000 room.', price: 0, ach: 'royal', img: 'assets/ach/royal.webp', bg: 'radial-gradient(circle, #4a1426, #1a0610)' },
+  ara_gold:    { name: 'Ararat Gold', desc: 'Only for players who finished a week as number one.', price: 0, ach: 'number_one', img: 'assets/ach/ara_gold.webp' },
   silversign:  { name: 'Silver Eternity', desc: 'A polished silver eternity sign on deep lapis.', price: 800, img: 'assets/dice/lapis/sign.webp', bg: 'radial-gradient(circle, #2f49b8, #10195a)' },
 };
 const FRAMES = {
@@ -748,7 +789,8 @@ const FRAMES = {
   gold:    { name: 'Gold', desc: 'A glowing gold ring.', price: 1000 },
   garnet:  { name: 'Garnet', desc: 'Deep red garnet with a gold edge.', price: 1500 },
   lapis:   { name: 'Lapis', desc: 'Royal blue lapis with a gold edge.', price: 2000 },
-  diamond: { name: 'Diamond', desc: 'A turning ring of diamond light. The rarest frame.', price: 5000 },
+  diamond: { name: 'Diamond', desc: 'A turning ring of diamond light. The rarest frame you can buy.', price: 5000 },
+  laurel:  { name: 'Golden Laurel', desc: 'Only for players who finished a week in the top 10.', price: 0, ach: 'top10' },
 };
 const CAT = { skins: SKINS, sets: SETS, dice: DICE, avatars: AVATARS, frames: FRAMES }, EQK = { skins: 'skin', sets: 'set', dice: 'dice', avatars: 'avatar', frames: 'frame' },
   TAB_KIND = { boards: ['skins'], sets: ['sets'], dice: ['dice'], avatars: ['avatars', 'frames'] };
@@ -1348,6 +1390,7 @@ const RULES = `<h2>How to play</h2><div class="rules">
   <li><b>Long:</b> both sides move the same way, starting from the head. No hitting: you cannot land on any point the opponent holds. Only one checker leaves the head per turn, except a first roll of 6-6, 4-4 or 3-3. You may not build a wall of six points unless an opponent checker is already past it.</li></ul></div>
   <button class="list-btn" data-act="close">Got it</button>`;
 $('overlay').addEventListener('click', e => {
+  const at = e.target.closest('[data-ach]'); if (at) { audio(); return achDetail(at.dataset.ach); }
   const act = e.target.closest('[data-act]')?.dataset.act;
   if (!act) { if (e.target.id === 'overlay' && G.phase !== 'over' && !sheetLocked) closeSheet(); return; }
   if (socialAct(act, e) || onlineAct(act, e)) return;
@@ -1455,6 +1498,7 @@ function renderShop() {
 }
 function shopBtnHTML(kind, id) {
   const it = CAT[kind][id], own = owned[kind].includes(id), eq = equip[EQK[kind]] === id;
+  if (it.ach && !own) return `<button class="ibtn done lockd" disabled>🏆 ${ACHN[it.ach] ? ACHN[it.ach].name : 'Achievement'}</button>`;
   return `<button class="ibtn ${eq ? 'done' : own ? 'equip' : 'buy'}" data-kind="${kind}" data-id="${id}" ${eq ? 'disabled' : ''}>${eq ? 'EQUIPPED' : own ? 'EQUIP' : `<img src="assets/coin.webp" alt="">${fmt(it.price)}`}</button>`;
 }
 function shopAction(kind, id) {
@@ -1790,7 +1834,7 @@ function chatBubble(screenSeat, k) {
 function chatSend(k) {
   const now = performance.now(); if (now - chatLast < 2500) return; chatLast = now;
   chatOpen(false); chatBubble(0, k);
-  if (G.opp === 'online' && NET.chan) NET.chan.send({ type: 'broadcast', event: 'chat', payload: { s: G.online.seat, k } });
+  if (G.opp === 'online' && NET.chan) { NET.chan.send({ type: 'broadcast', event: 'chat', payload: { s: G.online.seat, k } }); if (CHAT[k] === 'Good game!' || CHAT[k] === 'Well played!') api('gg', { game_id: G.online.id }); }
   else if (G.opp !== 'local' && Math.random() < .6) {
     const r = BOT_REPLY[CHAT[k]] || ['😎', '👍', '🎲', '😂'], pick = r[Math.floor(Math.random() * r.length)];
     let rk = CHAT.indexOf(pick); clearTimeout(chatTimer);
@@ -1917,6 +1961,7 @@ document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', 
   if (go === 'profile') { const pr = myProg(), mc = myCard(); sheet(`<div class="bigav">${avHTML(equip.avatar, equip.frame, equip.set)}</div><h2>${NET.profile ? esc(NET.profile.name) : 'Guest'}</h2><p><span class="netdot ${NET.ok ? 'on' : ''}"></span>${NET.ok ? 'Online' : 'Offline'}${mc.created_at ? ` · since ${since(mc.created_at)}` : ''}</p>
     ${statsHTML(mc)}
     <div class="xpline"><div class="xt"><span>Level ${pr.level}</span><b>${fmt(pr.xp - xpFor(pr.level))} / ${fmt(xpFor(pr.level + 1) - xpFor(pr.level))} XP</b></div><div class="xpbar"><i style="width:${lvPct(pr.xp, pr.level)}%"></i></div></div>
+    <button class="cta" data-act="ach-me">🏆 ACHIEVEMENTS · ${Object.keys((NET.profile || {}).ach || {}).length}/${ACHL.length}</button>
     <p class="stnote">Next level pays ${fmt(levelReward(pr.level + 1))} coins. Change your avatar and frame in the Shop.</p>
     ${NET.ok ? `<input class="namein" id="nameIn" maxlength="16" value="${esc(NET.profile.name)}" aria-label="Your name"><div class="err" id="nameErr"></div><button class="cta" data-act="rename">SAVE NAME</button>` : ''}
     <button class="list-btn" data-act="close">Close</button>`); }
@@ -1958,7 +2003,9 @@ async function api(action, args = {}) {
     const r = await fetch(SUPA.url + '/functions/v1/game', { method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: SUPA.key, Authorization: 'Bearer ' + session.access_token },
       body: JSON.stringify({ action, ...args }) });
-    return await r.json();
+    const j = await r.json();
+    if (j && j.ach_new && j.ach_new.length) setTimeout(() => achToast(j.ach_new), 400);
+    return j;
   } catch (e) { return { error: 'network' }; }
 }
 function applyProfile(p) {
@@ -2361,7 +2408,9 @@ function playerSheet(c, me) {
   const fr = !me && friendsList.find(f => f.id === c.id);
   sheet(`<div class="bigav">${avHTML(c.avatar, c.frame, me ? equip.set : 'classic')}</div><h2>${esc(c.name)}</h2>
     <p><span class="netdot ${c.online ? 'on' : ''}"></span>${c.online ? 'Online' : 'Offline'} · Level ${c.level || 1}${c.created_at ? ` · since ${since(c.created_at)}` : ''}</p>
+    ${achTop(c.ach).length ? `<div class="achtop">${achTop(c.ach).map(x => achIc(x.a, x.t)).join('')}</div>` : ''}
     ${statsHTML(c)}
+    ${NET.ok && (c.id || me) ? `<button class="list-btn" data-act="${me ? 'ach-me' : 'ach-them'}" data-id="${c.id || ''}" data-name="${esc(c.name)}">🏆 Achievements · ${Object.keys(c.ach || {}).length}/${ACHL.length}</button>` : ''}
     ${!me && NET.ok && c.id ? `<button class="list-btn" data-act="pl-add" data-id="${c.id}" ${fr && fr.state !== 'request' ? 'disabled' : ''}>${fr ? (fr.state === 'friend' ? 'Friends ✓' : fr.state === 'sent' ? 'Friend request sent ✓' : 'Add back as friend') : 'Add friend'}</button>` : ''}
     <button class="list-btn" data-act="close">Close</button>`);
 }
@@ -2381,6 +2430,81 @@ for (const e of [0, 1]) {
   };
   $('bar' + e).querySelector('.avatar').addEventListener('click', open);
   $('bar' + e).querySelector('.pinfo').addEventListener('click', open);
+}
+
+// ---------- achievements ----------
+const ACHL = [
+  ['first_win', 'First Blood', 'Win your first online game.', 'won', [[1, 100]]],
+  ['champion', 'Champion', 'Win online games.', 'won', [[10, 300], [50, 1000], [250, 3000]]],
+  ['streak', 'Hot Streak', 'Win online games in a row.', 'best_streak', [[3, 200], [5, 600], [10, 2000]]],
+  ['mars', 'Mars Master', 'Win with a mars: your opponent bore off nothing.', 'mars_wins', [[1, 150], [10, 800], [50, 2500]]],
+  ['comeback', 'Comeback King', 'Win a game after being 40 or more pips behind.', 'comebacks', [[1, 200], [5, 800], [20, 2500]]],
+  ['doubles', 'Perfect Doubles', 'Roll 6-6 three times in one online game.', 'perfect_doubles', [[1, 300]]],
+  ['untouchable', 'Untouchable', 'Win short nardi without ever being hit.', 'untouched_wins', [[1, 200], [5, 800], [20, 2500]]],
+  ['speed', 'Speed Player', 'Win a whole online game in under 5 minutes.', 'fast_wins', [[1, 150], [5, 600], [20, 2000]]],
+  ['both', 'Both Worlds', 'Win both short and long nardi (counts the smaller of the two).', 'both', [[3, 200], [10, 800], [30, 2500]]],
+  ['high_roller', 'High Roller', 'Win in the Gold, Diamond and Royal rooms.', 'high_rooms', [[1, 500], [2, 1500], [3, 4000]]],
+  ['fortune', 'Fortune', 'Coins won in coin rooms, all time.', 'coins_won_total', [[10000, 500], [100000, 3000], [1000000, 15000]]],
+  ['royal', 'Royal Victory', 'Win in the Royal 10,000 room. Unlocks the Royal Crown avatar.', 'royal_wins', [[1, 5000]]],
+  ['friendly', 'Friendly', 'Make friends: both of you added each other.', 'friends', [[1, 100], [5, 400], [20, 1500]]],
+  ['good_sport', 'Good Sport', 'Say "Good game!" or "Well played!" to opponents online.', 'gg_count', [[5, 100], [25, 400], [100, 1500]]],
+  ['rematch', 'Rematch Rival', 'Play rematches.', 'rematches', [[1, 100], [10, 500], [50, 2000]]],
+  ['daily', 'Daily Devotion', 'Complete the full 7-day daily bonus.', 'daily7', [[1, 300], [5, 1500], [20, 5000]]],
+  ['veteran', 'Veteran', 'Reach a level.', 'level', [[5, 500], [10, 1500], [25, 5000]]],
+  ['collector', 'Collector', 'Own items from the Shop.', 'owned', [[5, 300], [10, 1000], [20, 3000]]],
+  ['top10', 'Top 10', 'Finish a week in the top 10. Unlocks the Golden Laurel frame.', 'top10', [[1, 1000], [5, 3000], [20, 8000]]],
+  ['number_one', 'Number One', 'Finish a week as number one. Unlocks the Ararat Gold avatar.', 'number_one', [[1, 5000]]],
+];
+const ACHN = Object.fromEntries(ACHL.map(([id, name, desc, stat, tiers]) => [id, { id, name, desc, stat, tiers }]));
+const TIERN = ['', 'Bronze', 'Silver', 'Gold'];
+// ring colour: single-tier achievements are gold once earned
+const achTierCls = (a, t) => t <= 0 ? 0 : a.tiers.length === 1 ? 3 : t;
+function achIc(a, t, big) {
+  const pips = a.tiers.length > 1 ? `<span class="pips">${a.tiers.map((_, i) => `<i class="${i < t ? 'on' : ''}"></i>`).join('')}</span>` : '';
+  return `<span class="achic t${achTierCls(a, t)} ${big ? 'achbig' : ''}"><img src="assets/ach/${a.id}.webp" alt="">${pips}</span>`;
+}
+var achView = null;   // { ach, stats, mine, name }
+function achSheet(v) {
+  achView = v; const have = Object.keys(v.ach || {}).length;
+  sheet(`<h2>${v.mine ? 'Achievements' : esc(v.name) + '’s achievements'}</h2><p>${have} of ${ACHL.length} earned</p>
+    <div class="achgrid">${ACHL.map(([id]) => { const a = ACHN[id], t = +(v.ach || {})[id] || 0; return `<button class="achtile" data-ach="${id}">${achIc(a, t)}<small>${a.name}</small></button>`; }).join('')}</div>
+    <button class="list-btn" data-act="close">Close</button>`);
+}
+function achDetail(id) {
+  const v = achView, a = ACHN[id], t = +(v.ach || {})[id] || 0, val = (v.stats || {})[a.stat] || 0, next = a.tiers[t];
+  sheet(`${achIc(a, t, true)}<h2>${a.name}</h2><p>${a.desc}</p>
+    ${next ? `<div class="xpline"><div class="xt"><span>${t ? `${TIERN[achTierCls(a, t)]} · next tier` : 'Progress'}</span><b>${fmt(Math.min(val, next[0]))} / ${fmt(next[0])}</b></div><div class="xpbar"><i style="width:${Math.min(100, val / next[0] * 100)}%"></i></div></div>` : '<p style="color:var(--gold-hi)">Completed</p>'}
+    <div class="achtiers">${a.tiers.map(([n, c], i) => `<div class="${i < t ? 'ok' : ''}"><b>${a.tiers.length > 1 ? TIERN[i + 1] + ' · ' : ''}${fmt(n)}</b><span><img src="assets/coin.webp" alt="">${fmt(c)}</span></div>`).join('')}</div>
+    <button class="list-btn" data-act="ach-back">Back</button>`);
+}
+async function openAch(userId, name) {
+  if (!NET.ok) return sheet(`<h2>Achievements</h2><p>${ERR.network}<br>Achievements need a connection.</p><button class="list-btn" data-act="close">Close</button>`);
+  sheet(`<h2>Achievements</h2><div class="spin"></div>`);
+  const mine = !userId || userId === NET.uid, r = await api('achievements', mine ? {} : { user_id: userId });
+  if (r.error) return sheet(`<h2>Achievements</h2><p>${errText(r.error)}</p><button class="list-btn" data-act="close">Close</button>`);
+  if (mine && r.profile) applyProfile(r.profile);
+  achSheet({ ach: r.ach, stats: r.stats, mine, name: name || '' });
+}
+// best three for a player card: highest tier first, then rarer ones (later in the list)
+function achTop(ach) {
+  return Object.entries(ach || {}).map(([id, t]) => ACHN[id] && { a: ACHN[id], t: +t, w: achTierCls(ACHN[id], +t) * 100 + ACHL.findIndex(x => x[0] === id) }).filter(Boolean).sort((x, y) => y.w - x.w).slice(0, 3);
+}
+// toasts for new achievements, one after another
+var achQ = [], achBusy = false;
+function achToast(list) {
+  for (const n of list) if (ACHN[n.id]) achQ.push(n);
+  if (achBusy) return;
+  const next = () => {
+    const n = achQ.shift(); if (!n) { achBusy = false; return; }
+    achBusy = true; const a = ACHN[n.id];
+    const el = document.createElement('div'); el.className = 'achtoast';
+    el.innerHTML = `${achIc(a, n.tier)}<div><small>ACHIEVEMENT${a.tiers.length > 1 ? ' · ' + TIERN[n.tier].toUpperCase() : ''}</small><b>${a.name}</b></div><em><img src="assets/coin.webp" alt="">+${fmt(n.coins)}</em>`;
+    document.body.appendChild(el); sfx.matchFound(); buzz([20, 40, 20]);
+    setTimeout(() => { fxCoins(n.coins, [innerWidth - 50, 50]); syncCoins(true); }, 700);
+    if (n.unlock) setTimeout(() => mtoast(`New ${n.unlock[0] === 'frames' ? 'frame' : 'avatar'} unlocked: ${CAT[n.unlock[0]][n.unlock[1]].name}`), 1800);
+    setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.remove(); next(); }, 420); }, 3200);
+  };
+  next();
 }
 
 // ---------- weekly leaderboard ----------
@@ -2521,6 +2645,9 @@ async function friendButtonFor(oppId) {
 // sheet actions for these features; true when handled
 function socialAct(act, e) {
   if (act === 'daily-claim') { claimDaily(); return true; }
+  if (act === 'ach-me') { openAch(); return true; }
+  if (act === 'ach-them') { const b = e.target.closest('[data-id]'); openAch(b.dataset.id, b.dataset.name); return true; }
+  if (act === 'ach-back') { achSheet(achView); return true; }
   if (act === 'pinv-yes') { acceptInvite(); return true; }
   if (act === 'pinv-no') { const g = NET.pendingInv; NET.pendingInv = null; if (g) api('invite_decline', { game_id: g.id }); closeSheet(); return true; }
   if (act === 'rematch') { askRematch(); return true; }
