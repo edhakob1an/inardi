@@ -180,7 +180,13 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   filter: drop-shadow(0 12px 16px rgba(0,0,0,.55)); animation: rise .55s both; transition: transform .2s; }
 .room:active { transform: scale(.97); }
 .room:nth-child(2) { animation-delay: .08s; } .room:nth-child(3) { animation-delay: .16s; } .room:nth-child(4) { animation-delay: .24s; } .room:nth-child(5) { animation-delay: .32s; }
-.room .tier { font-size: 10.5px; font-weight: 700; letter-spacing: .22em; padding-left: .22em; color: var(--tc); margin-top: 18%; }
+.room .tier { font-size: 10.5px; font-weight: 700; letter-spacing: .22em; padding-left: .22em; color: var(--tc); margin-top: 0; }
+.room { box-sizing: border-box; min-height: 0; overflow: hidden; justify-content: center !important; padding: 12% 0 0 !important; gap: 1px !important; }
+.room img { width: 24% !important; margin: 3px 0; }
+.room b { font-size: clamp(19px, 6vw, 25px) !important; }
+.room .prize { font-size: 10.5px; }
+.room[data-tier="Diamond"] { filter: drop-shadow(0 0 14px rgba(120,210,255,.35)) drop-shadow(0 12px 16px rgba(0,0,0,.55)); }
+.room[data-tier="Royal"] { filter: drop-shadow(0 0 14px rgba(255,90,150,.35)) drop-shadow(0 12px 16px rgba(0,0,0,.55)); }
 .room img { width: 46%; aspect-ratio: 1; filter: drop-shadow(0 4px 5px rgba(0,0,0,.55)); }
 .room b { font-family: var(--font-display); font-weight: 400; font-size: clamp(22px, 7vw, 30px); color: var(--text); line-height: 1; font-variant-numeric: tabular-nums; }
 .room .prize { font-size: 11px; color: var(--muted); font-weight: 600; }
@@ -575,11 +581,11 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   <div class="mtop"><button class="back" id="roomsBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Play online</h2><div class="coins"><img src="assets/coin.webp" alt=""><span class="coinval">1,000</span><button class="plus" data-go="coins" aria-label="Get coins">+</button></div></div>
   <p class="rsub" id="roomsSub"></p>
   <div class="cards">
-    <button class="room" data-stake="100" data-tier="Bronze" style="--card:url(assets/card_bronze.webp);--tc:#d39a63"><span class="tier">BRONZE</span><img src="assets/coin.webp" alt=""><b>100</b><span class="prize">Win 200</span></button>
-    <button class="room" data-stake="500" data-tier="Silver" style="--card:url(assets/card_silver.webp);--tc:#d6dbe3"><span class="tier">SILVER</span><img src="assets/coin.webp" alt=""><b>500</b><span class="prize">Win 1,000</span></button>
-    <button class="room" data-stake="1000" data-tier="Gold" style="--card:url(assets/card_gold.webp);--tc:#f2c766"><span class="tier">GOLD</span><img src="assets/coin.webp" alt=""><b>1,000</b><span class="prize">Win 2,000</span></button>
-    <button class="room" data-stake="5000" data-tier="Diamond" style="--card:url(assets/card_gold.webp);--cf:hue-rotate(160deg) saturate(.55) brightness(1.15);--tc:#bfe6ff"><span class="tier">DIAMOND</span><img src="assets/coin.webp" alt=""><b>5,000</b><span class="prize">Win 10,000</span></button>
-    <button class="room" data-stake="10000" data-tier="Royal" style="--card:url(assets/card_gold.webp);--cf:hue-rotate(300deg) saturate(1.3) brightness(.9);--tc:#ff9fb0"><span class="tier">ROYAL</span><img src="assets/coin.webp" alt=""><b>10,000</b><span class="prize">Win 20,000</span></button>
+    <button class="room" data-stake="100" data-tier="Bronze" style="--card:url(assets/room_bronze.webp);--tc:#d39a63"><span class="tier">BRONZE</span><img src="assets/coin.webp" alt=""><b>100</b><span class="prize">Win 200</span></button>
+    <button class="room" data-stake="500" data-tier="Silver" style="--card:url(assets/room_silver.webp);--tc:#d6dbe3"><span class="tier">SILVER</span><img src="assets/coin.webp" alt=""><b>500</b><span class="prize">Win 1,000</span></button>
+    <button class="room" data-stake="1000" data-tier="Gold" style="--card:url(assets/room_gold.webp);--tc:#f2c766"><span class="tier">GOLD</span><img src="assets/coin.webp" alt=""><b>1,000</b><span class="prize">Win 2,000</span></button>
+    <button class="room" data-stake="5000" data-tier="Diamond" style="--card:url(assets/room_diamond.webp);--tc:#bfe6ff"><span class="tier">DIAMOND</span><img src="assets/coin.webp" alt=""><b>5,000</b><span class="prize">Win 10,000</span></button>
+    <button class="room" data-stake="10000" data-tier="Royal" style="--card:url(assets/room_royal.webp);--tc:#ff9fb0"><span class="tier">ROYAL</span><img src="assets/coin.webp" alt=""><b>10,000</b><span class="prize">Win 20,000</span></button>
   </div>
   <div class="howroom"><div><b>How rooms work.</b> You and your opponent each put in the stake. The winner takes the pot. A mars does not change the prize.</div></div>
   <button class="bimg btn-wood" id="inviteBtn"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 3v12M8 7l4-4 4 4"/></svg>INVITE A FRIEND</button>
