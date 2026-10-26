@@ -463,21 +463,9 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   filter: drop-shadow(0 14px 10px rgba(0,0,0,.55)) drop-shadow(0 30px 40px rgba(0,0,0,.45)); animation: place3d 1s cubic-bezier(.2,.9,.25,1) both; }
 @keyframes place3d { from { transform: perspective(900px) rotateX(24deg) translateY(-60px) scale(.92); opacity: 0; } 60% { opacity: 1; } }
 #menu .board3d ~ .hdice, #menu .hero:has(.board3d:not([hidden])) .hdice { transform: translate(-30%, -95%); }
-/* menu hero: blurred room in the background, the equipped board floating in front */
-#menu::before { inset: -40px; background: var(--scene) center 30% / cover no-repeat; filter: blur(9px) brightness(.48) saturate(1.15); }
-#menu::after { background: radial-gradient(70% 40% at 50% 34%, rgba(255,190,110,.20), transparent 70%), radial-gradient(130% 90% at 50% 40%, transparent 45%, rgba(8,5,3,.65) 100%), linear-gradient(180deg, rgba(0,0,0,.25) 0, transparent 16%, transparent 46%, rgba(10,6,3,.6) 62%, rgba(10,6,3,.94) 100%); }
-#menu .board3d { display: none !important; }
-#menu .tilt[hidden] { display: block !important; }
-#menu .hero { animation: bob 6s ease-in-out infinite; }
-@keyframes bob { 50% { transform: translateY(-7px); } }
-#menu .hero::after { content: ""; position: absolute; left: 50%; top: 0; width: calc(var(--bl, 300px) * 1.15); height: calc(var(--bl, 300px) * .32); transform: translate(-50%, 6%); border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(0,0,0,.6), transparent); filter: blur(6px); animation: bobsh 6s ease-in-out infinite; z-index: -1; }
-@keyframes bobsh { 50% { transform: translate(-50%, 9%) scale(.92); opacity: .75; } }
-#menu .tilt { transform: rotateX(52deg) rotateZ(90deg); }
-#menu .tilt::before { content: ""; position: absolute; inset: 0; border-radius: 5px; transform: translateZ(-10px); background: linear-gradient(90deg, #1c0f06, #3a2210 50%, #1c0f06); box-shadow: 0 0 0 1px rgba(0,0,0,.6); }
-#menu .tilt .hb { transform: translateZ(0); box-shadow: 0 0 0 1.5px rgba(30,16,6,.9); }
-@keyframes place { from { transform: rotateX(52deg) rotateZ(90deg) translateZ(180px) scale(.85); opacity: 0; } 60% { opacity: 1; } }
-#menu .hdice { transform: translate(14%, -64%) !important; }
+/* menu background: dark ornament wall with a spotlight; the board sits in the light */
+#menu::before { background: url(assets/scenes/studio.webp) center top / cover no-repeat; }
+#menu::after { background: linear-gradient(180deg, transparent 0, transparent 55%, rgba(10,8,6,.5) 70%, rgba(10,8,6,.85) 100%); }
 @media (max-height: 700px) { #menu .wordmark h1 { font-size: 56px; } #menu .modedesc { display: none; } .mode2 { margin-top: 8px; } }
 
 @media (max-height: 700px) { .wordmark { margin-top: -10px; } .modedesc { display: none; } .btn-brass { height: 64px; } .btn-wood { height: 52px; } .mnav { margin-top: 10px; } .wordmark h1 { font-size: 50px; } }
@@ -655,7 +643,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
     <div class="tilt"><div class="hb mini" id="heroBoard" role="img" aria-label="Nardi board"></div><div class="sheen"></div></div><img class="board3d" id="board3d" alt="Nardi board" hidden>
     <div class="hdice" id="hdice"></div>
   </div>
-  <div class="wordmark"><small>ARMENIAN NARDI</small><h1>iNardi</h1></div>
+  <div class="wordmark"><h1>iNardi</h1></div>
   <div class="mode2" id="mode" data-v="short"><button class="lbl" data-v="short" aria-pressed="true">SHORT</button><button class="sw" aria-label="Switch between short and long"><span class="knob"></span></button><button class="lbl" data-v="long" aria-pressed="false">LONG</button></div>
   <p class="modedesc" id="modeDesc"></p>
   <div class="actions">
@@ -1452,9 +1440,9 @@ function sceneNow() {
 function placeHero() {
   const m = $('menu'); if (m.hidden) return;
   const r0 = m.getBoundingClientRect(), top = m.querySelector('.mtop').getBoundingClientRect().bottom - r0.top, wm = m.querySelector('.wordmark').getBoundingClientRect().top - r0.top;
-  const gap = wm - top, y = Math.min(r0.height * .47, top + gap * .6);
+  const gap = wm - top, y = Math.min(r0.height * .45, top + gap * .66);
   m.style.setProperty('--by', y + 'px');
-  m.style.setProperty('--bl', Math.min(r0.width * .8, 380, gap * 1.6) + 'px');
+  m.style.setProperty('--bl', Math.min(r0.width * .9, 420, gap * 1.9) + 'px');
   m.style.setProperty('--bw3', Math.min(r0.width * 1.12, gap * 2.05) + 'px');
 }
 new ResizeObserver(placeHero).observe(document.getElementById('menu'));
@@ -1463,7 +1451,7 @@ function setVars() {
   r.setProperty('--cl', `url(${SA(equip.set, 'light')})`); r.setProperty('--cd', `url(${SA(equip.set, 'dark')})`);
   r.setProperty('--lring', st.ring ? 'rgba(52,26,8,.92)' : 'rgba(0,0,0,.35)');
   r.setProperty('--scene', `url(assets/scenes/${sceneNow()}.webp)`);
-  r.setProperty('--menubg', `url(assets/scenes/${sceneNow()}.webp)`);
+  r.setProperty('--menubg', 'url(assets/scenes/studio.webp)');
 }
 function renderMini(host, skinId, setId) {
   const sk = SKINS[skinId], st = SETS[setId], fw = sk.L[1] - sk.L[0], cw = fw / 6, c = Math.round(cw * .9);
@@ -1912,12 +1900,13 @@ function showScreen(id) {
 }
 function heroBoard() {
   const sk = SKINS[equip.skin] || SKINS.walnut, img = $('board3d'), tilt = document.querySelector('#menu .tilt');
-  img.hidden = true; tilt.hidden = false; renderMini($('heroBoard'), equip.skin, equip.set);
+  if (sk.hero3d) { if (img.getAttribute('src') !== sk.hero3d) img.src = sk.hero3d; img.hidden = false; tilt.hidden = true; }
+  else { img.hidden = true; tilt.hidden = false; renderMini($('heroBoard'), equip.skin, equip.set); }
 }
 function heroDice() {
   const h = $('hdice'); h.innerHTML = '';
   [[6, -16, 24, -14], [5, -14, -22, 12]].forEach(([v, rx, ry, z], i) => {
-    const w = makeDie(38, v, diceTheme()); w.querySelector('.cube').style.transform = faceTf(v, rx, ry, z);
+    const w = makeDie(50, v, diceTheme()); w.querySelector('.cube').style.transform = faceTf(v, rx, ry, z);
     if (i) w.style.marginTop = '14px';
     h.appendChild(w); throwDie(w, v, [rr(-30, 30), -280], 650 + i * 130, 900);
   });
@@ -1979,7 +1968,7 @@ document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', 
     <p class="stnote">Next level pays ${fmt(levelReward(pr.level + 1))} coins. Change your avatar and frame in the Shop.</p>
     ${NET.ok ? `<input class="namein" id="nameIn" maxlength="16" value="${esc(NET.profile.name)}" aria-label="Your name"><div class="err" id="nameErr"></div><button class="cta" data-act="rename">SAVE NAME</button>` : ''}
     <button class="list-btn" data-act="close">Close</button>`); }
-  if (go === 'settings') sheet(`<h2>Settings</h2>${volHTML()}<button class="list-btn" data-act="scene">Menu scene: ${{ auto: 'by time of day', day: 'sunset', night: 'night' }[prefs.scene || 'auto']}</button><button class="list-btn" data-act="rules">How to play</button><button class="list-btn" data-act="close">Close</button>`);
+  if (go === 'settings') sheet(`<h2>Settings</h2>${volHTML()}<button class="list-btn" data-act="rules">How to play</button><button class="list-btn" data-act="close">Close</button>`);
 }));
 
 // ---------- online play (Supabase) ----------
@@ -2704,7 +2693,7 @@ const EPM_LOGO = {"W":272,"H":371.2691690180153,"mono":{"E":"M0 0H33V253H0ZM0 0H
     <g fill="${GOLD}">${cellSvg}</g><path class="a-pix" fill="${GOLD}" d="${L.pixel.outline}"/>
     <g fill="${INK}">${mat}</g></svg>`;
   const sk = SKINS[equip.skin] || SKINS.walnut;
-  const urls = [`assets/scenes/${sceneNow()}.webp`, sk.hero3d || A(sk.id, 'board'), 'assets/coin.webp', 'assets/btn_brass.webp', 'assets/btn_wood.webp', `assets/dice/${diceTheme()}/face.webp`];
+  const urls = ['assets/scenes/studio.webp', sk.hero3d || A(sk.id, 'board'), 'assets/coin.webp', 'assets/btn_brass.webp', 'assets/btn_wood.webp', `assets/dice/${diceTheme()}/face.webp`];
   let n = 0; const bar = $('stBar'), total = urls.length + 1;
   const tick = () => { n++; bar.style.transform = `scaleX(${Math.min(1, n / total)})`; };
   const loads = urls.map(u => new Promise(res => { const im = new Image(); im.onload = im.onerror = () => { tick(); res(); }; im.src = u; }));
