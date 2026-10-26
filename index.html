@@ -17,7 +17,7 @@
 <title>iNardi</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;500;600;700&family=Noto+Sans+Armenian:wght@400;500;600;700&family=Noto+Serif+Armenian:wght@400;500&display=swap">
 <style>
 /* Layout: one full-height phone screen — top player bar, scaled wooden board, bottom player bar with the roll button. Single dark walnut look. */
 :root {
@@ -34,8 +34,8 @@
   --chip-dark: #7a2e18;
   --glow: rgba(255, 214, 140, .95);
   --danger: #e28a6a;
-  --font-display: "Marcellus", "Cormorant Garamond", Georgia, serif;
-  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Marcellus", "Noto Serif Armenian", "Cormorant Garamond", Georgia, serif;
+  --font-body: "Figtree", "Noto Sans Armenian", "Segoe UI", system-ui, sans-serif;
   color-scheme: dark;
 }
 [hidden] { display: none !important; }
@@ -587,6 +587,9 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 #menu .mnav { background: linear-gradient(180deg, rgba(28,24,22,.88), rgba(10,8,7,.94)); border: 0; border-top: 1px solid rgba(216,168,95,.7);
   box-shadow: 0 -1px 0 rgba(255,220,160,.15), 0 -10px 30px rgba(0,0,0,.4); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 #menu .mnav button { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #d9b977; }
+html[lang="hy"] #menu .mnav { grid-template-columns: repeat(5, auto); justify-content: space-between; padding-left: 12px; padding-right: 12px; }
+html[lang="hy"] #menu .mnav button { font-size: 9.5px; letter-spacing: 0; text-transform: none; min-width: 44px; }
+html[lang="hy"] .tabs button { font-size: 12.5px; letter-spacing: 0; }
 #menu .board3d { position: absolute; left: 50%; top: 0; width: var(--bw3, 96vw); max-width: 620px; translate: -50% -52%; transform: perspective(900px) rotateX(24deg); transform-origin: 50% 70%;
   filter: drop-shadow(0 14px 10px rgba(0,0,0,.55)) drop-shadow(0 30px 40px rgba(0,0,0,.45)); animation: place3d 1s cubic-bezier(.2,.9,.25,1) both; }
 @keyframes place3d { from { transform: perspective(900px) rotateX(24deg) translateY(-60px) scale(.92); opacity: 0; } 60% { opacity: 1; } }
@@ -630,6 +633,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 #chatBtn[aria-expanded="true"] { border-color: var(--gold); }
 #rollBtn { position: relative; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
 #rollBtn:disabled { pointer-events: none; }
+html[lang="hy"] #rollBtn.auto::after { content: "ԱՎՏՈ"; }
 #rollBtn.auto::after { content: "AUTO"; position: absolute; top: -7px; right: -5px; padding: 2px 5px; border-radius: 6px; background: #2a1a0c; border: 1px solid var(--gold); color: var(--gold-hi); font: 700 9px/1 system-ui, sans-serif; letter-spacing: .08em; }
 #rollBtn.holding:not(:disabled) { transform: scale(.96); transition: transform .4s; }
 #autoPop { position: fixed; z-index: 45; width: 230px; padding: 14px 16px; border-radius: 16px; background: linear-gradient(180deg, #2c1e13, #1b130c); border: 1px solid var(--gold); box-shadow: 0 18px 40px rgba(0,0,0,.6); animation: apop .18s ease-out both; }
@@ -929,6 +933,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   document.addEventListener('error', e => { const t = e.target; if (t && (t.tagName === 'IMG' || t.tagName === 'SCRIPT')) show('could not load ' + (t.src || '')); }, true);
 })();
 </script>
+<script src="i18n.js"></script>
 <script src="vendor/supabase.js"></script>
 <script src="engine.js"></script>
 <script src="bot.js"></script>
@@ -1602,6 +1607,8 @@ $('overlay').addEventListener('click', e => {
   const act = e.target.closest('[data-act]')?.dataset.act;
   if (!act) { if (e.target.id === 'overlay' && G.phase !== 'over' && !sheetLocked) closeSheet(); return; }
   if (socialAct(act, e) || onlineAct(act, e)) return;
+  if (act === 'lang') return sheet(`<h2>Language</h2><p>Choose the language of the game</p>${Object.entries(I18N.LANGS).map(([k, n]) => `<button class="list-btn${k === I18N.lang ? ' on' : ''}" data-act="lang-set" data-l="${k}" translate="no">${k === I18N.lang ? '✓ ' : ''}${n}</button>`).join('')}<button class="list-btn" data-act="close">Close</button>`);
+  if (act === 'lang-set') { const l = e.target.closest('[data-l]').dataset.l; if (l === I18N.lang) return closeSheet(); if (G.opp === 'online' && G.phase !== 'over' && !$('game').hidden) return sheet(`<h2>Language</h2><p>Finish this game first</p><button class="list-btn" data-act="close">Close</button>`); return I18N.set(l); }
   closeSheet();
   if (act === 'again') newGame(true);
   if (act === 'menu') { gameId++; G.timers.forEach(clearTimeout); leaveOnline(); showScreen('menu'); if (NET.ok) refreshProfile(); }
@@ -2179,7 +2186,7 @@ document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', 
   if (go === 'coins') coinSheet();
   if (go === 'pearls') pearlSheet();
   if (go === 'profile') sheet(`${profileHTML(myCard(), true)}<p class="pf-foot">Change your avatar and frame in the Shop.</p><button class="list-btn" data-act="close">Close</button>`);
-  if (go === 'settings') sheet(`<h2>Settings</h2>${volHTML()}<button class="list-btn orow" data-act="rules"><span class="oic"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7M8 11h7"/></svg></span><span class="ot"><b>How to play</b><small>Rules of short and long nardi</small></span><svg class="oar" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button><button class="list-btn" data-act="close">Close</button>`);
+  if (go === 'settings') sheet(`<h2>Settings</h2>${volHTML()}<button class="list-btn orow" data-act="rules"><span class="oic"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7M8 11h7"/></svg></span><span class="ot"><b>How to play</b><small>Rules of short and long nardi</small></span><svg class="oar" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button><button class="list-btn orow" data-act="lang"><span class="oic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span><span class="ot"><b>Language</b><small translate="no">${I18N.LANGS[I18N.lang]}</small></span><svg class="oar" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button><button class="list-btn" data-act="close">Close</button>`);
 }));
 
 // ---------- online play (Supabase) ----------
@@ -2335,7 +2342,7 @@ function onlineAct(act, e) {
   if (act === 'do-join') { const c = ($('codeIn').value || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (c.length !== 6) { $('codeErr').textContent = 'The code has 6 letters and numbers.'; return true; } joinCode(c); return true; }
   if (act === 'inv-share') {
     const inv = NET.inv; if (!inv) return true;
-    const text = `Play nardi with me on iNardi! Code ${inv.code}`;
+    const text = I18N.tr(`Play nardi with me on iNardi! Code ${inv.code}`);
     if (navigator.share) navigator.share({ title: 'iNardi', text, url: inv.link }).catch(() => {});
     else navigator.clipboard?.writeText(inv.link).then(() => mtoast('Link copied'), () => mtoast('Copy the link above'));
     return true;
@@ -2631,7 +2638,8 @@ function statsHTML(c) {
     <div><b>${c.best_streak || 0}</b><small>Best streak${c.streak ? ` · now ${c.streak}` : ''}</small></div><div><b>${c.mars_wins || 0}</b><small>Mars wins</small></div><div><b>${short(c.coins_won_total || 0)}</b><small>Coins won</small></div></div>
     <p class="stnote">Against the bot: ${fmt(c.bot_won || 0)} wins of ${fmt(c.bot_played || 0)} games</p>`;
 }
-const since = t => t ? new Date(t).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '';
+const MONTHS_HY = ['հունվար', 'փետրվար', 'մարտ', 'ապրիլ', 'մայիս', 'հունիս', 'հուլիս', 'օգոստոս', 'սեպտեմբեր', 'հոկտեմբեր', 'նոյեմբեր', 'դեկտեմբեր'];
+const since = t => { if (!t) return ''; const d = new Date(t); return I18N.lang === 'hy' ? `${MONTHS_HY[d.getMonth()]} ${d.getFullYear()}` : d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); };
 function myCard() {
   const p = NET.ok && NET.profile ? NET.profile : { name: 'Guest', played: 0, won: 0, bot_played: stats.played, bot_won: stats.won };
   return { ...p, avatar: equip.avatar, frame: equip.frame, level: myProg().level, online: NET.ok };
