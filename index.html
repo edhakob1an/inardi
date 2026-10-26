@@ -476,6 +476,9 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 #menu .wordmark::before { content: ""; position: absolute; left: 50%; top: 50%; width: 130%; height: 190%; transform: translate(-50%, -50%); z-index: -1; pointer-events: none; background: radial-gradient(closest-side, rgba(8,5,3,.72), rgba(8,5,3,.35) 60%, transparent); }
 #menu .wordmark h1 { background: none; filter: none; font-size: 0; line-height: 0; }
 #menu .wordmark .logo { width: min(78vw, 330px); height: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,.75)) drop-shadow(0 0 16px rgba(255,200,110,.25)); }
+/* no visible scrollbars anywhere (lists still scroll by touch, wheel and keyboard) */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { display: none; width: 0; height: 0; }
 #dust { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 #menu .tilt, #menu .board3d, #menu .hdice, #menu .modedesc { display: none !important; }
 #menu .hdice { left: 50% !important; transform: translate(-50%, -50%) !important; gap: 16px; animation: dfloat 5s ease-in-out infinite; }
