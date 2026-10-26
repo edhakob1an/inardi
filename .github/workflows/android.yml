@@ -22,7 +22,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: android-actions/setup-android@v3
+      - name: Use the Android SDK that comes with the runner
+        run: echo "sdk.dir=$ANDROID_HOME" > app/android/local.properties; echo "ANDROID_HOME=$ANDROID_HOME"
       - name: Copy the web game into the app
         working-directory: app
         run: |
