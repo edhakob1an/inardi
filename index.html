@@ -1943,7 +1943,7 @@ const V3 = (() => {
   return S;
 })();
 function pearlSheet() {
-  sheet(`<img class="bigcoin" src="assets/pearl.webp" alt=""><h2>Get pearls</h2><p>Pearls buy boards, checkers, dice, avatars, frames and cases.</p><div class="packs">${[100, 500, 1200].map(n => `<button class="pack" data-act="ppack-${n}"><img src="assets/pearl.webp" alt="">${fmt(n)}<small>Preview</small></button>`).join('')}</div>
+  sheet(`<img class="bigcoin" src="assets/pearl_pack.webp" alt="" style="width:120px;height:120px"><h2>Get pearls</h2><p>Pearls buy boards, checkers, dice, avatars, frames and cases.</p><div class="packs">${[100, 500, 1200].map(n => `<button class="pack" data-act="ppack-${n}"><img src="assets/pearl.webp" alt="">${fmt(n)}<small>Preview</small></button>`).join('')}</div>
     <p style="font-size:12px">In this preview, packs are added free. Real prices come with Google Play billing.</p><button class="list-btn" data-act="close">Close</button>`);
 }
 function coinSheet() {
