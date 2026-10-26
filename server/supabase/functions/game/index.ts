@@ -95,26 +95,26 @@ async function isFriendRow(a: string, b: string) {
 // stat -> thresholds per tier, coins per tier, optional exclusive item unlocked at a tier
 type Tier = { n: number; coins: number; unlock?: [string, string] };
 const ACH: { id: string; stat: string; tiers: Tier[] }[] = [
-  { id: 'first_win', stat: 'won', tiers: [{ n: 1, coins: 100 }] },
-  { id: 'champion', stat: 'won', tiers: [{ n: 10, coins: 300 }, { n: 50, coins: 1000 }, { n: 250, coins: 3000 }] },
-  { id: 'streak', stat: 'best_streak', tiers: [{ n: 3, coins: 200 }, { n: 5, coins: 600 }, { n: 10, coins: 2000 }] },
-  { id: 'mars', stat: 'mars_wins', tiers: [{ n: 1, coins: 150 }, { n: 10, coins: 800 }, { n: 50, coins: 2500 }] },
-  { id: 'comeback', stat: 'comebacks', tiers: [{ n: 1, coins: 200 }, { n: 5, coins: 800 }, { n: 20, coins: 2500 }] },
-  { id: 'doubles', stat: 'perfect_doubles', tiers: [{ n: 1, coins: 300 }] },
-  { id: 'untouchable', stat: 'untouched_wins', tiers: [{ n: 1, coins: 200 }, { n: 5, coins: 800 }, { n: 20, coins: 2500 }] },
-  { id: 'speed', stat: 'fast_wins', tiers: [{ n: 1, coins: 150 }, { n: 5, coins: 600 }, { n: 20, coins: 2000 }] },
-  { id: 'both', stat: 'both', tiers: [{ n: 3, coins: 200 }, { n: 10, coins: 800 }, { n: 30, coins: 2500 }] },
-  { id: 'high_roller', stat: 'high_rooms', tiers: [{ n: 1, coins: 500 }, { n: 2, coins: 1500 }, { n: 3, coins: 4000 }] },
-  { id: 'fortune', stat: 'coins_won_total', tiers: [{ n: 10000, coins: 500 }, { n: 100000, coins: 3000 }, { n: 1000000, coins: 15000 }] },
-  { id: 'royal', stat: 'royal_wins', tiers: [{ n: 1, coins: 5000, unlock: ['avatars', 'crown'] }] },
-  { id: 'friendly', stat: 'friends', tiers: [{ n: 1, coins: 100 }, { n: 5, coins: 400 }, { n: 20, coins: 1500 }] },
-  { id: 'good_sport', stat: 'gg_count', tiers: [{ n: 5, coins: 100 }, { n: 25, coins: 400 }, { n: 100, coins: 1500 }] },
-  { id: 'rematch', stat: 'rematches', tiers: [{ n: 1, coins: 100 }, { n: 10, coins: 500 }, { n: 50, coins: 2000 }] },
-  { id: 'daily', stat: 'daily7', tiers: [{ n: 1, coins: 300 }, { n: 5, coins: 1500 }, { n: 20, coins: 5000 }] },
-  { id: 'veteran', stat: 'level', tiers: [{ n: 5, coins: 500 }, { n: 10, coins: 1500 }, { n: 25, coins: 5000 }] },
-  { id: 'collector', stat: 'owned', tiers: [{ n: 5, coins: 300 }, { n: 10, coins: 1000 }, { n: 20, coins: 3000 }] },
-  { id: 'top10', stat: 'top10', tiers: [{ n: 1, coins: 1000, unlock: ['frames', 'laurel'] }, { n: 5, coins: 3000 }, { n: 20, coins: 8000 }] },
-  { id: 'number_one', stat: 'number_one', tiers: [{ n: 1, coins: 5000, unlock: ['avatars', 'ara_gold'] }] },
+  { id: 'first_win', stat: 'won', tiers: [{ n: 1, coins: 10 }] },
+  { id: 'champion', stat: 'won', tiers: [{ n: 10, coins: 30 }, { n: 50, coins: 100 }, { n: 250, coins: 300 }] },
+  { id: 'streak', stat: 'best_streak', tiers: [{ n: 3, coins: 20 }, { n: 5, coins: 60 }, { n: 10, coins: 200 }] },
+  { id: 'mars', stat: 'mars_wins', tiers: [{ n: 1, coins: 15 }, { n: 10, coins: 80 }, { n: 50, coins: 250 }] },
+  { id: 'comeback', stat: 'comebacks', tiers: [{ n: 1, coins: 20 }, { n: 5, coins: 80 }, { n: 20, coins: 250 }] },
+  { id: 'doubles', stat: 'perfect_doubles', tiers: [{ n: 1, coins: 30 }] },
+  { id: 'untouchable', stat: 'untouched_wins', tiers: [{ n: 1, coins: 20 }, { n: 5, coins: 80 }, { n: 20, coins: 250 }] },
+  { id: 'speed', stat: 'fast_wins', tiers: [{ n: 1, coins: 15 }, { n: 5, coins: 60 }, { n: 20, coins: 200 }] },
+  { id: 'both', stat: 'both', tiers: [{ n: 3, coins: 20 }, { n: 10, coins: 80 }, { n: 30, coins: 250 }] },
+  { id: 'high_roller', stat: 'high_rooms', tiers: [{ n: 1, coins: 50 }, { n: 2, coins: 150 }, { n: 3, coins: 400 }] },
+  { id: 'fortune', stat: 'coins_won_total', tiers: [{ n: 10000, coins: 50 }, { n: 100000, coins: 300 }, { n: 1000000, coins: 1500 }] },
+  { id: 'royal', stat: 'royal_wins', tiers: [{ n: 1, coins: 500, unlock: ['avatars', 'crown'] }] },
+  { id: 'friendly', stat: 'friends', tiers: [{ n: 1, coins: 10 }, { n: 5, coins: 40 }, { n: 20, coins: 150 }] },
+  { id: 'good_sport', stat: 'gg_count', tiers: [{ n: 5, coins: 10 }, { n: 25, coins: 40 }, { n: 100, coins: 150 }] },
+  { id: 'rematch', stat: 'rematches', tiers: [{ n: 1, coins: 10 }, { n: 10, coins: 50 }, { n: 50, coins: 200 }] },
+  { id: 'daily', stat: 'daily7', tiers: [{ n: 1, coins: 30 }, { n: 5, coins: 150 }, { n: 20, coins: 500 }] },
+  { id: 'veteran', stat: 'level', tiers: [{ n: 5, coins: 50 }, { n: 10, coins: 150 }, { n: 25, coins: 500 }] },
+  { id: 'collector', stat: 'owned', tiers: [{ n: 5, coins: 30 }, { n: 10, coins: 100 }, { n: 20, coins: 300 }] },
+  { id: 'top10', stat: 'top10', tiers: [{ n: 1, coins: 100, unlock: ['frames', 'laurel'] }, { n: 5, coins: 300 }, { n: 20, coins: 800 }] },
+  { id: 'number_one', stat: 'number_one', tiers: [{ n: 1, coins: 500, unlock: ['avatars', 'ara_gold'] }] },
 ];
 async function achStats(uid: string, p: Game) {
   const [{ count: f1 }, prizes] = await Promise.all([
@@ -149,6 +149,23 @@ async function checkAch(uid: string) {
   if (got.length) p = await profile(uid);
   return { profile: p, ach_new: got, ach_stats: st };
 }
+
+// ---------------------------------------------------------------- cases
+// odds per case; 'rare' = a dice or checker set, 'epic' = a board, frame or premium avatar, 'legendary' = case-only items
+type Drop = { w: number; coins?: number; pearls?: number; tier?: 'rare' | 'epic' | 'legendary' };
+const CASES: Record<string, { price: number; drops: Drop[] }> = {
+  bronze: { price: 30, drops: [{ w: 40, coins: 200 }, { w: 25, coins: 500 }, { w: 20, pearls: 10 }, { w: 10, pearls: 25 }, { w: 5, tier: 'rare' }] },
+  silver: { price: 80, drops: [{ w: 30, coins: 500 }, { w: 20, coins: 1500 }, { w: 20, pearls: 25 }, { w: 15, pearls: 60 }, { w: 10, tier: 'rare' }, { w: 5, tier: 'epic' }] },
+  gold:   { price: 200, drops: [{ w: 25, coins: 2000 }, { w: 20, pearls: 60 }, { w: 20, pearls: 150 }, { w: 15, tier: 'rare' }, { w: 15, tier: 'epic' }, { w: 5, tier: 'legendary' }] },
+};
+const POOL: Record<string, [string, string][]> = {
+  rare: [['dice', 'wood'], ['dice', 'pearl'], ['dice', 'obsidian'], ['dice', 'lapis'], ['sets', 'bone'], ['sets', 'pearl'], ['sets', 'tuff'], ['sets', 'amber']],
+  epic: [['skins', 'oak'], ['skins', 'ebony'], ['skins', 'tuff'], ['skins', 'garnet'], ['frames', 'gold'], ['frames', 'garnet'], ['frames', 'lapis'], ['avatars', 'star'], ['avatars', 'goldsign'], ['avatars', 'silversign']],
+  legendary: [['avatars', 'pearl'], ['frames', 'pearl'], ['frames', 'diamond']],
+};
+const DUP = { rare: 30, epic: 80, legendary: 200 };
+function rnd(n: number) { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; }
+const ownedOf = (p: Game, k: string): string[] => ({ skins: p.owned_skins, sets: p.owned_sets, dice: p.owned_dice, avatars: p.owned_avatars, frames: p.owned_frames } as any)[k] || [];
 
 async function finish(g: Game, winner: number, reason: string, points: number) {
   await rpc('settle_game', { p_game: g.id, p_winner: winner, p_reason: reason, p_points: points });
@@ -194,6 +211,31 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
     if (!p) throw new Fail('no_profile', 404);
     return { player: { ...p, avatar: p.equip?.avatar || 'default', frame: p.equip?.frame || 'none', equip: undefined,
       online: !!p.last_seen && Date.parse(p.last_seen) > Date.now() - 75e3, last_seen: undefined } };
+  },
+
+  async case_buy(uid, a) {
+    const c = CASES[a.kind]; if (!c) throw new Fail('bad_case');
+    await rpc('case_buy', { p_user: uid, p_kind: a.kind, p_price: c.price });
+    return { profile: await profile(uid) };
+  },
+  async case_daily(uid) { await rpc('case_daily', { p_user: uid }); return { profile: await profile(uid) }; },
+  async case_open(uid, a) {
+    const c = CASES[a.kind]; if (!c) throw new Fail('bad_case');
+    const p = await profile(uid);
+    if (!(Number(p.cases?.[a.kind]) > 0)) throw new Fail('no_case');
+    let r = rnd(c.drops.reduce((n, d) => n + d.w, 0)), d = c.drops[0];
+    for (const x of c.drops) { if (r < x.w) { d = x; break; } r -= x.w; }
+    let item: [string, string] | null = null;
+    if (d.tier) {
+      const pool = POOL[d.tier], fresh = pool.filter(([k, id]) => !ownedOf(p, k).includes(id));
+      const from = fresh.length ? fresh : pool;      // everything owned: the item comes as a duplicate and turns into pearls
+      item = from[rnd(from.length)];
+    }
+    const res = await rpc('case_apply', { p_user: uid, p_kind: a.kind, p_coins: d.coins || 0, p_pearls: d.pearls || 0,
+      p_item_kind: item ? item[0] : '', p_item_id: item ? item[1] : '', p_dup: d.tier ? DUP[d.tier] : 0 });
+    const reward = { coins: d.coins || 0, pearls: res.pearls, tier: d.tier || (d.pearls ? 'pearls' : 'coins'), item, dup: res.dup };
+    const ch = await checkAch(uid);
+    return { reward, profile: ch.profile, ach_new: ch.ach_new };
   },
 
   async leaderboard(uid, a) { return await rpc('leaderboard', { p_user: uid, p_board: a.board === 'coins' ? 'coins' : 'wins' }); },
@@ -282,6 +324,11 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
   async ad_reward(uid) { await rpc('grant_coins', { p_user: uid, p_amount: 50, p_reason: 'ad' }); return { profile: await profile(uid) }; },
 
   async preview_pack(uid, a) {
+    if (a.currency === 'pearls') {
+      if (![100, 500, 1200].includes(a.amount)) throw new Fail('bad_amount');
+      await rpc('grant_pearls', { p_user: uid, p_amount: a.amount, p_reason: 'preview_pack' });
+      return { profile: await profile(uid) };
+    }
     if (!PACKS.includes(a.amount)) throw new Fail('bad_amount');
     await rpc('grant_coins', { p_user: uid, p_amount: a.amount, p_reason: 'preview_pack' });
     return { profile: await profile(uid) };

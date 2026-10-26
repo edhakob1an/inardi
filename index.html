@@ -128,6 +128,64 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .me small { color: var(--muted); font-size: 12px; }
 .coins { display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 4px 0 5px; border-radius: 20px; background: rgba(10,6,3,.6); border: 1px solid var(--line); font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; flex: none; transition: transform .2s; }
 .coins.bump { transform: scale(1.12); }
+#menu .rgrp .coins { font-size: 13.5px; height: 34px; gap: 4px; padding-right: 3px; }
+#menu .rgrp .coins img { width: 23px; height: 23px; }
+#menu .rgrp .coins .plus { display: none; }
+#menu .rgrp .coins { padding: 0 10px 0 4px; cursor: pointer; }
+#menu .rgrp .gift { width: 34px; height: 34px; }
+#menu .rgrp { gap: 5px; }
+#menu .me .mi { max-width: 120px; }
+.coins.pearlp .plus { background: linear-gradient(180deg, #fff, #d9cfe6); }
+/* cases */
+.casecard { display: flex; align-items: center; gap: 14px; padding: 12px; border-radius: 20px; background: rgba(10,6,3,.55); border: 1px solid var(--line); flex: none; position: relative; overflow: hidden; }
+.casecard.bronze { --cg: rgba(220,140,70,.35); } .casecard.silver { --cg: rgba(170,210,255,.35); } .casecard.gold { --cg: rgba(255,210,110,.45); border-color: rgba(255,214,140,.5); }
+.casecard::before { content: ""; position: absolute; left: -10%; top: -40%; width: 60%; height: 180%; background: radial-gradient(closest-side, var(--cg), transparent); pointer-events: none; }
+.casecard .cimg { flex: none; width: 96px; height: 96px; position: relative; }
+.casecard .cimg img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 8px 12px rgba(0,0,0,.6)); }
+.casecard .cimg .cn { position: absolute; right: -4px; top: -4px; min-width: 24px; height: 24px; padding: 0 6px; box-sizing: border-box; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(180deg, #e2563a, #b23a22); color: #fff; font: 800 12px/1 system-ui, sans-serif; box-shadow: 0 0 0 2px #1a110a; }
+.casecard .iinfo { position: relative; }
+.casebtns { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; align-self: stretch; }
+.casebtns .ibtn { padding: 0 13px; }
+.ibtn img { width: 20px; height: 20px; flex: none; }
+.casebtns .ibtn { margin-top: 0; }
+.ibtn.odds { background: transparent; border: 1px solid var(--line); color: var(--muted); padding: 0 12px; }
+.ibtn img.pi, .pack img.pi { width: 18px; height: 18px; }
+.dailycase { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; flex: none; border: 1px solid rgba(255,214,140,.6); background: linear-gradient(180deg, rgba(255,214,140,.16), rgba(255,214,140,.04)); }
+.dailycase img { width: 46px; height: 46px; }
+.dailycase div { flex: 1; } .dailycase b { display: block; font-weight: 700; } .dailycase small { color: var(--muted); font-size: 12px; }
+.oddtab { display: grid; gap: 6px; }
+.oddtab div { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 12px; background: rgba(255,236,200,.05); border: 1px solid rgba(232,190,110,.18); font-size: 14px; }
+.oddtab div i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.oddtab div span { flex: 1; } .oddtab div b { color: var(--gold-hi); font-variant-numeric: tabular-nums; }
+/* case opening */
+#caseFx { position: fixed; inset: 0; z-index: 75; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; background: radial-gradient(70% 50% at 50% 42%, rgba(60,40,18,.85), rgba(4,3,2,.96)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); animation: ovin .25s both; }
+#caseFx[hidden] { display: none !important; }
+#caseFx .cbox { width: 190px; height: 190px; position: relative; }
+#caseFx .cbox img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 16px 24px rgba(0,0,0,.7)); }
+#caseFx .cbox.shake img { animation: cshake .14s linear infinite; }
+#caseFx .cbox.pop img { animation: cpop .45s ease-in forwards; }
+@keyframes cshake { 25% { transform: rotate(-4deg) translateX(-3px); } 75% { transform: rotate(4deg) translateX(3px); } }
+@keyframes cpop { 40% { transform: scale(1.15); filter: brightness(2) drop-shadow(0 0 40px #ffd98a); } 100% { transform: scale(1.6); opacity: 0; } }
+#caseFx .flash { position: absolute; inset: 0; background: radial-gradient(circle at 50% 42%, rgba(255,236,190,.95), rgba(255,200,110,.3) 30%, transparent 60%); animation: cflash .7s ease-out forwards; pointer-events: none; }
+@keyframes cflash { from { opacity: 1; } to { opacity: 0; } }
+.reelwrap { position: relative; width: 100%; max-width: 420px; height: 120px; overflow: hidden; -webkit-mask: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); mask: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent); }
+.reelwrap::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; background: linear-gradient(180deg, transparent, #ffd98a 20%, #ffd98a 80%, transparent); box-shadow: 0 0 12px #ffd98a; }
+.reel { position: absolute; left: 0; top: 10px; display: flex; gap: 10px; will-change: transform; }
+.rtile { flex: none; box-sizing: border-box; width: 92px; height: 100px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: rgba(255,236,200,.06); border: 2px solid var(--rc, #6b5f50); box-shadow: inset 0 -18px 24px -16px var(--rc, #6b5f50); font-size: 11.5px; font-weight: 700; color: var(--text); }
+.rtile .ri { width: 54px; height: 54px; display: grid; place-items: center; }
+.rtile .ri img { max-width: 100%; max-height: 100%; }
+.rtile .ri .av { width: 46px; height: 46px; }
+.rtile.win { animation: rwin 1s ease-in-out infinite; }
+@keyframes rwin { 50% { box-shadow: inset 0 -18px 24px -16px var(--rc), 0 0 26px var(--rc); transform: scale(1.06); } }
+.cres { text-align: center; min-height: 120px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.cres small { letter-spacing: .24em; font-weight: 800; font-size: 12px; }
+.cres b { font-family: var(--font-display); font-weight: 400; font-size: 30px; color: var(--gold-hi); }
+.cres span { color: var(--muted); font-size: 13.5px; }
+.cres .btns { display: flex; gap: 10px; margin-top: 6px; }
+.cres .btns button { min-width: 130px; }
+#caseFx .cta { border: 0; border-radius: 16px; padding: 14px 22px; font-family: var(--font-display); font-size: 19px; letter-spacing: .12em; color: #2a1a0c; background: linear-gradient(180deg, var(--gold-hi), var(--gold)); box-shadow: 0 8px 22px rgba(216,168,95,.3), inset 0 1px 0 rgba(255,255,255,.4), inset 0 -3px 0 rgba(0,0,0,.18); }
+#caseFx .list-btn { background: rgba(255,236,200,.06); border: 1px solid rgba(232,190,110,.35); border-radius: 16px; color: var(--text); padding: 13px 16px; }
+#caseFx .cres { opacity: 1; transition: opacity .3s; }
 .coins img { width: 28px; height: 28px; filter: drop-shadow(0 2px 2px rgba(0,0,0,.5)); }
 .coins .plus { width: 30px; height: 30px; border-radius: 50%; border: 0; background: linear-gradient(180deg, var(--gold-hi), var(--gold)); color: #2a1a0c; font-size: 20px; font-weight: 700; line-height: 1; display: grid; place-items: center; }
 
@@ -259,6 +317,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .av.fr-garnet { box-shadow: 0 0 0 calc(var(--t) + 1.5px) #e8b54a, 0 0 10px 2px rgba(214,58,74,.4); }
 .av.fr-lapis::before { background: conic-gradient(#0f1f6b, #4a6bf0, #1a2f8f, #b5c4ff, #0b1757, #3d5bd9, #0f1f6b); }
 .av.fr-lapis { box-shadow: 0 0 0 calc(var(--t) + 1.5px) #e8b54a, 0 0 10px 2px rgba(61,91,217,.45); }
+.av.fr-pearl::before { -webkit-mask: none; mask: none; inset: -26%; background: url(assets/ach/pearl_frame.webp) center / contain no-repeat; filter: drop-shadow(0 0 5px rgba(255,240,255,.45)); }
 .av.fr-laurel::before { -webkit-mask: none; mask: none; inset: -34%; background: url(assets/ach/laurel.webp) center / contain no-repeat; filter: drop-shadow(0 0 6px rgba(255,205,110,.5)); }
 .ibtn.lockd { color: var(--muted) !important; font-size: 11.5px; letter-spacing: .02em; }
 .ibtn.lockd::before { display: none; }
@@ -704,7 +763,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
   <canvas id="dust" aria-hidden="true"></canvas>
   <div class="mtop">
     <div class="me" data-go="profile" role="button" aria-label="Your profile"><div class="ava"><span class="avslot" id="meAv"></span><span class="alv" id="meLvl" title="Level">1</span></div><div class="mi"><b><span id="meName">Guest</span></b><div class="xpbar"><i id="meXp"></i></div><small id="meStats" hidden>Ready for a game</small></div></div>
-    <div class="rgrp"><button class="gift" data-go="daily" aria-label="Daily bonus"><svg viewBox="0 0 24 24"><rect x="3.5" y="9" width="17" height="11.5" rx="1.5"/><path d="M2.5 9h19v-1.5a1 1 0 0 0-1-1h-17a1 1 0 0 0-1 1z"/><path d="M12 6.5v14"/><path d="M12 6.5C10.8 3.6 7 3 7 5.2c0 1.6 3 1.3 5 1.3zM12 6.5c1.2-2.9 5-3.5 5-1.3 0 1.6-3 1.3-5 1.3z"/></svg><i class="dot" hidden></i></button><div class="coins"><img src="assets/coin.webp" alt=""><span class="coinval">1,000</span><button class="plus" data-go="coins" aria-label="Get coins">+</button></div></div>
+    <div class="rgrp"><button class="gift" data-go="daily" aria-label="Daily bonus"><svg viewBox="0 0 24 24"><rect x="3.5" y="9" width="17" height="11.5" rx="1.5"/><path d="M2.5 9h19v-1.5a1 1 0 0 0-1-1h-17a1 1 0 0 0-1 1z"/><path d="M12 6.5v14"/><path d="M12 6.5C10.8 3.6 7 3 7 5.2c0 1.6 3 1.3 5 1.3zM12 6.5c1.2-2.9 5-3.5 5-1.3 0 1.6-3 1.3-5 1.3z"/></svg><i class="dot" hidden></i></button><div class="coins"><img src="assets/coin.webp" alt=""><span class="coinval">1,000</span><button class="plus" data-go="coins" aria-label="Get coins">+</button></div><div class="coins pearlp"><img src="assets/pearl.webp" alt=""><span class="pearlval">50</span><button class="plus" data-go="pearls" aria-label="Get pearls">+</button></div></div>
   </div>
   <div class="hero">
     <div class="tilt"><div class="hb mini" id="heroBoard" role="img" aria-label="Nardi board"></div><div class="sheen"></div></div><img class="board3d" id="board3d" alt="Nardi board" hidden>
@@ -759,8 +818,8 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 </section>
 <!-- ============ SHOP ============ -->
 <section id="shop" class="screen mscreen" hidden>
-  <div class="mtop"><button class="back" id="shopBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Shop</h2><div class="coins"><img src="assets/coin.webp" alt=""><span class="coinval">1,000</span><button class="plus" data-go="coins" aria-label="Get coins">+</button></div></div>
-  <div class="tabs" id="shopTabs"><button data-t="boards" aria-pressed="true">BOARDS</button><button data-t="sets" aria-pressed="false">CHECKERS</button><button data-t="dice" aria-pressed="false">DICE</button><button data-t="avatars" aria-pressed="false">AVATARS</button></div>
+  <div class="mtop"><button class="back" id="shopBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><h2>Shop</h2><div class="coins pearlp"><img src="assets/pearl.webp" alt=""><span class="pearlval">50</span><button class="plus" data-go="pearls" aria-label="Get pearls">+</button></div></div>
+  <div class="tabs" id="shopTabs"><button data-t="cases" aria-pressed="false">CASES</button><button data-t="boards" aria-pressed="true">BOARDS</button><button data-t="sets" aria-pressed="false">CHECKERS</button><button data-t="dice" aria-pressed="false">DICE</button><button data-t="avatars" aria-pressed="false">AVATARS</button></div>
   <div class="shoplist" id="shopList"></div>
 </section>
 <section id="viewer" hidden aria-label="3D board preview">
@@ -771,6 +830,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
     <button class="back vreset" id="vReset" aria-label="Reset view"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4h4"/></svg></button></div>
   <div class="vbot"><div class="vhint" id="vHint">Tap the case to open it</div><div id="vBtn"></div></div>
 </section>
+<div id="caseFx" hidden></div>
 <div id="mtoast"></div>
 
 <!-- ============ GAME ============ -->
@@ -819,47 +879,49 @@ const $ = id => document.getElementById(id);
 // Each board image is 848 × 1264 and mirrored left-to-right, so the right field is the left one reflected.
 const SKINS = {
   walnut: { name: 'Ararat Walnut', desc: 'Carved vines and pomegranates with Mount Ararat medallions.', price: 0, W: 848, H: 1264, L: [83, 392], top: 84, bot: 1180, dim: .82, dice: 'ivory', hero3d: 'assets/skins/walnut/hero3d.webp' },
-  oak:    { name: 'Golden Oak', desc: 'Light oak, apricot-wood inlay and carved pomegranate branches.', price: 400, W: 848, H: 1264, L: [70, 397], top: 70, bot: 1206, dim: 1, dice: 'wood' },
-  ebony:  { name: 'Pearl Ebony', desc: 'Black ebony inlaid with mother-of-pearl and gold.', price: 900, W: 848, H: 1264, L: [60, 392], top: 55, bot: 1196, dim: .86, dice: 'pearl' },
-  tuff:   { name: 'Pink Tuff', desc: 'The rose-pink stone of Yerevan, carved lace and a black basalt bar.', price: 1200, W: 848, H: 1264, L: [66, 398], top: 64, bot: 1200, dim: 1, dice: 'obsidian' },
-  garnet: { name: 'Royal Garnet', desc: 'Garnet-red cherry under glossy lacquer, with gold-leaf lines and a golden pomegranate tree.', price: 1500, W: 848, H: 1264, L: [66, 398], top: 68, bot: 1196, dim: 1, dice: 'lapis' },
+  oak:    { name: 'Golden Oak', desc: 'Light oak, apricot-wood inlay and carved pomegranate branches.', price: 40, W: 848, H: 1264, L: [70, 397], top: 70, bot: 1206, dim: 1, dice: 'wood' },
+  ebony:  { name: 'Pearl Ebony', desc: 'Black ebony inlaid with mother-of-pearl and gold.', price: 90, W: 848, H: 1264, L: [60, 392], top: 55, bot: 1196, dim: .86, dice: 'pearl' },
+  tuff:   { name: 'Pink Tuff', desc: 'The rose-pink stone of Yerevan, carved lace and a black basalt bar.', price: 120, W: 848, H: 1264, L: [66, 398], top: 64, bot: 1200, dim: 1, dice: 'obsidian' },
+  garnet: { name: 'Royal Garnet', desc: 'Garnet-red cherry under glossy lacquer, with gold-leaf lines and a golden pomegranate tree.', price: 150, W: 848, H: 1264, L: [66, 398], top: 68, bot: 1196, dim: 1, dice: 'lapis' },
 };
 for (const k in SKINS) { const sk = SKINS[k]; sk.id = k; sk.R = [sk.W - sk.L[1], sk.W - sk.L[0]]; }
 const SETS = {
   classic: { name: 'Ivory & Mahogany', desc: 'The classic pair. Polished ivory and red mahogany.', price: 0, ring: true },
-  bone:    { name: 'Bone & Walnut', desc: 'Cream bone with a walnut rim, and dark walnut.', price: 200, ring: false },
-  pearl:   { name: 'Pearl & Garnet', desc: 'Mother-of-pearl and garnet lacquer, gold rims.', price: 500, ring: true },
-  tuff:    { name: 'Tuff & Basalt', desc: 'Rose-pink tuff against polished black basalt, two Armenian stones.', price: 700, ring: true },
-  amber:   { name: 'Amber & Onyx', desc: 'Honey amber against black onyx, both with thin gold rims.', price: 900, ring: true },
+  bone:    { name: 'Bone & Walnut', desc: 'Cream bone with a walnut rim, and dark walnut.', price: 20, ring: false },
+  pearl:   { name: 'Pearl & Garnet', desc: 'Mother-of-pearl and garnet lacquer, gold rims.', price: 50, ring: true },
+  tuff:    { name: 'Tuff & Basalt', desc: 'Rose-pink tuff against polished black basalt, two Armenian stones.', price: 70, ring: true },
+  amber:   { name: 'Amber & Onyx', desc: 'Honey amber against black onyx, both with thin gold rims.', price: 90, ring: true },
 };
 const DICE = {
   ivory: { name: 'Bronze Ivory', desc: 'Ivory dice, dark pips and a bronze eternity sign on the one.', price: 0 },
-  wood:  { name: 'Walnut & Bone', desc: 'Dark walnut dice with bone pips and a carved bone eternity sign.', price: 250 },
-  pearl: { name: 'Pearl & Gold', desc: 'Mother-of-pearl dice with gold pips and a gold eternity sign.', price: 600 },
-  obsidian: { name: 'Obsidian & Gold', desc: 'Black Armenian obsidian with gold pips and a gold eternity sign.', price: 800 },
-  lapis: { name: 'Lapis & Silver', desc: 'Deep blue lapis lazuli with gold flecks, silver pips and a silver eternity sign.', price: 1000 },
+  wood:  { name: 'Walnut & Bone', desc: 'Dark walnut dice with bone pips and a carved bone eternity sign.', price: 25 },
+  pearl: { name: 'Pearl & Gold', desc: 'Mother-of-pearl dice with gold pips and a gold eternity sign.', price: 60 },
+  obsidian: { name: 'Obsidian & Gold', desc: 'Black Armenian obsidian with gold pips and a gold eternity sign.', price: 80 },
+  lapis: { name: 'Lapis & Silver', desc: 'Deep blue lapis lazuli with gold flecks, silver pips and a silver eternity sign.', price: 100 },
 };
 // avatars use art that is already in the game; frames are drawn in CSS
 const AVATARS = {
   default:     { name: 'Your checker', desc: 'Your light checker, whatever set you play with.', price: 0 },
-  ararat:      { name: 'Mount Ararat', desc: 'The carved Ararat medallion of the walnut board.', price: 300, img: 'assets/skins/walnut/emblem.webp' },
-  pomegranate: { name: 'Pomegranate', desc: 'Carved pomegranate branches in light oak.', price: 300, img: 'assets/skins/oak/emblem.webp' },
-  star:        { name: 'Pearl Star', desc: 'The mother-of-pearl star of the ebony board.', price: 500, img: 'assets/skins/ebony/emblem.webp' },
-  eternity:    { name: 'Eternity Stone', desc: 'The eternity sign carved in pink tuff.', price: 600, img: 'assets/skins/tuff/emblem.webp' },
-  garnet:      { name: 'Golden Branch', desc: 'A gold-leaf pomegranate branch on garnet lacquer.', price: 600, img: 'assets/skins/garnet/emblem.webp' },
-  goldsign:    { name: 'Gold Eternity', desc: 'A polished gold eternity sign on black obsidian.', price: 800, img: 'assets/dice/obsidian/sign.webp', bg: 'radial-gradient(circle, #2a2a2a, #050505)' },
+  ararat:      { name: 'Mount Ararat', desc: 'The carved Ararat medallion of the walnut board.', price: 30, img: 'assets/skins/walnut/emblem.webp' },
+  pomegranate: { name: 'Pomegranate', desc: 'Carved pomegranate branches in light oak.', price: 30, img: 'assets/skins/oak/emblem.webp' },
+  star:        { name: 'Pearl Star', desc: 'The mother-of-pearl star of the ebony board.', price: 50, img: 'assets/skins/ebony/emblem.webp' },
+  eternity:    { name: 'Eternity Stone', desc: 'The eternity sign carved in pink tuff.', price: 60, img: 'assets/skins/tuff/emblem.webp' },
+  garnet:      { name: 'Golden Branch', desc: 'A gold-leaf pomegranate branch on garnet lacquer.', price: 60, img: 'assets/skins/garnet/emblem.webp' },
+  goldsign:    { name: 'Gold Eternity', desc: 'A polished gold eternity sign on black obsidian.', price: 80, img: 'assets/dice/obsidian/sign.webp', bg: 'radial-gradient(circle, #2a2a2a, #050505)' },
+  pearl:       { name: 'Black Pearl', desc: 'A lustrous pearl on black silk. Only from Gold cases.', price: 0, fromCase: 'gold', img: 'assets/pearl.webp', bg: 'radial-gradient(circle, #2a2a33, #050508)' },
   crown:       { name: 'Royal Crown', desc: 'Only for winners of the Royal 10,000 room.', price: 0, ach: 'royal', img: 'assets/ach/royal.webp', bg: 'radial-gradient(circle, #4a1426, #1a0610)' },
   ara_gold:    { name: 'Ararat Gold', desc: 'Only for players who finished a week as number one.', price: 0, ach: 'number_one', img: 'assets/ach/ara_gold.webp' },
-  silversign:  { name: 'Silver Eternity', desc: 'A polished silver eternity sign on deep lapis.', price: 800, img: 'assets/dice/lapis/sign.webp', bg: 'radial-gradient(circle, #2f49b8, #10195a)' },
+  silversign:  { name: 'Silver Eternity', desc: 'A polished silver eternity sign on deep lapis.', price: 80, img: 'assets/dice/lapis/sign.webp', bg: 'radial-gradient(circle, #2f49b8, #10195a)' },
 };
 const FRAMES = {
   none:    { name: 'No frame', desc: 'A simple thin line.', price: 0 },
-  bronze:  { name: 'Bronze', desc: 'A warm bronze ring.', price: 200 },
-  silver:  { name: 'Silver', desc: 'A bright polished silver ring.', price: 500 },
-  gold:    { name: 'Gold', desc: 'A glowing gold ring.', price: 1000 },
-  garnet:  { name: 'Garnet', desc: 'Deep red garnet with a gold edge.', price: 1500 },
-  lapis:   { name: 'Lapis', desc: 'Royal blue lapis with a gold edge.', price: 2000 },
-  diamond: { name: 'Diamond', desc: 'A turning ring of diamond light. The rarest frame you can buy.', price: 5000 },
+  bronze:  { name: 'Bronze', desc: 'A warm bronze ring.', price: 20 },
+  silver:  { name: 'Silver', desc: 'A bright polished silver ring.', price: 50 },
+  gold:    { name: 'Gold', desc: 'A glowing gold ring.', price: 100 },
+  garnet:  { name: 'Garnet', desc: 'Deep red garnet with a gold edge.', price: 150 },
+  lapis:   { name: 'Lapis', desc: 'Royal blue lapis with a gold edge.', price: 200 },
+  diamond: { name: 'Diamond', desc: 'A turning ring of diamond light. The rarest frame you can buy.', price: 500 },
+  pearl:   { name: 'Pearl String', desc: 'A ring of real pearls. Only from Gold cases.', price: 0, fromCase: 'gold' },
   laurel:  { name: 'Golden Laurel', desc: 'Only for players who finished a week in the top 10.', price: 0, ach: 'top10' },
 };
 const CAT = { skins: SKINS, sets: SETS, dice: DICE, avatars: AVATARS, frames: FRAMES }, EQK = { skins: 'skin', sets: 'set', dice: 'dice', avatars: 'avatar', frames: 'frame' },
@@ -1475,6 +1537,8 @@ $('overlay').addEventListener('click', e => {
   if (act === 'bot-hard') startGame('normal');
   if (act === 'local') startGame('local');
   if (act === 'watchad' && NET.ok) { serverWallet('ad_reward', {}, '+50 coins'); return; }
+  if (act === 'pearls') { pearlSheet(); return; }
+  if (act.startsWith('ppack-')) { const n = +act.slice(6); if (NET.ok) serverWallet('preview_pack', { currency: 'pearls', amount: n }, `+${fmt(n)} pearls`); else { pearls += n; store.set('pearls', pearls); syncCoins(true); mtoast(`+${fmt(n)} pearls`); } return; }
   if (act.startsWith('pack-') && NET.ok) { serverWallet('preview_pack', { amount: +act.slice(5) }, `+${fmt(+act.slice(5))} coins`); return; }
   if (act === 'buy' && pendingBuy && NET.ok) { const b = pendingBuy; pendingBuy = null; serverWallet('buy', { kind: b.kind, id: b.id }, `${b.it.name} is yours`); return; }
   if (act === 'watchad') { coins += 50; store.set('coins', coins); syncCoins(true); sfx.ui(); mtoast('+50 coins'); }
@@ -1482,8 +1546,8 @@ $('overlay').addEventListener('click', e => {
   if (act === 'coins') coinSheet();
   if (act === 'scene') { const order = ['auto', 'day', 'night']; prefs.scene = order[(order.indexOf(prefs.scene || 'auto') + 1) % 3]; store.set('scene', prefs.scene); setVars(); document.querySelector('.mnav [data-go="settings"]').click(); }
   if (act.startsWith('pack-')) { coins += +act.slice(5); store.set('coins', coins); syncCoins(true); sfx.ui(); mtoast(`+${fmt(+act.slice(5))} coins`); }
-  if (act === 'buy' && pendingBuy && coins >= pendingBuy.it.price) {
-    coins -= pendingBuy.it.price; store.set('coins', coins); syncCoins(true);
+  if (act === 'buy' && pendingBuy && pearls >= pendingBuy.it.price) {
+    pearls -= pendingBuy.it.price; store.set('pearls', pearls); syncCoins(true);
     owned[pendingBuy.kind].push(pendingBuy.id); store.set('owned', owned);
     doEquip(pendingBuy.kind, pendingBuy.id); mtoast(`${pendingBuy.it.name} is yours`); pendingBuy = null;
   }
@@ -1550,6 +1614,7 @@ function renderShop() {
   $('shopTabs').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === shopTab));
   const kinds = TAB_KIND[shopTab], list = $('shopList');
   list.innerHTML = '';
+  if (shopTab === 'cases') return renderCases(list);
   for (const kind of kinds) {
   if (kinds.length > 1) { const h = document.createElement('div'); h.className = 'fsec'; h.textContent = kind === 'avatars' ? 'AVATARS' : 'FRAMES'; list.appendChild(h); }
   for (const [id, it] of Object.entries(CAT[kind])) {
@@ -1573,21 +1638,24 @@ function renderShop() {
 function shopBtnHTML(kind, id) {
   const it = CAT[kind][id], own = owned[kind].includes(id), eq = equip[EQK[kind]] === id;
   if (it.ach && !own) return `<button class="ibtn done lockd" disabled>🏆 ${ACHN[it.ach] ? ACHN[it.ach].name : 'Achievement'}</button>`;
-  return `<button class="ibtn ${eq ? 'done' : own ? 'equip' : 'buy'}" data-kind="${kind}" data-id="${id}" ${eq ? 'disabled' : ''}>${eq ? 'EQUIPPED' : own ? 'EQUIP' : `<img src="assets/coin.webp" alt="">${fmt(it.price)}`}</button>`;
+  if (it.fromCase && !own) return `<button class="ibtn done lockd" disabled>🎁 Gold case only</button>`;
+  return `<button class="ibtn ${eq ? 'done' : own ? 'equip' : 'buy'}" data-kind="${kind}" data-id="${id}" ${eq ? 'disabled' : ''}>${eq ? 'EQUIPPED' : own ? 'EQUIP' : `<img src="assets/pearl.webp" alt="">${fmt(it.price)}`}</button>`;
 }
 function shopAction(kind, id) {
   const it = CAT[kind][id];
   if (owned[kind].includes(id)) return doEquip(kind, id);
-  if (coins < it.price) return sheet(`<h2>Not enough coins</h2><p>${it.name} costs ${fmt(it.price)} coins. You have ${fmt(coins)}.</p>
-    <button class="cta" data-act="coins">GET COINS</button><button class="list-btn" data-act="close">Close</button>`);
+  if (pearls < it.price) return sheet(`<h2>Not enough pearls</h2><p>${it.name} costs ${fmt(it.price)} pearls. You have ${fmt(pearls)}.</p>
+    <button class="cta" data-act="pearls">GET PEARLS</button><button class="list-btn" data-act="close">Close</button>`);
   pendingBuy = { kind, id, it };
-  sheet(`<h2>${it.name}</h2><p>${it.desc}</p><p style="font-family:var(--font-display);font-size:24px;color:var(--text)">${fmt(it.price)} coins</p>
+  sheet(`<h2>${it.name}</h2><p>${it.desc}</p><p style="font-family:var(--font-display);font-size:24px;color:var(--text)"><img src="assets/pearl.webp" alt="" style="width:24px;vertical-align:-4px"> ${fmt(it.price)} pearls</p>
     <button class="cta" data-act="buy">BUY AND EQUIP</button><button class="list-btn" data-act="close">Cancel</button>`);
 }
 function doEquip(kind, id) {
   if (NET.ok) api('equip', { kind, id }).then(r => r.profile && applyProfile(r.profile));
   equip[EQK[kind]] = id; store.set('equip', equip); preloadImgs(gameArt()); setVars(); renderShop();
 }
+// in the menu bar the + buttons are hidden: tapping the counter opens the same sheet
+document.querySelectorAll('#menu .rgrp .coins').forEach(c => c.addEventListener('click', e => { if (e.target.closest('.plus')) return; c.querySelector('.plus').click(); }));
 $('shopTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; shopTab = b.dataset.t; renderShop(); });
 $('shopList').addEventListener('click', e => {
   const v = e.target.closest('[data-view]'); if (v) { audio(); const [k, id] = v.dataset.view.split(':'); return V3.open(k, id); }
@@ -1874,6 +1942,10 @@ const V3 = (() => {
   $('vBtn').addEventListener('click', e => { const b = e.target.closest('.ibtn'); if (!b || b.disabled) return; audio(); shopAction(b.dataset.kind, b.dataset.id); });
   return S;
 })();
+function pearlSheet() {
+  sheet(`<img class="bigcoin" src="assets/pearl.webp" alt=""><h2>Get pearls</h2><p>Pearls buy boards, checkers, dice, avatars, frames and cases.</p><div class="packs">${[100, 500, 1200].map(n => `<button class="pack" data-act="ppack-${n}"><img src="assets/pearl.webp" alt="">${fmt(n)}<small>Preview</small></button>`).join('')}</div>
+    <p style="font-size:12px">In this preview, packs are added free. Real prices come with Google Play billing.</p><button class="list-btn" data-act="close">Close</button>`);
+}
 function coinSheet() {
   sheet(`<h2>Get coins</h2><div class="packs">${[1000, 5000, 12000].map(n => `<button class="pack" data-act="pack-${n}"><img src="assets/coin.webp" alt="">${fmt(n)}<small>Preview</small></button>`).join('')}</div>
     <p style="font-size:12px">In this preview, packs are added free. Real prices come with Google Play billing.</p>
@@ -1950,10 +2022,11 @@ $('bar0').addEventListener('pointermove', e => { if (holdT && holdAt && Math.hyp
 $('rollBtn').addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('pointerdown', e => { if (!$('autoPop').hidden && !e.target.closest('#autoPop')) { autoPopOpen(false); if (e.target.closest('#rollBtn')) rollHeld = true; } }, true);
 // ---------- main menu ----------
-let coins = store.get('coins', 1000), stats = store.get('stats', { played: 0, won: 0 });
+let coins = store.get('coins', 1000), pearls = store.get('pearls', 50), stats = store.get('stats', { played: 0, won: 0 });
 const fmt = n => n.toLocaleString('en-US');
 function syncCoins(bump) {
   document.querySelectorAll('.coinval').forEach(e => e.textContent = fmt(coins));
+  document.querySelectorAll('.pearlval').forEach(e => e.textContent = fmt(pearls));
   if (bump) document.querySelectorAll('.coins').forEach(c => { c.classList.add('bump'); setTimeout(() => c.classList.remove('bump'), 220); });
 }
 let mtT;
@@ -2032,6 +2105,7 @@ document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', 
   if (go === 'friends') openFriends();
   if (go === 'leaders') openLeaders();
   if (go === 'coins') coinSheet();
+  if (go === 'pearls') pearlSheet();
   if (go === 'profile') { const pr = myProg(), mc = myCard(); sheet(`<div class="bigav">${avHTML(equip.avatar, equip.frame, equip.set)}</div><h2>${NET.profile ? esc(NET.profile.name) : 'Guest'}</h2><p><span class="netdot ${NET.ok ? 'on' : ''}"></span>${NET.ok ? 'Online' : 'Offline'}${mc.created_at ? ` · since ${since(mc.created_at)}` : ''}</p>
     ${statsHTML(mc)}
     <div class="xpline"><div class="xt"><span>Level ${pr.level}</span><b>${fmt(pr.xp - xpFor(pr.level))} / ${fmt(xpFor(pr.level + 1) - xpFor(pr.level))} XP</b></div><div class="xpbar"><i style="width:${lvPct(pr.xp, pr.level)}%"></i></div></div>
@@ -2083,7 +2157,7 @@ async function api(action, args = {}) {
   } catch (e) { return { error: 'network' }; }
 }
 function applyProfile(p) {
-  NET.profile = p; coins = p.coins; owned = { skins: [...p.owned_skins], sets: [...p.owned_sets], dice: [...(p.owned_dice || ['ivory'])], avatars: [...(p.owned_avatars || ['default'])], frames: [...(p.owned_frames || ['none'])] };
+  NET.profile = p; coins = p.coins; pearls = p.pearls ?? pearls; owned = { skins: [...p.owned_skins], sets: [...p.owned_sets], dice: [...(p.owned_dice || ['ivory'])], avatars: [...(p.owned_avatars || ['default'])], frames: [...(p.owned_frames || ['none'])] };
   equip = { skin: SKINS[p.equip.skin] ? p.equip.skin : 'walnut', set: SETS[p.equip.set] ? p.equip.set : 'classic', dice: DICE[p.equip.dice] ? p.equip.dice : (DICE[equip.dice] && owned.dice.includes(equip.dice) ? equip.dice : 'ivory'),
     avatar: AVATARS[p.equip.avatar] ? p.equip.avatar : 'default', frame: FRAMES[p.equip.frame] ? p.equip.frame : 'none' };
   stats = { played: p.played, won: p.won };
@@ -2427,7 +2501,7 @@ function showXp(r) {
   const el = $('xpLine'); if (!el || !r || !r.xp) return;
   const { xp, level } = myProg(), before = xp - r.xp, up = r.level > r.from;
   el.innerHTML = `<div class="xt"><span>Level ${level}</span><b>+${r.xp} XP</b></div><div class="xpbar"><i style="width:${up ? 0 : lvPct(before, level)}%"></i></div>
-    ${up ? `<div class="lvup">Level up! You are now level ${level}<small>+${fmt(r.coins)} coins</small></div>` : ''}`;
+    ${up ? `<div class="lvup">Level up! You are now level ${level}<small>+${fmt(r.coins)} coins · ${level % 5 === 0 ? 'Silver' : 'Bronze'} case</small></div>` : ''}`;
   requestAnimationFrame(() => requestAnimationFrame(() => { const i = el.querySelector('.xpbar i'); if (i) i.style.width = lvPct(xp, level) + '%'; }));
   if (up) { setTimeout(() => { sfx.matchFound(); fxBanner('LEVEL ' + level, `+${fmt(r.coins)} COINS`); setTimeout(() => { fxCoins(r.coins); syncCoins(true); }, 900); }, 500); }
 }
@@ -2548,7 +2622,7 @@ function achDetail(id) {
   const v = achView, a = ACHN[id], t = +(v.ach || {})[id] || 0, val = (v.stats || {})[a.stat] || 0, next = a.tiers[t];
   sheet(`${achIc(a, t, true)}<h2>${a.name}</h2><p>${a.desc}</p>
     ${next ? `<div class="xpline"><div class="xt"><span>${t ? `${TIERN[achTierCls(a, t)]} · next tier` : 'Progress'}</span><b>${fmt(Math.min(val, next[0]))} / ${fmt(next[0])}</b></div><div class="xpbar"><i style="width:${Math.min(100, val / next[0] * 100)}%"></i></div></div>` : '<p style="color:var(--gold-hi)">Completed</p>'}
-    <div class="achtiers">${a.tiers.map(([n, c], i) => `<div class="${i < t ? 'ok' : ''}"><b>${a.tiers.length > 1 ? TIERN[i + 1] + ' · ' : ''}${fmt(n)}</b><span><img src="assets/coin.webp" alt="">${fmt(c)}</span></div>`).join('')}</div>
+    <div class="achtiers">${a.tiers.map(([n, c], i) => `<div class="${i < t ? 'ok' : ''}"><b>${a.tiers.length > 1 ? TIERN[i + 1] + ' · ' : ''}${fmt(n)}</b><span><img src="assets/pearl.webp" alt="">${fmt(Math.max(10, Math.floor(c / 10)))}</span></div>`).join('')}</div>
     <button class="list-btn" data-act="ach-back">Back</button>`);
 }
 async function openAch(userId, name) {
@@ -2572,13 +2646,124 @@ function achToast(list) {
     const n = achQ.shift(); if (!n) { achBusy = false; return; }
     achBusy = true; const a = ACHN[n.id];
     const el = document.createElement('div'); el.className = 'achtoast';
-    el.innerHTML = `${achIc(a, n.tier)}<div><small>ACHIEVEMENT${a.tiers.length > 1 ? ' · ' + TIERN[n.tier].toUpperCase() : ''}</small><b>${a.name}</b></div><em><img src="assets/coin.webp" alt="">+${fmt(n.coins)}</em>`;
+    el.innerHTML = `${achIc(a, n.tier)}<div><small>ACHIEVEMENT${a.tiers.length > 1 ? ' · ' + TIERN[n.tier].toUpperCase() : ''}</small><b>${a.name}</b></div><em><img src="assets/pearl.webp" alt="">+${fmt(n.coins)}</em>`;
     document.body.appendChild(el); sfx.matchFound(); buzz([20, 40, 20]);
-    setTimeout(() => { fxCoins(n.coins, [innerWidth - 50, 50]); syncCoins(true); }, 700);
+    setTimeout(() => syncCoins(true), 700);
     if (n.unlock) setTimeout(() => mtoast(`New ${n.unlock[0] === 'frames' ? 'frame' : 'avatar'} unlocked: ${CAT[n.unlock[0]][n.unlock[1]].name}`), 1800);
     setTimeout(() => { el.classList.add('out'); setTimeout(() => { el.remove(); next(); }, 420); }, 3200);
   };
   next();
+}
+
+// ---------- cases: bought with pearls or earned; the server rolls the prize, the screen shows it on a spinning reel ----------
+const CASEDEF = {
+  bronze: { name: 'Bronze case', price: 30, desc: 'Coins and pearls, sometimes a dice or checker set.',
+    drops: [[40, 'coins', 200], [25, 'coins', 500], [20, 'pearls', 10], [10, 'pearls', 25], [5, 'rare']] },
+  silver: { name: 'Silver case', price: 80, desc: 'Bigger prizes and a chance at a board or frame.',
+    drops: [[30, 'coins', 500], [20, 'coins', 1500], [20, 'pearls', 25], [15, 'pearls', 60], [10, 'rare'], [5, 'epic']] },
+  gold: { name: 'Gold case', price: 200, desc: 'The best prizes, and the only way to get legendary items.',
+    drops: [[25, 'coins', 2000], [20, 'pearls', 60], [20, 'pearls', 150], [15, 'rare'], [15, 'epic'], [5, 'legendary']] },
+};
+const RARITY = { coins: ['Common', '#9c917f'], pearls: ['Common', '#d8d2e6'], rare: ['Rare', '#4aa3ff'], epic: ['Epic', '#b56cff'], legendary: ['Legendary', '#ffcf4a'] };
+const TIERPOOL = {
+  rare: [['dice', 'wood'], ['dice', 'pearl'], ['dice', 'obsidian'], ['dice', 'lapis'], ['sets', 'bone'], ['sets', 'pearl'], ['sets', 'tuff'], ['sets', 'amber']],
+  epic: [['skins', 'oak'], ['skins', 'ebony'], ['skins', 'tuff'], ['skins', 'garnet'], ['frames', 'gold'], ['frames', 'garnet'], ['frames', 'lapis'], ['avatars', 'star'], ['avatars', 'goldsign'], ['avatars', 'silversign']],
+  legendary: [['avatars', 'pearl'], ['frames', 'pearl'], ['frames', 'diamond']],
+};
+const caseCount = k => +((NET.profile && NET.profile.cases) || {})[k] || 0;
+const caseDailyFree = () => NET.ok && NET.profile && NET.profile.case_daily !== ymdYerevan(0);
+const itemIcon = (k, id) => k === 'skins' ? `<img src="${A(id, 'thumb')}" alt="">` : k === 'sets' ? `<img src="${SA(id, 'light')}" alt="" style="border-radius:50%">`
+  : k === 'dice' ? `<img src="assets/dice/${id}/face.webp" alt="" style="border-radius:22%">` : k === 'avatars' ? avHTML(id, 'none', equip.set) : avHTML(equip.avatar, id, equip.set);
+function renderCases(list) {
+  if (!NET.ok) { list.innerHTML = `<div class="lbempty">${ERR.network}<br>Cases need a connection.</div>`; return; }
+  let h = '';
+  if (caseDailyFree()) h += `<div class="dailycase"><img src="assets/cases/bronze.webp" alt=""><div><b>Free daily case</b><small>A Bronze case, free every day.</small></div><button class="ibtn buy" data-case-daily>CLAIM</button></div>`;
+  for (const [k, c] of Object.entries(CASEDEF)) {
+    const n = caseCount(k);
+    h += `<div class="casecard ${k}"><div class="cimg"><img src="assets/cases/${k}.webp" alt="">${n ? `<span class="cn">${n}</span>` : ''}</div>
+      <div class="iinfo"><b>${c.name}</b><span>${c.desc}</span><div class="casebtns">
+        ${n ? `<button class="ibtn buy" data-case-open="${k}">OPEN</button>` : ''}
+        <button class="ibtn ${n ? 'equip' : 'buy'}" data-case-buy="${k}"><img src="assets/pearl.webp" alt="">${c.price}</button>
+        <button class="ibtn odds" data-case-odds="${k}">Chances</button></div></div></div>`;
+  }
+  h += `<p class="lbinfo">You also get cases from level-ups (Silver every 5th level) and from the weekly leaderboard. Items you already own turn into pearls.</p>`;
+  list.innerHTML = h;
+}
+function oddsSheet(k) {
+  const c = CASEDEF[k], tot = c.drops.reduce((n, d) => n + d[0], 0);
+  const label = d => d[1] === 'coins' ? `${fmt(d[2])} coins` : d[1] === 'pearls' ? `${fmt(d[2])} pearls` : d[1] === 'rare' ? 'Rare: a dice or checker set' : d[1] === 'epic' ? 'Epic: a board, frame or premium avatar' : 'Legendary: case-only Black Pearl avatar, Pearl String frame or Diamond frame';
+  sheet(`<h2>${c.name}</h2><p>Chances for each opening</p><div class="oddtab">${c.drops.map(d => `<div><i style="background:${RARITY[d[1]][1]}"></i><span>${label(d)}</span><b>${Math.round(d[0] / tot * 100)}%</b></div>`).join('')}</div>
+    <p style="font-size:12px">If you already own the item, you get pearls instead: Rare 30, Epic 80, Legendary 200.</p><button class="list-btn" data-act="close">Close</button>`);
+}
+$('shopList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-case-open],[data-case-buy],[data-case-odds],[data-case-daily]'); if (!b) return;
+  e.stopImmediatePropagation(); audio();
+  if (b.dataset.caseOdds) return oddsSheet(b.dataset.caseOdds);
+  if (b.dataset.caseOpen) return openCase(b.dataset.caseOpen);
+  b.disabled = true;
+  if (b.hasAttribute('data-case-daily')) { const r = await api('case_daily'); if (r.profile) { applyProfile(r.profile); mtoast('Free Bronze case added'); sfx.matchFound(); } else mtoast(errText(r.error)); renderShop(); return; }
+  const k = b.dataset.caseBuy, c = CASEDEF[k];
+  if (pearls < c.price) { b.disabled = false; return sheet(`<h2>Not enough pearls</h2><p>${c.name} costs ${c.price} pearls. You have ${fmt(pearls)}.</p><button class="cta" data-act="pearls">GET PEARLS</button><button class="list-btn" data-act="close">Close</button>`); }
+  const r = await api('case_buy', { kind: k });
+  if (r.profile) { applyProfile(r.profile); syncCoins(true); renderShop(); openCase(k); } else { b.disabled = false; mtoast(errText(r.error)); }
+}, true);
+// the reel: random tiles that look like this case's prizes, with the real prize placed where the reel stops
+function rewardTile(rw) {
+  if (rw.item) { const [k, id] = rw.item, it = CAT[k][id]; return { rc: RARITY[rw.tier][1], ic: itemIcon(k, id), t: it ? it.name : id }; }
+  return rw.coins ? { rc: RARITY.coins[1], ic: '<img src="assets/coin.webp" alt="">', t: fmt(rw.coins) } : { rc: RARITY.pearls[1], ic: '<img src="assets/pearl.webp" alt="">', t: fmt(rw.pearls) };
+}
+function fakeTile(k) {
+  const c = CASEDEF[k], tot = c.drops.reduce((n, d) => n + d[0], 0); let r = Math.random() * tot, d = c.drops[0];
+  for (const x of c.drops) { if (r < x[0]) { d = x; break; } r -= x[0]; }
+  if (d[1] === 'coins') return rewardTile({ coins: d[2] });
+  if (d[1] === 'pearls') return rewardTile({ pearls: d[2] });
+  const pool = TIERPOOL[d[1]], it = pool[Math.floor(Math.random() * pool.length)];
+  return rewardTile({ item: it, tier: d[1] });
+}
+const tileHTML = (t, win) => `<div class="rtile ${win ? 'win-slot' : ''}" style="--rc:${t.rc}"><span class="ri">${t.ic}</span><span>${t.t}</span></div>`;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+async function openCase(k) {
+  const fx = $('caseFx'), c = CASEDEF[k];
+  fx.innerHTML = `<div class="cbox shake"><img src="assets/cases/${k}.webp" alt=""></div><div class="cres"><span>Opening ${c.name}…</span></div>`;
+  fx.hidden = false; buzz(20);
+  const t0 = performance.now(), shakeSnd = setInterval(() => sfx.tap(), 180);
+  const r = await api('case_open', { kind: k });
+  await wait(Math.max(0, 1100 - (performance.now() - t0))); clearInterval(shakeSnd);
+  if (!r.reward) { fx.hidden = true; return mtoast(errText(r.error || 'network')); }
+  if (r.profile) applyProfile(r.profile);
+  const box = fx.querySelector('.cbox'); box.classList.remove('shake'); box.classList.add('pop');
+  fx.insertAdjacentHTML('afterbegin', '<div class="flash"></div>'); sfx.dice(); buzz([30, 30, 60]);
+  await wait(380);
+  const N = 42, WIN = 36, tiles = [];
+  for (let i = 0; i < N; i++) tiles.push(i === WIN ? rewardTile(r.reward) : fakeTile(k));
+  fx.querySelector('.cres').innerHTML = `<span>${c.name}</span>`;
+  box.outerHTML = `<div class="reelwrap"><div class="reel">${tiles.map((t, i) => tileHTML(t, i === WIN)).join('')}</div></div>`;
+  const reel = fx.querySelector('.reel'), wrap = fx.querySelector('.reelwrap'), wt = reel.children[WIN], tw = reel.children[1].offsetLeft - reel.children[0].offsetLeft;
+  const stop = -(wt.offsetLeft + wt.offsetWidth / 2 - wrap.clientWidth / 2), end = stop + (Math.random() - .5) * tw * .6;
+  const dur = 4200, start = performance.now(); let lastIdx = -1;
+  await new Promise(done => {
+    const step = now => {
+      const k2 = Math.min(1, (now - start) / dur), e = 1 - Math.pow(1 - k2, 4), x = end * e;
+      reel.style.transform = `translateX(${x}px)`;
+      const idx = Math.floor((-x + wrap.clientWidth / 2) / tw); if (idx !== lastIdx) { lastIdx = idx; sfx.tap(); }
+      if (k2 < 1) requestAnimationFrame(step); else done();
+    };
+    requestAnimationFrame(step);
+  });
+  // settle exactly on the prize
+  reel.style.transition = 'transform .35s ease-out'; reel.style.transform = `translateX(${stop}px)`;
+  await wait(380);
+  const win = reel.children[WIN]; win.classList.add('win');
+  const rw = r.reward, t = rewardTile(rw), [rn, rc] = RARITY[rw.tier];
+  const what = rw.item ? (CAT[rw.item[0]][rw.item[1]] || {}).name : rw.coins ? `${fmt(rw.coins)} coins` : `${fmt(rw.pearls)} pearls`;
+  const sub = rw.item ? (rw.dup ? `You already have it, so you get ${fmt(rw.pearls)} pearls instead.` : `New ${({ skins: 'board', sets: 'checker set', dice: 'dice set', avatars: 'avatar', frames: 'frame' })[rw.item[0]]}. Equip it in the Shop.`) : 'Added to your balance.';
+  if (rw.tier === 'legendary' || rw.tier === 'epic') fxBanner(rn.toUpperCase(), what.toUpperCase(), rw.tier === 'legendary' ? '' : '');
+  sfx.win(); if (rw.coins) fxCoins(rw.coins); syncCoins(true);
+  const more = caseCount(k);
+  fx.querySelector('.cres').innerHTML = `<small style="color:${rc}">${rn.toUpperCase()}</small><b>${esc(what)}</b><span>${sub}</span>
+    <div class="btns">${more ? `<button class="list-btn" data-again="${k}">Open another (${more})</button>` : ''}<button class="cta" data-done>COLLECT</button></div>`;
+  fx.querySelector('[data-done]').onclick = () => { fx.hidden = true; fx.innerHTML = ''; renderShop(); };
+  const ag = fx.querySelector('[data-again]'); if (ag) ag.onclick = () => openCase(k);
 }
 
 // ---------- weekly leaderboard ----------

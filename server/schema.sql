@@ -38,6 +38,17 @@ alter table public.profiles add column if not exists bot_played integer not null
 alter table public.profiles add column if not exists bot_won integer not null default 0;
 -- achievements: counters the server keeps, and the tier reached per achievement {"champion": 2, ...}
 alter table public.profiles add column if not exists ach jsonb not null default '{}';
+-- pearls: the shop currency (coins are only for playing); cases waiting to be opened {"bronze": 2, ...}
+alter table public.profiles add column if not exists pearls integer not null default 50;
+alter table public.profiles add column if not exists cases jsonb not null default '{}';
+alter table public.profiles add column if not exists case_daily date;
+alter table public.profiles add column if not exists pearls_welcome boolean not null default false;
+alter table public.profiles drop constraint if exists profiles_pearls_check;
+alter table public.profiles add constraint profiles_pearls_check check (pearls >= 0);
+alter table public.coin_ledger add column if not exists currency text not null default 'coins';
+-- players from before pearls existed get a welcome gift once
+update public.profiles set pearls = pearls + 150, pearls_welcome = true where not pearls_welcome and created_at < '2026-10-26 03:00+00';
+update public.profiles set pearls_welcome = true where not pearls_welcome;
 alter table public.profiles add column if not exists comebacks integer not null default 0;
 alter table public.profiles add column if not exists perfect_doubles integer not null default 0;
 alter table public.profiles add column if not exists untouched_wins integer not null default 0;
@@ -94,16 +105,17 @@ alter table public.shop_items add constraint shop_items_kind_check check (kind i
 alter table public.shop_items enable row level security;
 drop policy if exists "anyone reads prices" on public.shop_items;
 create policy "anyone reads prices" on public.shop_items for select to anon, authenticated using (true);
+-- prices in pearls
 insert into public.shop_items values
-  ('skins', 'walnut', 0), ('skins', 'oak', 400), ('skins', 'ebony', 900),
-  ('sets', 'classic', 0), ('sets', 'bone', 200), ('sets', 'pearl', 500),
-  ('dice', 'ivory', 0), ('dice', 'wood', 250), ('dice', 'pearl', 600),
-  ('skins', 'tuff', 1200), ('sets', 'tuff', 700), ('dice', 'obsidian', 800),
-  ('skins', 'garnet', 1500), ('sets', 'amber', 900), ('dice', 'lapis', 1000),
-  ('avatars', 'default', 0), ('avatars', 'ararat', 300), ('avatars', 'pomegranate', 300), ('avatars', 'star', 500), ('avatars', 'eternity', 600),
-  ('avatars', 'garnet', 600), ('avatars', 'goldsign', 800), ('avatars', 'silversign', 800),
-  ('frames', 'none', 0), ('frames', 'bronze', 200), ('frames', 'silver', 500), ('frames', 'gold', 1000), ('frames', 'garnet', 1500),
-  ('frames', 'lapis', 2000), ('frames', 'diamond', 5000)
+  ('skins', 'walnut', 0), ('skins', 'oak', 40), ('skins', 'ebony', 90),
+  ('sets', 'classic', 0), ('sets', 'bone', 20), ('sets', 'pearl', 50),
+  ('dice', 'ivory', 0), ('dice', 'wood', 25), ('dice', 'pearl', 60),
+  ('skins', 'tuff', 120), ('sets', 'tuff', 70), ('dice', 'obsidian', 80),
+  ('skins', 'garnet', 150), ('sets', 'amber', 90), ('dice', 'lapis', 100),
+  ('avatars', 'default', 0), ('avatars', 'ararat', 30), ('avatars', 'pomegranate', 30), ('avatars', 'star', 50), ('avatars', 'eternity', 60),
+  ('avatars', 'garnet', 60), ('avatars', 'goldsign', 80), ('avatars', 'silversign', 80),
+  ('frames', 'none', 0), ('frames', 'bronze', 20), ('frames', 'silver', 50), ('frames', 'gold', 100), ('frames', 'garnet', 150),
+  ('frames', 'lapis', 200), ('frames', 'diamond', 500)
 on conflict (kind, id) do update set price = excluded.price;
 
 -- app switches (e.g. preview_mode lets testers add free coin packs; turn it off before launch)
@@ -228,7 +240,7 @@ create or replace function public.level_reward(p_level int) returns int language
   select case when p_level % 5 = 0 then 500 + 100 * p_level else 100 + 10 * p_level end $$;
 create or replace function public.add_xp(p_user uuid, p_xp int)
 returns jsonb language plpgsql security definer set search_path = public as $$
-declare v_p profiles; v_new int; v_coins int := 0; l int;
+declare v_p profiles; v_new int; v_coins int := 0; l int; v_cases jsonb; v_b int := 0; v_s int := 0;
 begin
   if p_xp <= 0 then return jsonb_build_object('xp', 0); end if;
   select * into v_p from profiles where id = p_user for update;
@@ -237,9 +249,11 @@ begin
   for l in v_p.level + 1 .. v_new loop
     v_coins := v_coins + level_reward(l);
     insert into coin_ledger (user_id, delta, reason) values (p_user, level_reward(l), 'level:' || l);
+    if l % 5 = 0 then v_s := v_s + 1; else v_b := v_b + 1; end if;
   end loop;
-  update profiles set xp = xp + p_xp, level = v_new, coins = coins + v_coins where id = p_user;
-  return jsonb_build_object('xp', p_xp, 'level', v_new, 'from', v_p.level, 'coins', v_coins);
+  v_cases := v_p.cases || jsonb_build_object('bronze', coalesce((v_p.cases ->> 'bronze')::int, 0) + v_b, 'silver', coalesce((v_p.cases ->> 'silver')::int, 0) + v_s);
+  update profiles set xp = xp + p_xp, level = v_new, coins = coins + v_coins, cases = case when v_b + v_s > 0 then v_cases else cases end where id = p_user;
+  return jsonb_build_object('xp', p_xp, 'level', v_new, 'from', v_p.level, 'coins', v_coins, 'cases', jsonb_build_object('bronze', v_b, 'silver', v_s));
 end $$;
 
 -- ---------------------------------------------------------------- weekly leaderboard (weeks start Monday 00:00 Yerevan time)
@@ -294,7 +308,9 @@ begin
   for r in select user_id, row_number() over (order by wins desc, coins_won desc, games, user_id) as rk
              from weekly_stats where week = v_prev and wins > 0 order by rk limit 10 loop
     v_c := v_prize[r.rk];
-    update profiles set coins = coins + v_c where id = r.user_id;
+    update profiles set coins = coins + v_c,
+           cases = cases || jsonb_build_object(case when r.rk <= 3 then 'gold' else 'silver' end, coalesce((cases ->> case when r.rk <= 3 then 'gold' else 'silver' end)::int, 0) + 1)
+     where id = r.user_id;
     insert into coin_ledger (user_id, delta, reason) values (r.user_id, v_c, 'weekly:' || r.rk);
     insert into weekly_prizes (user_id, week, rank, coins) values (r.user_id, v_prev, r.rk, v_c) on conflict do nothing;
   end loop;
@@ -397,15 +413,80 @@ declare v_p profiles;
 begin
   select * into v_p from profiles where id = p_user for update;
   if not found or coalesce((v_p.ach ->> p_id)::int, 0) >= p_tier then return false; end if;
-  update profiles set ach = ach || jsonb_build_object(p_id, p_tier), coins = coins + p_coins,
+  update profiles set ach = ach || jsonb_build_object(p_id, p_tier), pearls = pearls + p_coins,
          owned_avatars = case when p_kind = 'avatars' and not (p_item = any (owned_avatars)) then array_append(owned_avatars, p_item) else owned_avatars end,
          owned_frames  = case when p_kind = 'frames'  and not (p_item = any (owned_frames))  then array_append(owned_frames, p_item)  else owned_frames end
    where id = p_user;
-  if p_coins > 0 then insert into coin_ledger (user_id, delta, reason) values (p_user, p_coins, 'ach:' || p_id || ':' || p_tier); end if;
+  if p_coins > 0 then insert into coin_ledger (user_id, delta, reason, currency) values (p_user, p_coins, 'ach:' || p_id || ':' || p_tier, 'pearls'); end if;
   return true;
 end $$;
 revoke all on function public.ach_grant(uuid, text, int, int, text, text) from public, anon, authenticated;
 grant execute on function public.ach_grant(uuid, text, int, int, text, text) to service_role;
+
+-- ---------------------------------------------------------------- cases
+create or replace function public.case_add(p_user uuid, p_kind text, p_n int) returns void
+language sql security definer set search_path = public as $$
+  update profiles set cases = cases || jsonb_build_object(p_kind, coalesce((cases ->> p_kind)::int, 0) + p_n) where id = p_user $$;
+-- buy a case with pearls
+create or replace function public.case_buy(p_user uuid, p_kind text, p_price int)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_p profiles;
+begin
+  select * into v_p from profiles where id = p_user for update;
+  if v_p.pearls < p_price then return jsonb_build_object('error', 'not_enough_pearls'); end if;
+  update profiles set pearls = pearls - p_price, cases = cases || jsonb_build_object(p_kind, coalesce((cases ->> p_kind)::int, 0) + 1) where id = p_user;
+  insert into coin_ledger (user_id, delta, reason, currency) values (p_user, -p_price, 'case:' || p_kind, 'pearls');
+  return jsonb_build_object('ok', true);
+end $$;
+-- one free bronze case per day (Yerevan time)
+create or replace function public.case_daily(p_user uuid)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_today date := (now() at time zone 'Asia/Yerevan')::date;
+begin
+  update profiles set case_daily = v_today, cases = cases || jsonb_build_object('bronze', coalesce((cases ->> 'bronze')::int, 0) + 1)
+   where id = p_user and case_daily is distinct from v_today;
+  if not found then return jsonb_build_object('error', 'already_claimed'); end if;
+  return jsonb_build_object('ok', true);
+end $$;
+-- open one case: the server picked the reward; this applies it once. An item the player already owns turns into pearls.
+create or replace function public.case_apply(p_user uuid, p_kind text, p_coins int, p_pearls int, p_item_kind text, p_item_id text, p_dup int)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_p profiles; v_have int; v_dup boolean := false; v_pearls int := p_pearls;
+begin
+  select * into v_p from profiles where id = p_user for update;
+  v_have := coalesce((v_p.cases ->> p_kind)::int, 0);
+  if v_have < 1 then return jsonb_build_object('error', 'no_case'); end if;
+  if p_item_kind <> '' then
+    v_dup := (p_item_kind = 'skins' and p_item_id = any (v_p.owned_skins)) or (p_item_kind = 'sets' and p_item_id = any (v_p.owned_sets))
+          or (p_item_kind = 'dice' and p_item_id = any (v_p.owned_dice)) or (p_item_kind = 'avatars' and p_item_id = any (v_p.owned_avatars))
+          or (p_item_kind = 'frames' and p_item_id = any (v_p.owned_frames));
+    if v_dup then v_pearls := v_pearls + p_dup; end if;
+  end if;
+  update profiles set cases = cases || jsonb_build_object(p_kind, v_have - 1), coins = coins + p_coins, pearls = pearls + v_pearls,
+         owned_skins   = case when not v_dup and p_item_kind = 'skins'   then array_append(owned_skins, p_item_id)   else owned_skins end,
+         owned_sets    = case when not v_dup and p_item_kind = 'sets'    then array_append(owned_sets, p_item_id)    else owned_sets end,
+         owned_dice    = case when not v_dup and p_item_kind = 'dice'    then array_append(owned_dice, p_item_id)    else owned_dice end,
+         owned_avatars = case when not v_dup and p_item_kind = 'avatars' then array_append(owned_avatars, p_item_id) else owned_avatars end,
+         owned_frames  = case when not v_dup and p_item_kind = 'frames'  then array_append(owned_frames, p_item_id)  else owned_frames end
+   where id = p_user;
+  if p_coins > 0 then insert into coin_ledger (user_id, delta, reason) values (p_user, p_coins, 'case:' || p_kind); end if;
+  if v_pearls > 0 then insert into coin_ledger (user_id, delta, reason, currency) values (p_user, v_pearls, 'case:' || p_kind, 'pearls'); end if;
+  return jsonb_build_object('ok', true, 'dup', v_dup, 'pearls', v_pearls);
+end $$;
+-- preview packs of pearls (testing only, while preview_mode is on)
+create or replace function public.grant_pearls(p_user uuid, p_amount int, p_reason text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+begin
+  if p_reason <> 'preview_pack' or p_amount <= 0 or p_amount > 5000 then return jsonb_build_object('error', 'bad_amount'); end if;
+  if coalesce((select (value #>> '{}')::boolean from app_config where key = 'preview_mode'), false) is not true then return jsonb_build_object('error', 'disabled'); end if;
+  update profiles set pearls = pearls + p_amount where id = p_user;
+  insert into coin_ledger (user_id, delta, reason, currency) values (p_user, p_amount, p_reason, 'pearls');
+  return jsonb_build_object('ok', true);
+end $$;
+revoke all on function public.case_add(uuid, text, int), public.case_buy(uuid, text, int), public.case_daily(uuid),
+  public.case_apply(uuid, text, int, int, text, text, int), public.grant_pearls(uuid, int, text) from public, anon, authenticated;
+grant execute on function public.case_add(uuid, text, int), public.case_buy(uuid, text, int), public.case_daily(uuid),
+  public.case_apply(uuid, text, int, int, text, text, int), public.grant_pearls(uuid, int, text) to service_role;
 
 -- Finish a game exactly once and pay the pot to the winner.
 create or replace function public.settle_game(p_game uuid, p_winner smallint, p_reason text, p_points smallint)
@@ -475,15 +556,15 @@ begin
      or (p_kind = 'frames' and p_id = any (v_p.owned_frames)) then
     return jsonb_build_object('error', 'already_owned');
   end if;
-  if v_p.coins < v_price then return jsonb_build_object('error', 'not_enough_coins'); end if;
-  update profiles set coins = coins - v_price,
+  if v_p.pearls < v_price then return jsonb_build_object('error', 'not_enough_pearls'); end if;
+  update profiles set pearls = pearls - v_price,
          owned_skins = case when p_kind = 'skins' then array_append(owned_skins, p_id) else owned_skins end,
          owned_sets  = case when p_kind = 'sets'  then array_append(owned_sets, p_id)  else owned_sets  end,
          owned_dice  = case when p_kind = 'dice'  then array_append(owned_dice, p_id)  else owned_dice  end,
          owned_avatars = case when p_kind = 'avatars' then array_append(owned_avatars, p_id) else owned_avatars end,
          owned_frames  = case when p_kind = 'frames'  then array_append(owned_frames, p_id)  else owned_frames  end
    where id = p_user;
-  if v_price > 0 then insert into coin_ledger (user_id, delta, reason) values (p_user, -v_price, 'buy:' || p_kind || ':' || p_id); end if;
+  if v_price > 0 then insert into coin_ledger (user_id, delta, reason, currency) values (p_user, -v_price, 'buy:' || p_kind || ':' || p_id, 'pearls'); end if;
   return jsonb_build_object('ok', true);
 end $$;
 
