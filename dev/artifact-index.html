@@ -162,8 +162,36 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .row2 .btn-wood:nth-child(1) { animation: rise .6s .68s both; }
 .row2 .btn-wood:nth-child(2) { animation: rise .6s .74s both; }
 .btn-wood svg, .mnav svg, .back svg { width: 21px; height: 21px; fill: none; stroke: var(--gold-hi); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.mnav { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); margin-top: 14px; padding: 9px 4px 8px; border-radius: 18px;
-  background: linear-gradient(180deg, rgba(46,31,20,.92), rgba(22,15,9,.96)); border: 1px solid var(--line); animation: rise .6s .82s both; }
+.mnav { flex: none; display: grid; grid-template-columns: repeat(5, 1fr); margin-top: 14px; padding: 8px 6px 7px; border-radius: 24px; position: relative;
+  background: linear-gradient(180deg, rgba(255,236,200,.10), rgba(255,236,200,.03)), rgba(20,13,8,.55);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(255,225,170,.16); box-shadow: inset 0 1px 0 rgba(255,240,210,.14), 0 14px 30px rgba(0,0,0,.45); animation: rise .6s .82s both; }
+.mnav button { border-radius: 16px; transition: background .2s, color .2s; }
+.mnav button::after { content: ""; position: absolute; left: 50%; bottom: -3px; width: 18px; height: 3px; margin-left: -9px; border-radius: 2px; background: var(--gold-hi); box-shadow: 0 0 10px 2px rgba(255,205,110,.7); opacity: 0; transform: scaleX(.3); transition: opacity .2s, transform .25s; }
+.mnav button:active, .mnav button.press { background: rgba(255,214,140,.10); color: var(--gold-hi); }
+.mnav button:active::after, .mnav button.press::after { opacity: 1; transform: none; }
+.mnav button:active svg, .mnav button.press svg { filter: drop-shadow(0 0 6px rgba(255,205,110,.8)); }
+.mnav .badge { top: -4px !important; min-width: 16px; text-align: center; box-sizing: border-box; background: linear-gradient(180deg, #e2563a, #b23a22) !important; box-shadow: 0 0 0 2px rgba(20,13,8,.9), 0 2px 6px rgba(0,0,0,.5) !important; }
+.mnav .badge.new { font-size: 8.5px !important; letter-spacing: .06em; padding: 2px 5px !important; }
+/* glass top bar: avatar with XP ring, name and level, daily gift, coins */
+#menu > .mtop { padding: 6px 6px 6px 8px; border-radius: 30px;
+  background: linear-gradient(180deg, rgba(255,236,200,.10), rgba(255,236,200,.03)), rgba(20,13,8,.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid rgba(255,225,170,.16); box-shadow: inset 0 1px 0 rgba(255,240,210,.14), 0 10px 26px rgba(0,0,0,.4); }
+#menu .me .ava { width: 44px; height: 44px; margin: 3px; }
+#menu .me .ava::before { content: ""; position: absolute; inset: -7px; border-radius: 50%; z-index: 0;
+  background: conic-gradient(from -90deg, var(--gold-hi) 0 var(--xp, 0%), rgba(255,255,255,.12) var(--xp, 0%) 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px));
+  transition: --xp .9s; filter: drop-shadow(0 0 4px rgba(255,205,110,.5)); }
+#menu .me .ava .avslot { z-index: 1; }
+#menu .alv { z-index: 2; right: -9px; bottom: -7px; }
+#menu .me .mi { display: flex; flex-direction: column; gap: 1px; padding-left: 4px; }
+#menu .me .mi .xpbar { display: none; }
+#menu .me .mi small#meStats { display: block !important; font-size: 11.5px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+#menu .rgrp { gap: 6px; }
+#menu .gift { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,236,200,.07); border-color: rgba(255,225,170,.14); }
+#menu .coins { background: rgba(0,0,0,.28); border-color: rgba(255,225,170,.12); }
+@property --xp { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
 .mnav button { border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; color: var(--muted); letter-spacing: .02em; white-space: nowrap; position: relative; padding: 2px 0; }
 .mnav svg { width: 24px; height: 24px; stroke: var(--gold); }
 .mnav .badge { position: absolute; top: -5px; left: calc(50% + 6px); background: #b8452c; color: #fff; font-size: 10px; font-weight: 700; border-radius: 8px; padding: 1px 5px; box-shadow: 0 1px 3px rgba(0,0,0,.5); }
@@ -568,7 +596,7 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
     </div>
   </div>
   <nav class="mnav">
-    <button data-go="shop"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 12H6.2L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>Shop</button>
+    <button data-go="shop"><span class="badge new" id="shopNew" hidden>NEW</span><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 12H6.2L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>Shop</button>
     <button data-go="ad"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.6-2.8z"/></svg><span class="badge">+50</span>Free coins</button>
     <button data-go="friends"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.3A5 5 0 0 1 21 19"/></svg><span class="badge" id="frBadge" hidden></span>Friends</button>
     <button data-go="leaders"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v4M8.5 20.5h7M10 17h4v3.5h-4z"/></svg>Leaders</button>
@@ -1820,12 +1848,14 @@ function heroDice() {
     h.appendChild(w); throwDie(w, v, [rr(-30, 30), -280], 650 + i * 130, 900);
   });
 }
+// "NEW" on the Shop button when items were added since the player last opened it
+function shopBadge() { const n = Object.values(CAT).reduce((n, c) => n + Object.keys(c).length, 0), seen = store.get('shopSeen', 0); $('shopNew').hidden = n <= seen; }
+document.querySelectorAll('.mnav button').forEach(b => b.addEventListener('pointerdown', () => { b.classList.add('press'); setTimeout(() => b.classList.remove('press'), 260); }));
 function syncMenu() {
   const m = $('mode'); m.dataset.v = prefs.variant;
   m.querySelectorAll('button[data-v]').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === prefs.variant));
   $('modeDesc').textContent = prefs.variant === 'short' ? 'Classic rules · hit single checkers' : 'No hitting · all 15 start on the head';
-  $('meStats').textContent = stats.played ? `${stats.won} won of ${stats.played}` : 'Ready for a game';
-  syncCoins(); syncProgress();
+  syncCoins(); syncProgress(); shopBadge();
 }
 $('mode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; audio(); prefs.variant = b.classList.contains('sw') ? (prefs.variant === 'short' ? 'long' : 'short') : b.dataset.v; store.set('variant', prefs.variant); syncMenu(); });
 // game art (board, points, checkers, dice) is loaded and decoded ahead of time and kept in memory,
@@ -1863,7 +1893,7 @@ document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', 
   e.stopPropagation(); audio(); const go = b.dataset.go;
   if (go === 'ad') sheet(`<img class="bigcoin" src="assets/coin.webp" alt=""><h2>Free coins</h2><p>Watch a short video and get 50 coins.</p><p style="font-size:12px">In this preview the ad is skipped and the coins are added straight away.</p>
     <button class="cta" data-act="watchad">WATCH AD · +50</button><button class="list-btn" data-act="close">Not now</button>`);
-  if (go === 'shop') showScreen('shop');
+  if (go === 'shop') { store.set('shopSeen', Object.values(CAT).reduce((n, c) => n + Object.keys(c).length, 0)); shopBadge(); showScreen('shop'); }
   if (go === 'daily') dailySheet();
   if (go === 'friends') openFriends();
   if (go === 'leaders') openLeaders();
@@ -2211,6 +2241,8 @@ function syncProgress() {
   const { xp, level } = myProg();
   const k = equip.avatar + '|' + equip.frame + '|' + equip.set; if ($('meAv').dataset.k !== k) { $('meAv').dataset.k = k; $('meAv').innerHTML = avHTML(equip.avatar, equip.frame, equip.set); }
   $('meLvl').textContent = level; $('meXp').style.width = lvPct(xp, level) + '%';
+  document.querySelector('#menu .me .ava').style.setProperty('--xp', lvPct(xp, level) + '%');
+  $('meStats').textContent = `${fmt(xp - xpFor(level))} / ${fmt(xpFor(level + 1) - xpFor(level))} XP`;
   const d = dailyNow(); document.querySelectorAll('.gift .dot').forEach(e => e.hidden = !(d && d.available));
 }
 function dailySheet() {
