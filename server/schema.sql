@@ -27,6 +27,15 @@ alter table public.profiles add column if not exists daily_streak integer not nu
 alter table public.profiles add column if not exists daily_last date;
 alter table public.profiles add column if not exists last_seen timestamptz;
 alter table public.profiles add column if not exists last_bot_xp_at timestamptz;
+-- avatars and frames, and lifetime statistics (online games; bot games counted separately)
+alter table public.profiles add column if not exists owned_avatars text[] not null default '{default}';
+alter table public.profiles add column if not exists owned_frames  text[] not null default '{none}';
+alter table public.profiles add column if not exists streak integer not null default 0;
+alter table public.profiles add column if not exists best_streak integer not null default 0;
+alter table public.profiles add column if not exists mars_wins integer not null default 0;
+alter table public.profiles add column if not exists coins_won_total integer not null default 0;
+alter table public.profiles add column if not exists bot_played integer not null default 0;
+alter table public.profiles add column if not exists bot_won integer not null default 0;
 alter table public.profiles enable row level security;
 drop policy if exists "read own profile" on public.profiles;
 create policy "read own profile" on public.profiles for select to authenticated using (id = auth.uid());
@@ -62,11 +71,13 @@ create trigger on_auth_user_created after insert on auth.users
 
 -- ---------------------------------------------------------------- shop prices (server is the source of truth)
 create table if not exists public.shop_items (
-  kind  text not null check (kind in ('skins', 'sets', 'dice')),
+  kind  text not null,
   id    text not null,
   price integer not null check (price >= 0),
   primary key (kind, id)
 );
+alter table public.shop_items drop constraint if exists shop_items_kind_check;
+alter table public.shop_items add constraint shop_items_kind_check check (kind in ('skins', 'sets', 'dice', 'avatars', 'frames'));
 alter table public.shop_items enable row level security;
 drop policy if exists "anyone reads prices" on public.shop_items;
 create policy "anyone reads prices" on public.shop_items for select to anon, authenticated using (true);
@@ -75,14 +86,19 @@ insert into public.shop_items values
   ('sets', 'classic', 0), ('sets', 'bone', 200), ('sets', 'pearl', 500),
   ('dice', 'ivory', 0), ('dice', 'wood', 250), ('dice', 'pearl', 600),
   ('skins', 'tuff', 1200), ('sets', 'tuff', 700), ('dice', 'obsidian', 800),
-  ('skins', 'garnet', 1500), ('sets', 'amber', 900), ('dice', 'lapis', 1000)
+  ('skins', 'garnet', 1500), ('sets', 'amber', 900), ('dice', 'lapis', 1000),
+  ('avatars', 'default', 0), ('avatars', 'ararat', 300), ('avatars', 'pomegranate', 300), ('avatars', 'star', 500), ('avatars', 'eternity', 600),
+  ('avatars', 'garnet', 600), ('avatars', 'goldsign', 800), ('avatars', 'silversign', 800),
+  ('frames', 'none', 0), ('frames', 'bronze', 200), ('frames', 'silver', 500), ('frames', 'gold', 1000), ('frames', 'garnet', 1500),
+  ('frames', 'lapis', 2000), ('frames', 'diamond', 5000)
 on conflict (kind, id) do update set price = excluded.price;
 
 -- app switches (e.g. preview_mode lets testers add free coin packs; turn it off before launch)
 create table if not exists public.app_config (key text primary key, value jsonb not null);
 alter table public.app_config enable row level security;
-insert into public.app_config values ('preview_mode', 'true'), ('turn_seconds', '60'), ('rooms', '[100, 500, 1000]')
+insert into public.app_config values ('preview_mode', 'true'), ('turn_seconds', '60'), ('rooms', '[100, 500, 1000, 5000, 10000]')
 on conflict (key) do nothing;
+update public.app_config set value = '[100, 500, 1000, 5000, 10000]' where key = 'rooms';
 
 -- ---------------------------------------------------------------- games
 create table if not exists public.games (
@@ -242,8 +258,8 @@ begin
                                        case when p_board = 'coins' then s.wins else s.coins_won end desc, s.games, s.user_id) as rank
       from weekly_stats s where s.week = v_week and (case when p_board = 'coins' then s.coins_won else s.wins end) > 0
   )
-  select coalesce(jsonb_agg(jsonb_build_object('rank', r.rank, 'name', p.name, 'level', p.level, 'wins', r.wins, 'coins', r.coins_won, 'me', r.user_id = p_user) order by r.rank) filter (where r.rank <= 50), '[]'),
-         (array_agg(jsonb_build_object('rank', r.rank, 'name', p.name, 'level', p.level, 'wins', r.wins, 'coins', r.coins_won, 'me', true)) filter (where r.user_id = p_user))[1]
+  select coalesce(jsonb_agg(jsonb_build_object('rank', r.rank, 'id', r.user_id, 'name', p.name, 'level', p.level, 'wins', r.wins, 'coins', r.coins_won, 'me', r.user_id = p_user) order by r.rank) filter (where r.rank <= 50), '[]'),
+         (array_agg(jsonb_build_object('rank', r.rank, 'id', r.user_id, 'name', p.name, 'level', p.level, 'wins', r.wins, 'coins', r.coins_won, 'me', true)) filter (where r.user_id = p_user))[1]
     into v_top, v_me
     from r join profiles p on p.id = r.user_id;
   return jsonb_build_object('top', v_top, 'me', v_me, 'ends_at', ((v_week + 7)::timestamp at time zone 'Asia/Yerevan'),
@@ -373,11 +389,14 @@ begin
     insert into coin_ledger (user_id, delta, reason, game_id) values (v_winner, v_pot, 'win', g.id);
   end if;
   update profiles set played = played + 1 where id in (g.p0, g.p1);
-  update profiles set won = won + 1 where id = v_winner;
+  update profiles set won = won + 1, streak = streak + 1, best_streak = greatest(best_streak, streak + 1),
+         mars_wins = mars_wins + case when p_points = 2 then 1 else 0 end, coins_won_total = coins_won_total + g.stake
+   where id = v_winner;
   v_loser := case when p_winner = 0 then g.p1 else g.p0 end;
   -- XP: a real game gives full XP; a game resigned or timed out in the first few turns gives little (no farming by quick resigns)
   v_turns := coalesce((g.state->'turnsTaken'->>0)::int, 0) + coalesce((g.state->'turnsTaken'->>1)::int, 0);
   if v_winner is not null then perform add_xp(v_winner, case when p_reason <> 'win' and v_turns < 8 then 10 else 50 + case when p_points = 2 then 25 else 0 end end); end if;
+  update profiles set streak = 0 where id = v_loser and v_loser is not null;
   if v_loser is not null then perform add_xp(v_loser, case when p_reason = 'win' then 20 when v_turns < 8 then 0 else 5 end); end if;
   -- weekly leaderboard: only games played for coins count
   if g.stake > 0 then
@@ -402,14 +421,17 @@ begin
   if not found then return jsonb_build_object('error', 'no_such_item'); end if;
   select * into v_p from profiles where id = p_user for update;
   if (p_kind = 'skins' and p_id = any (v_p.owned_skins)) or (p_kind = 'sets' and p_id = any (v_p.owned_sets))
-     or (p_kind = 'dice' and p_id = any (v_p.owned_dice)) then
+     or (p_kind = 'dice' and p_id = any (v_p.owned_dice)) or (p_kind = 'avatars' and p_id = any (v_p.owned_avatars))
+     or (p_kind = 'frames' and p_id = any (v_p.owned_frames)) then
     return jsonb_build_object('error', 'already_owned');
   end if;
   if v_p.coins < v_price then return jsonb_build_object('error', 'not_enough_coins'); end if;
   update profiles set coins = coins - v_price,
          owned_skins = case when p_kind = 'skins' then array_append(owned_skins, p_id) else owned_skins end,
          owned_sets  = case when p_kind = 'sets'  then array_append(owned_sets, p_id)  else owned_sets  end,
-         owned_dice  = case when p_kind = 'dice'  then array_append(owned_dice, p_id)  else owned_dice  end
+         owned_dice  = case when p_kind = 'dice'  then array_append(owned_dice, p_id)  else owned_dice  end,
+         owned_avatars = case when p_kind = 'avatars' then array_append(owned_avatars, p_id) else owned_avatars end,
+         owned_frames  = case when p_kind = 'frames'  then array_append(owned_frames, p_id)  else owned_frames  end
    where id = p_user;
   if v_price > 0 then insert into coin_ledger (user_id, delta, reason) values (p_user, -v_price, 'buy:' || p_kind || ':' || p_id); end if;
   return jsonb_build_object('ok', true);

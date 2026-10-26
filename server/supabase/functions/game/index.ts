@@ -10,7 +10,7 @@ const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SE
 
 const TURN_SECONDS = 60;          // time for one turn (roll + moves)
 const FIRST_TURN_GRACE = 10;      // extra seconds when a game starts
-const ROOMS = [100, 500, 1000];   // coin rooms for random matchmaking
+const ROOMS = [100, 500, 1000, 5000, 10000];   // coin rooms for random matchmaking
 const PACKS = [1000, 5000, 12000];
 
 const CORS = {
@@ -122,8 +122,18 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
     if (p.last_bot_xp_at && Date.parse(p.last_bot_xp_at) > Date.now() - 90e3) throw new Fail('too_soon');
     await db.from('profiles').update({ last_bot_xp_at: new Date().toISOString() }).eq('id', uid);
     const xp = a.won ? (a.mars ? 30 : 20) : 8;
+    await db.from('profiles').update({ bot_played: p.bot_played + 1, bot_won: p.bot_won + (a.won ? 1 : 0) }).eq('id', uid);
     const r = await rpc('add_xp', { p_user: uid, p_xp: xp });
     return { xp: r, profile: await profile(uid) };
+  },
+
+  // public card of a player: what an opponent sees when tapping their name
+  async player(_uid, a) {
+    if (!isUuid(a.user_id)) throw new Fail('bad_user');
+    const { data: p } = await db.from('profiles').select('id,name,level,xp,played,won,streak,best_streak,mars_wins,coins_won_total,bot_played,bot_won,equip,created_at,last_seen').eq('id', a.user_id).maybeSingle();
+    if (!p) throw new Fail('no_profile', 404);
+    return { player: { ...p, avatar: p.equip?.avatar || 'default', frame: p.equip?.frame || 'none', equip: undefined,
+      online: !!p.last_seen && Date.parse(p.last_seen) > Date.now() - 75e3, last_seen: undefined } };
   },
 
   async leaderboard(uid, a) { return await rpc('leaderboard', { p_user: uid, p_board: a.board === 'coins' ? 'coins' : 'wins' }); },
@@ -179,6 +189,8 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
     if (a.kind === 'skins' && p.owned_skins.includes(a.id)) p.equip.skin = a.id;
     else if (a.kind === 'sets' && p.owned_sets.includes(a.id)) p.equip.set = a.id;
     else if (a.kind === 'dice' && (p.owned_dice || []).includes(a.id)) p.equip.dice = a.id;
+    else if (a.kind === 'avatars' && (p.owned_avatars || []).includes(a.id)) p.equip.avatar = a.id;
+    else if (a.kind === 'frames' && (p.owned_frames || []).includes(a.id)) p.equip.frame = a.id;
     else throw new Fail('not_owned');
     await db.from('profiles').update({ equip: p.equip }).eq('id', uid);
     return { profile: await profile(uid) };
