@@ -336,8 +336,54 @@ button:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
 .stgrid b { display: block; font-family: var(--font-display); font-weight: 400; font-size: 21px; color: var(--gold-hi); line-height: 1.1; font-variant-numeric: tabular-nums; }
 .stgrid small { display: block; font-size: 10.5px; color: var(--muted); font-weight: 600; margin-top: 3px; line-height: 1.2; }
 .stnote { font-size: 11.5px !important; }
+/* profile card */
+.pf-head { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 2px; }
+.pf-av { position: relative; width: 104px; height: 104px; margin-bottom: 6px; --xp: 0%; }
+.pf-av::before { content: ""; position: absolute; inset: -9px; border-radius: 50%; background: conic-gradient(from -90deg, var(--gold-hi) 0 var(--xp), rgba(255,255,255,.1) var(--xp) 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px)); filter: drop-shadow(0 0 6px rgba(255,205,110,.5)); }
+.pf-av .av { --t: 5px; }
+.pf-av .pf-lv { position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%); padding: 3px 10px; border-radius: 12px; background: linear-gradient(180deg, var(--gold-hi), var(--gold)); color: #2a1a0c; font: 800 11.5px/1.2 system-ui, sans-serif; letter-spacing: .04em; white-space: nowrap; box-shadow: 0 0 0 3px rgba(24,16,9,.9); z-index: 2; }
+.pf-name { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.pf-name h2 { margin: 0; }
+.pf-edit { width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(232,190,110,.3); background: rgba(255,236,200,.06); display: grid; place-items: center; padding: 0; }
+.pf-edit svg { width: 14px; height: 14px; stroke: #e8cf9a; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.pf-sub { font-size: 12.5px; color: var(--muted); text-align: center; }
+.pf-xp { font-size: 12px; color: var(--muted); }
+.pf-xp b { color: var(--gold-hi); font-weight: 700; }
+.pf-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pf-stats div { position: relative; border-radius: 16px; padding: 12px 6px 10px; text-align: center; background: rgba(255,236,200,.05); border: 1px solid rgba(232,190,110,.18); display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.pf-stats svg, .pf-stats img { width: 18px; height: 18px; stroke: #d8b06a; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+.pf-stats b { font: 700 20px/1.1 system-ui, -apple-system, sans-serif; color: #f6e2b4; font-variant-numeric: tabular-nums; }
+.pf-stats small { font-size: 10.5px; color: var(--muted); font-weight: 600; line-height: 1.2; }
+.pf-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: rgba(255,236,200,.04); border: 1px solid rgba(232,190,110,.14); font-size: 13px; color: var(--muted); }
+.pf-row svg { width: 18px; height: 18px; stroke: #d8b06a; stroke-width: 1.8; fill: none; flex: none; }
+.pf-row span { flex: 1; } .pf-row b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+.pf-ach { display: flex; flex-direction: column; gap: 10px; width: 100%; padding: 14px; border-radius: 20px; text-align: left; cursor: pointer;
+  border: 1px solid rgba(255,214,140,.55); background: radial-gradient(120% 120% at 0% 0%, rgba(255,214,140,.2), transparent 60%), rgba(255,236,200,.05); box-shadow: 0 0 24px rgba(255,200,110,.1); color: var(--text); }
+.pf-ach:active { border-color: #ffd98a; }
+.pf-ach .t { display: flex; align-items: center; gap: 12px; }
+.pf-ach .ti { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; background: linear-gradient(180deg, var(--gold-hi), var(--gold)); }
+.pf-ach .ti img { width: 30px; height: 30px; object-fit: contain; }
+.pf-ach .tt { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+.pf-ach .tt b { font-family: var(--font-display); font-weight: 400; font-size: 20px; color: var(--gold-hi); line-height: 1.1; }
+.pf-ach .tt small { font-size: 12px; color: var(--muted); }
+.pf-ach .oar { width: 18px; height: 18px; stroke: var(--gold-hi); stroke-width: 2; fill: none; }
+.pf-ach .bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.1); overflow: hidden; }
+.pf-ach .bar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-hi)); }
+.pf-ach .icons { display: flex; justify-content: space-between; }
+.pf-ach .icons .achic { width: 44px; height: 44px; }
+.pf-foot { font-size: 11.5px; color: var(--muted); text-align: center; }
 /* achievements */
-.achgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-height: 46vh; overflow-y: auto; padding: 4px 2px; }
+.achgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 8px; max-height: min(58vh, 520px); overflow-y: auto; padding: 8px 2px 26px;
+  -webkit-mask: linear-gradient(180deg, transparent 0, #000 10px, #000 calc(100% - 34px), transparent); mask: linear-gradient(180deg, transparent 0, #000 10px, #000 calc(100% - 34px), transparent); }
+.achtile .ap { width: 70%; height: 4px; border-radius: 2px; background: rgba(255,255,255,.1); overflow: hidden; margin-top: 1px; }
+.achtile .ap i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-hi)); }
+.achtile.done small { color: var(--gold-hi); }
+.achsum { display: flex; flex-direction: column; gap: 6px; }
+.achsum .row { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); }
+.achsum .row b { color: var(--gold-hi); font-variant-numeric: tabular-nums; }
+.achsum .bar { height: 7px; border-radius: 4px; background: rgba(255,255,255,.1); overflow: hidden; }
+.achsum .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--gold), var(--gold-hi)); box-shadow: 0 0 10px rgba(255,205,110,.5); }
 .achtile { border: 0; background: none; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0; color: var(--text); }
 .achtile small { font-size: 10px; line-height: 1.15; color: var(--muted); text-align: center; font-weight: 600; }
 .achic { position: relative; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #3a2818, #160e08); }
@@ -2111,13 +2157,7 @@ document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', 
   if (go === 'leaders') openLeaders();
   if (go === 'coins') coinSheet();
   if (go === 'pearls') pearlSheet();
-  if (go === 'profile') { const pr = myProg(), mc = myCard(); sheet(`<div class="bigav">${avHTML(equip.avatar, equip.frame, equip.set)}</div><h2>${NET.profile ? esc(NET.profile.name) : 'Guest'}</h2><p><span class="netdot ${NET.ok ? 'on' : ''}"></span>${NET.ok ? 'Online' : 'Offline'}${mc.created_at ? ` · since ${since(mc.created_at)}` : ''}</p>
-    ${statsHTML(mc)}
-    <div class="xpline"><div class="xt"><span>Level ${pr.level}</span><b>${fmt(pr.xp - xpFor(pr.level))} / ${fmt(xpFor(pr.level + 1) - xpFor(pr.level))} XP</b></div><div class="xpbar"><i style="width:${lvPct(pr.xp, pr.level)}%"></i></div></div>
-    <button class="cta" data-act="ach-me">🏆 ACHIEVEMENTS · ${Object.keys((NET.profile || {}).ach || {}).length}/${ACHL.length}</button>
-    <p class="stnote">Next level pays ${fmt(levelReward(pr.level + 1))} coins. Change your avatar and frame in the Shop.</p>
-    ${NET.ok ? `<input class="namein" id="nameIn" maxlength="16" value="${esc(NET.profile.name)}" aria-label="Your name"><div class="err" id="nameErr"></div><button class="cta" data-act="rename">SAVE NAME</button>` : ''}
-    <button class="list-btn" data-act="close">Close</button>`); }
+  if (go === 'profile') sheet(`${profileHTML(myCard(), true)}<p class="pf-foot">Change your avatar and frame in the Shop.</p><button class="list-btn" data-act="close">Close</button>`);
   if (go === 'settings') sheet(`<h2>Settings</h2>${volHTML()}<button class="list-btn orow" data-act="rules"><span class="oic"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M8 7h7M8 11h7"/></svg></span><span class="ot"><b>How to play</b><small>Rules of short and long nardi</small></span><svg class="oar" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button><button class="list-btn" data-act="close">Close</button>`);
 }));
 
@@ -2559,11 +2599,7 @@ function myCard() {
 }
 function playerSheet(c, me) {
   const fr = !me && friendsList.find(f => f.id === c.id);
-  sheet(`<div class="bigav">${avHTML(c.avatar, c.frame, me ? equip.set : 'classic')}</div><h2>${esc(c.name)}</h2>
-    <p><span class="netdot ${c.online ? 'on' : ''}"></span>${c.online ? 'Online' : 'Offline'} · Level ${c.level || 1}${c.created_at ? ` · since ${since(c.created_at)}` : ''}</p>
-    ${achTop(c.ach).length ? `<div class="achtop">${achTop(c.ach).map(x => achIc(x.a, x.t)).join('')}</div>` : ''}
-    ${statsHTML(c)}
-    ${NET.ok && (c.id || me) ? `<button class="list-btn" data-act="${me ? 'ach-me' : 'ach-them'}" data-id="${c.id || ''}" data-name="${esc(c.name)}">🏆 Achievements · ${Object.keys(c.ach || {}).length}/${ACHL.length}</button>` : ''}
+  sheet(`${profileHTML(c, me)}
     ${!me && NET.ok && c.id ? `<button class="list-btn" data-act="pl-add" data-id="${c.id}" ${fr && fr.state !== 'request' ? 'disabled' : ''}>${fr ? (fr.state === 'friend' ? 'Friends ✓' : fr.state === 'sent' ? 'Friend request sent ✓' : 'Add back as friend') : 'Add friend'}</button>` : ''}
     <button class="list-btn" data-act="close">Close</button>`);
 }
@@ -2619,8 +2655,12 @@ function achIc(a, t, big) {
 var achView = null;   // { ach, stats, mine, name }
 function achSheet(v) {
   achView = v; const have = Object.keys(v.ach || {}).length;
-  sheet(`<h2>${v.mine ? 'Achievements' : esc(v.name) + '’s achievements'}</h2><p>${have} of ${ACHL.length} earned</p>
-    <div class="achgrid">${ACHL.map(([id]) => { const a = ACHN[id], t = +(v.ach || {})[id] || 0; return `<button class="achtile" data-ach="${id}">${achIc(a, t)}<small>${a.name}</small></button>`; }).join('')}</div>
+  const tiersAll = ACHL.reduce((n, x) => n + x[4].length, 0), tiersGot = Object.values(v.ach || {}).reduce((n, t) => n + +t, 0);
+  sheet(`<h2>${v.mine ? 'Achievements' : esc(v.name) + '’s achievements'}</h2>
+    <div class="achsum"><div class="row"><span>${have} of ${ACHL.length} earned</span><b>${tiersGot} / ${tiersAll} tiers</b></div><div class="bar"><i style="width:${tiersGot / tiersAll * 100}%"></i></div></div>
+    <div class="achgrid">${ACHL.map(([id]) => { const a = ACHN[id], t = +(v.ach || {})[id] || 0, next = a.tiers[t], val = (v.stats || {})[a.stat] || 0;
+      const pc = next ? Math.min(100, val / next[0] * 100) : 100;
+      return `<button class="achtile ${next ? '' : 'done'}" data-ach="${id}">${achIc(a, t)}<small>${a.name}</small><span class="ap"><i style="width:${pc}%"></i></span></button>`; }).join('')}</div>
     <button class="list-btn" data-act="close">Close</button>`);
 }
 function achDetail(id) {
@@ -2795,6 +2835,40 @@ async function openCase(k) {
   const ag = fx.querySelector('[data-again]'); if (ag) ag.onclick = () => openCase(k);
 }
 
+// ---------- profile card (yours and other players') ----------
+const PI = {
+  games: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.2" fill="#d8b06a"/><circle cx="15" cy="15" r="1.2" fill="#d8b06a"/><circle cx="12" cy="12" r="1.2" fill="#d8b06a"/></svg>',
+  wins: '<svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20.5h7"/></svg>',
+  rate: '<svg viewBox="0 0 24 24"><path d="M5 19L19 5"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg>',
+  streak: '<svg viewBox="0 0 24 24"><path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-6 1-9z"/></svg>',
+  mars: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><ellipse cx="12" cy="12" rx="10" ry="3.5" transform="rotate(-20 12 12)"/></svg>',
+  bot: '<svg viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V5M9 13h.01M15 13h.01M10 16h4"/></svg>',
+  pen: '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>',
+  arr: '<svg class="oar" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>',
+};
+function profileHTML(c, me) {
+  const pr = me ? myProg() : null, lvl = me ? pr.level : c.level || 1, xpP = me ? lvPct(pr.xp, pr.level) : 0;
+  const got = Object.keys(c.ach || {}).length, top = achTop(c.ach);
+  const fill = ACHL.map(([id]) => ACHN[id]).filter(a => !(c.ach || {})[a.id]).slice(0, Math.max(0, 5 - top.length)).map(a => achIc(a, 0));
+  const icons = top.slice(0, 5).map(x => achIc(x.a, x.t)).concat(fill).join('');
+  return `<div class="pf-head"><div class="pf-av" style="--xp:${me ? xpP : 0}%">${avHTML(c.avatar, c.frame, me ? equip.set : 'classic')}<span class="pf-lv">LEVEL ${lvl}</span></div>
+      <div class="pf-name"><h2>${esc(c.name || 'Guest')}</h2>${me && NET.ok ? `<button class="pf-edit" data-act="name-edit" aria-label="Change name">${PI.pen}</button>` : ''}</div>
+      <div class="pf-sub"><span class="netdot ${c.online ? 'on' : ''}"></span>${c.online ? 'Online' : 'Offline'}${c.created_at ? ` · since ${since(c.created_at)}` : ''}</div>
+      ${me ? `<div class="pf-xp"><b>${fmt(pr.xp - xpFor(pr.level))} / ${fmt(xpFor(pr.level + 1) - xpFor(pr.level))} XP</b> · next level pays ${fmt(levelReward(pr.level + 1))} coins</div>` : ''}</div>
+    <div class="pf-stats">
+      <div>${PI.games}<b>${fmt(c.played || 0)}</b><small>Online games</small></div>
+      <div>${PI.wins}<b>${fmt(c.won || 0)}</b><small>Wins</small></div>
+      <div>${PI.rate}<b>${pct(c.won || 0, c.played || 0)}</b><small>Win rate</small></div>
+      <div>${PI.streak}<b>${c.best_streak || 0}</b><small>Best streak${c.streak ? ` · now ${c.streak}` : ''}</small></div>
+      <div>${PI.mars}<b>${c.mars_wins || 0}</b><small>Mars wins</small></div>
+      <div><img src="assets/coin.webp" alt="" style="opacity:1"><b>${short(c.coins_won_total || 0)}</b><small>Coins won</small></div></div>
+    <div class="pf-row">${PI.bot}<span>Against the bot</span><b>${fmt(c.bot_won || 0)} wins of ${fmt(c.bot_played || 0)}</b></div>
+    ${NET.ok && (me || c.id) ? `<button class="pf-ach" data-act="${me ? 'ach-me' : 'ach-them'}" data-id="${c.id || ''}" data-name="${esc(c.name || '')}">
+      <span class="t"><span class="ti"><img src="assets/ach/champion.webp" alt=""></span><span class="tt"><b>Achievements</b><small>${got} of ${ACHL.length} earned</small></span>${PI.arr}</span>
+      <span class="bar"><i style="width:${got / ACHL.length * 100}%"></i></span>
+      <span class="icons">${icons}</span></button>` : ''}`;
+}
+
 // ---------- weekly leaderboard ----------
 var lbBoard = 'wins';
 const until = t => { const s = Math.max(0, (Date.parse(t) - Date.now()) / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : `${m}m`; };
@@ -2933,6 +3007,7 @@ async function friendButtonFor(oppId) {
 // sheet actions for these features; true when handled
 function socialAct(act, e) {
   if (act === 'daily-claim') { claimDaily(); return true; }
+  if (act === 'name-edit') { sheet(`<h2>Your name</h2><p>2 to 16 letters or numbers. Other players see it.</p><input class="namein" id="nameIn" maxlength="16" value="${esc(NET.profile.name)}" aria-label="Your name"><div class="err" id="nameErr"></div><button class="cta" data-act="rename">SAVE</button><button class="list-btn" data-act="close">Cancel</button>`); setTimeout(() => $('nameIn') && $('nameIn').select(), 60); return true; }
   if (act === 'ach-me') { openAch(); return true; }
   if (act === 'ach-them') { const b = e.target.closest('[data-id]'); openAch(b.dataset.id, b.dataset.name); return true; }
   if (act === 'ach-back') { achSheet(achView); return true; }
