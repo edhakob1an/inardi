@@ -1062,7 +1062,7 @@ const SAMPLES = {
   switch: ['assets/sfx/switch-1.mp3', 'assets/sfx/switch-2.mp3', 'assets/sfx/switch-3.mp3'],
   popup: ['assets/sfx/popup-1.mp3', 'assets/sfx/popup-2.mp3'],
   back: ['assets/sfx/back-1.mp3'],
-  yourturn: ['assets/sfx/yourturn-1.mp3'], matchfound: ['assets/sfx/matchfound-1.mp3'], win: ['assets/sfx/win2.mp3'], winmars: ['assets/sfx/winmars.mp3'], reward: ['assets/sfx/reward.mp3'], caseburst: ['assets/sfx/caseburst.mp3'],
+  yourturn: ['assets/sfx/yourturn-1.mp3'], matchfound: ['assets/sfx/matchfound-1.mp3'], win: ['assets/sfx/win2.mp3'], winmars: ['assets/sfx/winmars.mp3'], reward: ['assets/sfx/reward.mp3'], caseburst: ['assets/sfx/caseburst.mp3'], casetap: ['assets/sfx/casetap.mp3'], casecharge: ['assets/sfx/casecharge.mp3'], reeltick: ['assets/sfx/reeltick.mp3'],
   'prize-common': ['assets/sfx/prize-common.mp3'], 'prize-rare': ['assets/sfx/prize-rare.mp3'], 'prize-epic': ['assets/sfx/prize-epic.mp3'], 'prize-legendary': ['assets/sfx/prize-legendary.mp3'],
   lose: ['assets/sfx/lose2.mp3'], tick: ['assets/sfx/tick-1.mp3'], invalid: ['assets/sfx/invalid-1.mp3'],
 };
@@ -1093,7 +1093,8 @@ function playSample(k, gain = 1, opts = {}) {
 document.addEventListener('pointerdown', () => loadSamples(), { once: true, capture: true });
 document.addEventListener('click', e => {
   const t = e.target.closest('button, a, .room, .opt, .pack'); if (!t || t.disabled) return;
-  if (t.id === 'rollBtn' || t.closest('#boardWrap')) return;                     // dice and checkers have their own sounds
+  if (t.id === 'rollBtn' || t.closest('#boardWrap')) return;
+  if (t.matches('[data-case-open], [data-case-buy], [data-again]')) return sfx.caseTap();                     // dice and checkers have their own sounds
   if (t.matches('[data-act="close"]')) return;                                   // closing a sheet plays the close sound
   lastBtnSound = performance.now();
   if (t.matches('.back')) return sfx.back();
@@ -1116,6 +1117,9 @@ const sfx = {
   winMars() { playSample('winmars', .6, { rate: 1 }) || sfx.win(); },
   reward() { playSample('reward', .55, { rate: 1 }); },
   caseBurst() { playSample('caseburst', .6, { rate: 1 }); },
+  caseTap() { playSample('casetap', .6, { rate: 1 }) || sfx.tap(); },
+  caseCharge() { playSample('casecharge', .55, { rate: 1 }); },
+  reelTick() { playSample('reeltick', .5, { rate: .97 + Math.random() * .06 }) || sfx.tap(); },
   prize(t) { playSample('prize-' + (t === 'coins' || t === 'pearls' ? 'common' : t), t === 'legendary' ? .7 : .55, { rate: 1 }); },
   yourTurn() { playSample('yourturn', .4, { rate: 1 }); },
   matchFound() { playSample('matchfound', .55, { rate: 1 }); },
@@ -2784,7 +2788,8 @@ async function openCase(k) {
   halo.style.transition = 'opacity 1.2s'; halo.style.opacity = '.9';
   const shake = chest.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-3deg) translateX(-2%)' }, { transform: 'rotate(3deg) translateX(2%)' }, { transform: 'rotate(0)' }], { duration: 220, iterations: Infinity });
   cc.animate([{ filter: 'brightness(1)' }, { filter: `brightness(1.5) drop-shadow(0 0 18px ${cg})` }], { duration: 1300, fill: 'forwards' });
-  let n = 0; const tick = setInterval(() => { sfx.tap(); shake.playbackRate = 1 + n++ * .18; }, 150);
+  sfx.caseCharge();
+  let n = 0; const tick = setInterval(() => { shake.playbackRate = 1 + n++ * .18; }, 150);
   const t0 = performance.now(), r = await req;
   await wait(Math.max(0, 1300 - (performance.now() - t0)));
   clearInterval(tick); shake.cancel();
@@ -2815,7 +2820,7 @@ async function openCase(k) {
     const step = now => {
       const k2 = Math.min(1, (now - start) / dur), e = 1 - Math.pow(1 - k2, 4), x = end * e;
       reel.style.transform = `translateX(${x}px)`;
-      const idx = Math.floor((-x + wrap.clientWidth / 2) / tw); if (idx !== lastIdx) { lastIdx = idx; sfx.tap(); }
+      const idx = Math.floor((-x + wrap.clientWidth / 2) / tw); if (idx !== lastIdx) { lastIdx = idx; sfx.reelTick(); }
       if (k2 < 1) requestAnimationFrame(step); else done();
     };
     requestAnimationFrame(step);
