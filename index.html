@@ -2194,7 +2194,7 @@ document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', 
 // ---------- online play (Supabase) ----------
 // running inside the Android/iOS app (Capacitor)? Invite links then point to the website.
 const IS_APP = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
-const WEB_URL = location.hostname.endsWith('github.io') ? location.origin + location.pathname : 'https://edhakob1an.github.io/inardi/';
+const WEB_URL = /(github\.io|eachpixelmatters\.dev)$/.test(location.hostname) ? location.origin + location.pathname : 'https://eachpixelmatters.dev/inardi/';
 const SUPA = { url: 'https://fihtbfwibprcnhxiozux.supabase.co', key: 'sb_publishable_iLZB3ov6vRWLhE6OPHppoA_czkUkAbO' };
 const NET = { sb: null, ok: false, uid: null, profile: null, chan: null, poll: null, tick: null, mm: null, inv: null };
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
