@@ -1016,8 +1016,9 @@ const SAMPLES = {
   switch: ['assets/sfx/switch-1.mp3', 'assets/sfx/switch-2.mp3', 'assets/sfx/switch-3.mp3'],
   popup: ['assets/sfx/popup-1.mp3', 'assets/sfx/popup-2.mp3'],
   back: ['assets/sfx/back-1.mp3'],
-  yourturn: ['assets/sfx/yourturn-1.mp3'], matchfound: ['assets/sfx/matchfound-1.mp3'], win: ['assets/sfx/win-1.mp3'],
-  lose: ['assets/sfx/lose-1.mp3'], tick: ['assets/sfx/tick-1.mp3'], invalid: ['assets/sfx/invalid-1.mp3'],
+  yourturn: ['assets/sfx/yourturn-1.mp3'], matchfound: ['assets/sfx/matchfound-1.mp3'], win: ['assets/sfx/win2.mp3'], winmars: ['assets/sfx/winmars.mp3'], reward: ['assets/sfx/reward.mp3'], caseburst: ['assets/sfx/caseburst.mp3'],
+  'prize-common': ['assets/sfx/prize-common.mp3'], 'prize-rare': ['assets/sfx/prize-rare.mp3'], 'prize-epic': ['assets/sfx/prize-epic.mp3'], 'prize-legendary': ['assets/sfx/prize-legendary.mp3'],
+  lose: ['assets/sfx/lose2.mp3'], tick: ['assets/sfx/tick-1.mp3'], invalid: ['assets/sfx/invalid-1.mp3'],
 };
 // per-file level so variations sound equally loud (the slides differ a lot in how long and dense they are)
 const SAMPLE_GAIN = { 'assets/sfx/slide-2.mp3': .22, 'assets/sfx/slide-3.mp3': .22, 'assets/sfx/slide-4.mp3': .26 };
@@ -1065,7 +1066,11 @@ const sfx = {
   toggle() { playSample('switch', .7, { rate: 1 }) || knock(0, 1700, .5, .04); },
   popup() { playSample('popup', .32, { rate: 1 }); },
   back() { playSample('back', .38, { rate: 1 }); },
-  lose() { playSample('lose', .45, { rate: 1 }); },
+  lose() { playSample('lose', .5, { rate: 1 }); },
+  winMars() { playSample('winmars', .6, { rate: 1 }) || sfx.win(); },
+  reward() { playSample('reward', .55, { rate: 1 }); },
+  caseBurst() { playSample('caseburst', .6, { rate: 1 }); },
+  prize(t) { playSample('prize-' + (t === 'coins' || t === 'pearls' ? 'common' : t), t === 'legendary' ? .7 : .55, { rate: 1 }); },
   yourTurn() { playSample('yourturn', .4, { rate: 1 }); },
   matchFound() { playSample('matchfound', .55, { rate: 1 }); },
   tick() { playSample('tick', .55, { rate: 1 }); },
@@ -1472,7 +1477,7 @@ function gameOver(w) {
   const pts = N.resultPoints(G.s, w); G.score[w] += pts; hud();
   if (G.opp !== 'local') { stats.played++; if (w === 0) stats.won++; store.set('stats', stats); }
   const xpP = G.opp === 'local' ? Promise.resolve(null) : awardBot(w === 0, pts === 2).catch(() => null);
-  if (!isBot(w)) sfx.win(); else sfx.lose();
+  if (!isBot(w)) (pts === 2 ? sfx.winMars() : sfx.win()); else sfx.lose();
   const fx = !isBot(w);
   if (fx) later(() => G.opp === 'local' ? fxBanner(names()[w].toUpperCase() + ' WINS', pts === 2 ? 'MARS · DOUBLE WIN' : '', pts === 2 ? 'mars' : '') : pts === 2 ? fxBanner('MARS!', 'DOUBLE WIN', 'mars') : fxBanner('YOU WIN'), 250);
   const nm = names(), title = G.opp === 'local' ? `${nm[w]} wins` : w === 0 ? 'You win' : 'Bot wins';
@@ -2417,7 +2422,7 @@ function onlineOver(row) {
   clearInterval(NET.tick); clearInterval(NET.poll);
   for (const e of [0, 1]) $('bar' + e).classList.remove('timed', 'low');
   const won = row.winner === o.seat, opp = names()[1 - o.seat];
-  if (won) sfx.win(); else sfx.lose();
+  if (won) (row.points === 2 && row.end_reason === 'win' ? sfx.winMars() : sfx.win()); else sfx.lose();
   if (won) { later(() => row.points === 2 && row.end_reason === 'win' ? fxBanner('MARS!', 'DOUBLE WIN', 'mars') : fxBanner('YOU WIN', row.stake ? `+${fmt(row.stake * 2)} COINS` : ''), 250); if (row.stake) later(() => fxCoins(row.stake * 2), 1100); }
   const why = row.end_reason === 'resign' ? (won ? `${opp} resigned.` : 'You resigned.')
     : row.end_reason === 'timeout' ? (won ? `${opp} ran out of time.` : 'You ran out of time.')
@@ -2465,7 +2470,7 @@ function dailySheet() {
     ${d.available ? `<button class="cta" data-act="daily-claim">CLAIM ${fmt(DAILY[d.day - 1])}</button>` : ''}<button class="list-btn" data-act="close">${d.available ? 'Later' : 'Close'}</button>`);
 }
 function coinCelebrate(n, title, sub = '') {
-  sfx.win(); syncCoins(true); setTimeout(() => fxCoins(n), 150);
+  sfx.reward(); syncCoins(true); setTimeout(() => fxCoins(n), 150);
   sheet(`<img class="bigcoin" src="assets/coin.webp" alt=""><h2>+${fmt(n)} coins</h2><p>${title}</p>${sub}<button class="cta" data-act="close">GREAT</button>`);
 }
 async function claimDaily() {
@@ -2503,7 +2508,7 @@ function showXp(r) {
   el.innerHTML = `<div class="xt"><span>Level ${level}</span><b>+${r.xp} XP</b></div><div class="xpbar"><i style="width:${up ? 0 : lvPct(before, level)}%"></i></div>
     ${up ? `<div class="lvup">Level up! You are now level ${level}<small>+${fmt(r.coins)} coins · ${level % 5 === 0 ? 'Silver' : 'Bronze'} case</small></div>` : ''}`;
   requestAnimationFrame(() => requestAnimationFrame(() => { const i = el.querySelector('.xpbar i'); if (i) i.style.width = lvPct(xp, level) + '%'; }));
-  if (up) { setTimeout(() => { sfx.matchFound(); fxBanner('LEVEL ' + level, `+${fmt(r.coins)} COINS`); setTimeout(() => { fxCoins(r.coins); syncCoins(true); }, 900); }, 500); }
+  if (up) { setTimeout(() => { sfx.reward(); fxBanner('LEVEL ' + level, `+${fmt(r.coins)} COINS`); setTimeout(() => { fxCoins(r.coins); syncCoins(true); }, 900); }, 500); }
 }
 
 // ---------- win effects: banner, sparks, flying coins ----------
@@ -2754,7 +2759,7 @@ async function openCase(k) {
   rays.animate([{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 600, easing: 'ease-out', fill: 'forwards' });
   beam.animate([{ opacity: 0, transform: 'scaleY(.2)' }, { opacity: .95, transform: 'scaleY(1)', offset: .3 }, { opacity: .55, transform: 'scaleY(1)' }], { duration: 1100, easing: 'ease-out', fill: 'forwards' });
   const sr = st.getBoundingClientRect(); fxSparks(sr.left + sr.width / 2, sr.top + sr.height * .42, k === 'gold' ? 46 : 32);
-  sfx.dice(); setTimeout(() => sfx.matchFound(), 120); buzz([30, 30, 70]);
+  sfx.caseBurst(); buzz([30, 30, 70]);
   await wait(1150);
   // 4. the open chest moves up and the prize reel slides in
   st.classList.add('small'); beam.animate([{ opacity: .55 }, { opacity: 0 }], { duration: 400, fill: 'forwards' });
@@ -2782,7 +2787,7 @@ async function openCase(k) {
   const what = rw.item ? (CAT[rw.item[0]][rw.item[1]] || {}).name : rw.coins ? `${fmt(rw.coins)} coins` : `${fmt(rw.pearls)} pearls`;
   const sub = rw.item ? (rw.dup ? `You already have it, so you get ${fmt(rw.pearls)} pearls instead.` : `New ${({ skins: 'board', sets: 'checker set', dice: 'dice set', avatars: 'avatar', frames: 'frame' })[rw.item[0]]}. Equip it in the Shop.`) : 'Added to your balance.';
   if (rw.tier === 'legendary' || rw.tier === 'epic') fxBanner(rn.toUpperCase(), what.toUpperCase());
-  sfx.win(); if (rw.coins) fxCoins(rw.coins); syncCoins(true);
+  sfx.prize(rw.tier); if (rw.coins) fxCoins(rw.coins); syncCoins(true);
   const more = caseCount(k);
   fx.querySelector('.cres').innerHTML = `<small style="color:${rc}">${rn.toUpperCase()}</small><b>${esc(what)}</b><span>${sub}</span>
     <div class="btns">${more ? `<button class="list-btn" data-again="${k}">Open another (${more})</button>` : ''}<button class="cta" data-done>COLLECT</button></div>`;
@@ -2951,7 +2956,7 @@ function afterStart(me) {
   startShown = true;
   if (!$('overlay').hidden || $('menu').hidden) return;
   const pz = me && me.prizes && me.prizes[0];
-  if (pz) { sfx.win(); return sheet(`<img class="bigcoin" src="assets/coin.webp" alt=""><h2>Weekly prize</h2><p>You finished <b>#${pz.rank}</b> on last week’s leaderboard.</p><p style="font-family:var(--font-display);font-size:26px;color:var(--gold-hi)">+${fmt(pz.coins)} coins</p><button class="cta" data-act="prizes-ok">COLLECT</button>`, true); }
+  if (pz) { sfx.reward(); return sheet(`<img class="bigcoin" src="assets/coin.webp" alt=""><h2>Weekly prize</h2><p>You finished <b>#${pz.rank}</b> on last week’s leaderboard.</p><p style="font-family:var(--font-display);font-size:26px;color:var(--gold-hi)">+${fmt(pz.coins)} coins</p><button class="cta" data-act="prizes-ok">COLLECT</button>`, true); }
   const d = dailyNow(); if (d && d.available) dailySheet();
 }
 
