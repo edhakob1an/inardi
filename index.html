@@ -2182,6 +2182,9 @@ document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', 
 }));
 
 // ---------- online play (Supabase) ----------
+// running inside the Android/iOS app (Capacitor)? Invite links then point to the website.
+const IS_APP = !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
+const WEB_URL = location.hostname.endsWith('github.io') ? location.origin + location.pathname : 'https://edhakob1an.github.io/inardi/';
 const SUPA = { url: 'https://fihtbfwibprcnhxiozux.supabase.co', key: 'sb_publishable_iLZB3ov6vRWLhE6OPHppoA_czkUkAbO' };
 const NET = { sb: null, ok: false, uid: null, profile: null, chan: null, poll: null, tick: null, mm: null, inv: null };
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2272,7 +2275,7 @@ async function createInvite(friend) {
   sheet(`<h2>Invite a friend</h2><div class="spin"></div>`, true);
   const r = await api('invite_create', friend ? { variant: prefs.variant, friend_id: friend.id } : { variant: prefs.variant });
   if (r.error) return sheet(`<h2>Invite a friend</h2><p>${errText(r.error)}</p><button class="list-btn" data-act="close">Close</button>`);
-  const g = r.game, link = location.origin + location.pathname + '#join-' + g.invite_code, inv = NET.inv = { id: g.id, code: g.invite_code, link, on: true };
+  const g = r.game, link = WEB_URL + '#join-' + g.invite_code, inv = NET.inv = { id: g.id, code: g.invite_code, link, on: true };
   if (friend) sheet(`<h2>Invite sent</h2><div class="spin"></div><p>Waiting for <b>${esc(friend.name)}</b> to accept a game of ${g.variant === 'short' ? 'Short' : 'Long'} nardi…</p>
     <p style="font-size:12px">${friend.online ? 'They are online now.' : 'They are offline right now. They will see the invite if they open iNardi in the next 10 minutes.'}</p>
     <button class="list-btn" data-act="inv-cancel">Cancel invite</button>`, true);
@@ -3092,6 +3095,21 @@ function afterStart(me) {
   if (reduce) { P.forEach(p => { p.vy = 0; p.vx = 0; }); }
   requestAnimationFrame(frame);
 })();
+
+// ---------- Android back button: close what is open, step back to the menu, then leave the app ----------
+if (IS_APP && Capacitor.Plugins && Capacitor.Plugins.App) {
+  const CApp = Capacitor.Plugins.App;
+  CApp.addListener('backButton', () => {
+    if (!$('caseFx').hidden) return;
+    if (!$('chatPop').hidden) return chatOpen(false);
+    if (!$('autoPop').hidden) return autoPopOpen(false);
+    if (!$('overlay').hidden) { if (!sheetLocked) closeSheet(); return; }
+    if (!$('viewer').hidden) return V3.close();
+    if (!$('game').hidden) return $('menuBtn').click();
+    if (!$('menu').hidden) return CApp.minimizeApp ? CApp.minimizeApp() : CApp.exitApp();
+    showScreen('menu');
+  });
+}
 
 setVars(); syncMenu(); heroBoard(); heroDice(); requestAnimationFrame(placeHero);
 

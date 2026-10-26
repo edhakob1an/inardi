@@ -1,0 +1,25 @@
+{
+  "appId": "com.eachpixelmatters.inardi",
+  "appName": "iNardi",
+  "webDir": "www",
+  "backgroundColor": "#0d0805",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#0d0805",
+    "adjustMarginsForEdgeToEdge": "force"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 300,
+      "launchAutoHide": true,
+      "launchFadeOutDuration": 200,
+      "backgroundColor": "#0d0805",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "DARK",
+      "backgroundColor": "#0d0805"
+    }
+  }
+}
