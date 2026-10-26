@@ -2723,7 +2723,7 @@ function fakeTile(k) {
 const tileHTML = (t, win) => `<div class="rtile ${win ? 'win-slot' : ''}" style="--rc:${t.rc}"><span class="ri">${t.ic}</span><span>${t.t}</span></div>`;
 const wait = ms => new Promise(r => setTimeout(r, ms));
 async function openCase(k) {
-  const fx = $('caseFx'), c = CASEDEF[k], cg = { bronze: '#ff9a4a', silver: '#a8d8ff', gold: '#ffd27a' }[k];
+  const fx = $('caseFx'), c = CASEDEF[k], cg = { bronze: '#7fd0ff', silver: '#f3e6c4', gold: '#ffd27a' }[k];
   fx.innerHTML = `<div class="cstage" style="--cg:${cg}"><div class="rays"></div><div class="halo"></div><div class="shadow"></div><div class="beam"></div>
     <div class="chest"><img class="cc" src="assets/cases/${k}_c.webp" alt=""><img class="co" src="assets/cases/${k}_o.webp" alt=""></div></div>
     <div class="cres"><span>${c.name}</span></div>`;
