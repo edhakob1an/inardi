@@ -3,9 +3,12 @@
 // so a modified client can't fake rolls, play illegal moves or touch coin balances.
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 import './engine.js';
+import './bot.js';
 
 // deno-lint-ignore no-explicit-any
 const N: any = (globalThis as any).Nardi;
+// deno-lint-ignore no-explicit-any
+const Bot: any = (globalThis as any).NardiBot;
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
 
 const TURN_SECONDS = 60;          // time for one turn (roll + moves)
@@ -172,6 +175,95 @@ async function finish(g: Game, winner: number, reason: string, points: number) {
   return await loadGame(g.id);
 }
 
+// ---------------------------------------------------------------- fill-in opponents
+// A believable player for a table nobody else is at: a local-sounding name, a level that fits the room,
+// cosmetics and lifetime statistics to match. Dice and rules are exactly those of a real game.
+const BOT_FIRST = ['Ashot', 'Narek', 'Gor', 'Tigran', 'Armen', 'Davit', 'Hayk', 'Karen', 'Vardan', 'Aram', 'Levon', 'Sargis', 'Artur', 'Samvel', 'Vahe',
+  'Hovhannes', 'Gagik', 'Arsen', 'Edgar', 'Mher', 'Ruben', 'Suren', 'Garik', 'Robert', 'Arman', 'Erik', 'Gevorg', 'Mkrtich', 'Rafik', 'Ararat',
+  'Lilit', 'Anahit', 'Ani', 'Mariam', 'Nare', 'Gayane', 'Sona', 'Lusine', 'Astghik', 'Hasmik', 'Armine', 'Siranush',
+  'Sergey', 'Andrey', 'Dima', 'Alex', 'Misha', 'Oleg', 'Artyom', 'Vova', 'Igor', 'Kolya', 'Anna', 'Olga', 'Irina',
+  'Ali', 'Murad', 'Reza', 'George', 'Nick', 'David', 'Sam'];
+const BOT_NICK = ['Davo', 'Gogo', 'Tiko', 'Aro', 'Hayko', 'Naro', 'Vazo', 'Arto', 'Sako', 'Rubo', 'Mko', 'Gev', 'Edo', 'Levo', 'Suro'];
+const BOT_TAIL = ['nardi', 'Nardi', 'king', 'pro', 'master', 'yan', 'Erevan', 'GY', 'arm', 'zone', 'Zar', 'boss'];
+function rint(a: number, b: number) { return a + rnd(b - a + 1); }
+function pick<T>(xs: T[]): T { return xs[rnd(xs.length)]; }
+function botName() {
+  const f = Math.random() < .12 ? pick(BOT_NICK) : pick(BOT_FIRST), t = rnd(10);
+  if (t < 3) return f + rint(1, 99);                                  // Ashot77
+  if (t < 5) return f + rint(1970, 2006);                             // Gor1985
+  if (t < 6) return f + '_' + rint(1, 999);                           // Narek_92
+  if (t < 7) return f + '.' + 'ABDGHKLMNPSTV'[rnd(13)];               // Lilit.A
+  if (t < 8) return f + '_' + pick(BOT_TAIL);                         // Davo_nardi
+  if (t < 9) return f.toLowerCase() + rint(10, 99);                   // tigran23
+  return f;                                                           // Hayk
+}
+const BOT_LEVELS: Record<number, [number, number]> = { 100: [2, 12], 500: [5, 18], 1000: [8, 24], 5000: [14, 34], 10000: [20, 45] };
+const BOT_AVATARS: [string, number][] = [['default', 40], ['ararat', 12], ['pomegranate', 12], ['star', 9], ['eternity', 8], ['garnet', 7], ['goldsign', 5], ['silversign', 5], ['pearl', 2]];
+const BOT_FRAMES: [string, number][] = [['none', 34], ['bronze', 20], ['silver', 16], ['gold', 12], ['garnet', 7], ['lapis', 6], ['diamond', 3], ['pearl', 2]];
+function weighted(xs: [string, number][], boost = 0) {
+  const w = xs.map(([, n], i) => n * (1 + boost * i / xs.length)), sum = w.reduce((a, b) => a + b, 0); let r = Math.random() * sum;
+  for (let i = 0; i < xs.length; i++) { r -= w[i]; if (r <= 0) return xs[i][0]; }
+  return xs[0][0];
+}
+function makeBot(stake: number, myLevel: number) {
+  const [lo, hi] = BOT_LEVELS[stake] || [3, 15];
+  let level = rint(lo, hi);
+  if (myLevel >= lo && myLevel <= hi && Math.random() < .5) level = Math.max(lo, Math.min(hi, myLevel + rint(-3, 4)));   // often near your own level
+  const played = Math.round(level * rint(9, 16) + rint(0, 30)), won = Math.round(played * (.42 + Math.random() * .16));
+  const short_wins = Math.round(won * (.3 + Math.random() * .5)), long_wins = won - short_wins;
+  const boost = Math.min(2, level / 18);
+  const stats: Record<string, number> = {
+    won, best_streak: Math.min(won, rint(2, 5) + Math.floor(level / 6)), mars_wins: Math.round(won * (.06 + Math.random() * .1)),
+    comebacks: Math.round(won * Math.random() * .03), perfect_doubles: Math.random() < level / 60 ? 1 : 0,
+    untouched_wins: Math.round(short_wins * Math.random() * .06), fast_wins: Math.round(won * Math.random() * .05), both: Math.min(short_wins, long_wins),
+    high_rooms: stake >= 5000 ? rint(1, 3) : stake >= 1000 ? rint(0, 2) : 0,
+    coins_won_total: Math.round(won * stake * (.4 + Math.random() * .5) + won * 120), royal_wins: stake === 10000 && Math.random() < .5 ? rint(1, 6) : 0,
+    friends: rint(0, Math.min(6, Math.floor(level / 5))), gg_count: rint(0, Math.floor(played / 12)), rematches: rint(0, Math.floor(played / 30)),
+    daily7: rint(0, Math.floor(level / 10)), level, owned: Math.min(22, Math.floor(level / 3) + rint(0, 2)), top10: 0, number_one: 0,
+  };
+  const ach: Record<string, number> = {};
+  for (const a of ACH) { const n = a.tiers.filter(t => (stats[a.stat] || 0) >= t.n).length; if (n) ach[a.id] = n; }
+  return {
+    id: crypto.randomUUID(), name: botName(), level, xp: 50 * level * (level - 1) + rint(0, level * 40),
+    avatar: weighted(BOT_AVATARS, boost), frame: weighted(BOT_FRAMES, boost),
+    skill: Math.random() < (stake >= 5000 ? .75 : stake >= 1000 ? .6 : .45) ? 'normal' : 'easy',
+    played, won, streak: rint(0, 3), best_streak: stats.best_streak, mars_wins: stats.mars_wins, coins_won_total: stats.coins_won_total,
+    bot_played: rint(0, 40), bot_won: 0, created_at: new Date(Date.now() - rint(20, 330) * 864e5).toISOString(), ach, stats,
+  };
+}
+// a finished-or-running game whose computer opponent has this id
+async function botById(id: string) {
+  const { data } = await db.from('games').select('bot').eq('bot->>id', id).order('created_at', { ascending: false }).limit(1);
+  return data && data[0] ? data[0].bot : null;
+}
+function botCard(b: Game) {
+  const keys = ['id', 'name', 'level', 'xp', 'played', 'won', 'streak', 'best_streak', 'mars_wins', 'coins_won_total', 'bot_played', 'bot_won', 'created_at', 'ach', 'avatar', 'frame'];
+  const c: Game = {}; for (const k of keys) c[k] = b[k];
+  c.bot_won = Math.round((b.bot_played || 0) * .7);
+  return { ...c, online: true };
+}
+// play the computer opponent's whole turn: fair dice, a move chosen by the bot, replayed through the rules engine
+async function playBotTurn(g: Game) {
+  const bs = Number(g.bot.seat), d = [die(), die()];
+  const sixes = [...(g.sixes || [0, 0])]; if (d[0] === 6 && d[1] === 6) sixes[bs]++;
+  const t = new N.Turn(g.state, bs, d[0], d[1]);
+  if (t.total === 0) return await save(g, { sixes, state: t.finish(), turn: 1 - bs, phase: 'roll', dice: null, last_moves: [], last_player: bs, last_dice: d, deadline: later(TURN_SECONDS) });
+  const choice = Bot.chooseTurn(g.state, bs, d[0], d[1], g.bot.skill === 'easy' ? 'easy' : 'normal'), played: Game[] = [];
+  for (const m of choice.moves) {
+    const legal = t.legal().find((x: Game) => x.from === m.from && x.to === m.to && x.die === m.die);
+    if (!legal) break;
+    t.play(legal); played.push(legal);
+  }
+  const ns = t.finish(), w = N.winner(ns);
+  const hits = [...(g.hits || [0, 0])], behind = [...(g.behind || [0, 0])];
+  hits[bs] += played.filter(m => m.hit).length;
+  const pp = [N.pips(ns, 0), N.pips(ns, 1)];
+  for (const s of [0, 1]) behind[s] = Math.max(behind[s], pp[s] - pp[1 - s]);
+  const base = { sixes, state: ns, last_moves: played, last_player: bs, last_dice: d, dice: null, hits, behind };
+  if (w >= 0) { const g2 = await save(g, { ...base, phase: 'roll' }); return await finish(g2, w, 'win', N.resultPoints(ns, w)); }
+  return await save(g, { ...base, turn: 1 - bs, phase: 'roll', deadline: later(TURN_SECONDS) });
+}
+
 const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
   // ---------------------------------------------------------------- account
   async me(uid) {
@@ -207,6 +299,8 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
   // public card of a player: what an opponent sees when tapping their name
   async player(_uid, a) {
     if (!isUuid(a.user_id)) throw new Fail('bad_user');
+    const { count: real } = await db.from('profiles').select('id', { count: 'exact', head: true }).eq('id', a.user_id);
+    if (!real) { const b = await botById(a.user_id); if (b) return { player: botCard(b) }; }
     const { data: p } = await db.from('profiles').select('id,name,level,xp,played,won,streak,best_streak,mars_wins,coins_won_total,bot_played,bot_won,equip,created_at,last_seen,ach').eq('id', a.user_id).maybeSingle();
     if (!p) throw new Fail('no_profile', 404);
     return { player: { ...p, avatar: p.equip?.avatar || 'default', frame: p.equip?.frame || 'none', equip: undefined,
@@ -245,6 +339,8 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
 
   async friend_add(uid, a) {
     if (!isUuid(a.user_id) || a.user_id === uid) throw new Fail('bad_user');
+    // a computer opponent: nothing is stored, it never becomes a friend
+    if (!(await isFriendRow(a.user_id, uid)) && (await botById(a.user_id))) return { friends: await rpc('friends_list', { p_user: uid }) };
     if (!(await isFriendRow(a.user_id, uid)) && !(await playedTogether(uid, a.user_id))) throw new Fail('not_played');
     const { count } = await db.from('friends').select('user_id', { count: 'exact', head: true }).eq('user_id', uid);
     if ((count || 0) >= 200) throw new Fail('too_many_friends');
@@ -271,6 +367,8 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
   async achievements(uid, a) {
     const id = isUuid(a.user_id) ? a.user_id : uid;
     if (id === uid) { const c = await checkAch(uid); return { ach: c.profile.ach, stats: c.ach_stats, ach_new: c.ach_new, profile: c.profile }; }
+    const { count: real } = await db.from('profiles').select('id', { count: 'exact', head: true }).eq('id', id);
+    if (!real) { const b = await botById(id); if (b) return { ach: b.ach, stats: b.stats }; }
     const p = await profile(id);
     return { ach: p.ach, stats: await achStats(id, p) };
   },
@@ -291,6 +389,22 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
   async rematch(uid, a) {
     if (!isUuid(a.game_id)) throw new Fail('bad_game');
     const old = await loadGame(a.game_id);
+    if (old.bot) {
+      if (seat(old, uid) !== 0) throw new Fail('not_your_game');
+      const prior = await db.from('games').select('id,status').eq('rematch_of', old.id).limit(1);
+      if (prior.data && prior.data[0]) {
+        if (prior.data[0].status === 'active') return { game: await loadGame(prior.data[0].id) };
+        return { waiting: prior.data[0] };
+      }
+      await new Promise(res => setTimeout(res, 2500 + rnd(4000)));
+      if (Math.random() < .55) {
+        const r = await rpc('bot_rematch', { p_user: uid, p_old: old.id, p_state: N.newGame(old.variant), p_opening: openingRoll() });
+        if (r.game_id) return { game: await loadGame(r.game_id) };
+      }
+      const { data: w, error } = await db.from('games').insert({ variant: old.variant, stake: old.stake, kind: 'invite', status: 'cancelled', p0: uid, p0_name: old.p0_name, rematch_of: old.id, state: null }).select().maybeSingle();
+      if (error) throw error;
+      return { waiting: w };
+    }
     const r = await rpc('rematch', { p_user: uid, p_old: old.id, p_state: N.newGame(old.variant), p_opening: openingRoll() });
     if (r.game_id) return { game: await loadGame(r.game_id) };
     return { waiting: await loadGame(r.waiting) };
@@ -399,6 +513,23 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
     return { queued: !!q, waiting: w || [] };
   },
 
+  // nobody came to the table: the waiting player gets a computer opponent
+  async queue_bot(uid, a) {
+    if (!variantOk(a.variant)) throw new Fail('bad_variant');
+    if (!ROOMS.includes(a.stake)) throw new Fail('bad_room');
+    const me = await profile(uid);
+    const r = await rpc('bot_match', { p_user: uid, p_variant: a.variant, p_stake: a.stake, p_state: N.newGame(a.variant), p_opening: openingRoll(), p_bot: makeBot(a.stake, me.level) });
+    return { game: await loadGame(r.game_id) };
+  },
+
+  // the player's app asks for the computer opponent's turn after a short "thinking" pause
+  async bot_turn(uid, a) {
+    const g = await loadGame(a.game_id);
+    if (seat(g, uid) < 0 || !g.bot) throw new Fail('not_your_game');
+    if (g.status !== 'active' || g.turn !== Number(g.bot.seat) || g.phase !== 'roll') return { game: g };
+    return { game: await playBotTurn(g) };
+  },
+
   async queue_cancel(uid) { await db.from('match_queue').delete().eq('user_id', uid); return { ok: true }; },
 
   // ---------------------------------------------------------------- playing
@@ -454,6 +585,7 @@ const ACTIONS: Record<string, (uid: string, a: any) => Promise<unknown>> = {
     if (me < 0) throw new Fail('not_your_game');
     if (g.status !== 'active') throw new Fail('not_active');
     if (g.turn === me) throw new Fail('your_turn');
+    if (g.bot) return { game: await playBotTurn(g) };
     if (!g.deadline || Date.parse(g.deadline) > Date.now()) throw new Fail('not_yet');
     return { game: await finish(g, me, 'timeout', 1) };
   },

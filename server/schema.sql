@@ -529,8 +529,8 @@ begin
   update profiles set perfect_doubles = perfect_doubles + 1 where (id = g.p0 and g.sixes[1] >= 3) or (id = g.p1 and g.sixes[2] >= 3);
   if g.rematch_of is not null then update profiles set rematches = rematches + 1 where id in (g.p0, g.p1); end if;
   if v_loser is not null then perform add_xp(v_loser, case when p_reason = 'win' then 20 when v_turns < 8 then 0 else 5 end); end if;
-  -- weekly leaderboard: only games played for coins count
-  if g.stake > 0 then
+  -- weekly leaderboard: only games played for coins against real players count
+  if g.stake > 0 and g.bot is null then
     if v_winner is not null then
       insert into weekly_stats (user_id, week, wins, coins_won, games) values (v_winner, v_week, 1, g.stake, 1)
       on conflict (user_id, week) do update set wins = weekly_stats.wins + 1, coins_won = weekly_stats.coins_won + excluded.coins_won, games = weekly_stats.games + 1;
@@ -592,6 +592,65 @@ begin
   return jsonb_build_object('ok', true);
 end $$;
 
+-- ---------------------------------------------------------------- fill-in opponents
+-- When nobody else is at a table, the waiting player gets a computer opponent with its own name and profile.
+-- games.bot holds that identity ({id, name, level, avatar, frame, skill, seat, stats...}); p1 stays empty.
+alter table public.games add column if not exists bot jsonb;
+create index if not exists games_bot_id on public.games ((bot->>'id')) where bot is not null;
+
+create or replace function public.bot_match(p_user uuid, p_variant text, p_stake int, p_state jsonb, p_opening smallint[], p_bot jsonb)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_me profiles; v_game uuid; v_first smallint; v_secs int; v_active uuid;
+begin
+  perform pg_advisory_xact_lock(hashtext('mm:' || p_variant || ':' || p_stake));
+  -- matched with a real player in the meantime: use that game
+  select id into v_active from games where status = 'active' and p_user in (p0, p1) limit 1;
+  if v_active is not null then return jsonb_build_object('game_id', v_active); end if;
+  if not exists (select 1 from match_queue where user_id = p_user and variant = p_variant and stake = p_stake) then
+    return jsonb_build_object('error', 'not_queued');
+  end if;
+  select * into v_me from profiles where id = p_user for update;
+  if v_me.coins < p_stake then delete from match_queue where user_id = p_user; return jsonb_build_object('error', 'not_enough_coins'); end if;
+  delete from match_queue where user_id = p_user;
+  select (value #>> '{}')::int into v_secs from app_config where key = 'turn_seconds';
+  update profiles set coins = coins - p_stake where id = p_user;
+  v_first := case when p_opening[1] > p_opening[2] then 0 else 1 end;
+  insert into games (variant, stake, kind, status, p0, p1, p0_name, p1_name, p0_level, p1_level, state, turn, phase, opening, deadline, bot)
+  values (p_variant, p_stake, 'match', 'active', p_user, null, v_me.name, p_bot->>'name', v_me.level, (p_bot->>'level')::int, p_state, v_first, 'roll',
+          p_opening, now() + make_interval(secs => coalesce(v_secs, 60) + 10), p_bot || '{"seat": 1}'::jsonb)
+  returning id into v_game;
+  if p_stake > 0 then insert into coin_ledger (user_id, delta, reason, game_id) values (p_user, -p_stake, 'stake', v_game); end if;
+  return jsonb_build_object('game_id', v_game);
+end $$;
+
+-- the computer opponent accepted a rematch: same opponent, same stake
+create or replace function public.bot_rematch(p_user uuid, p_old uuid, p_state jsonb, p_opening smallint[])
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare g games; v_me profiles; v_game uuid; v_first smallint; v_secs int;
+begin
+  select * into g from games where id = p_old;
+  if not found or g.status <> 'finished' or g.bot is null then return jsonb_build_object('error', 'not_finished'); end if;
+  if g.p0 is distinct from p_user then return jsonb_build_object('error', 'not_your_game'); end if;
+  perform pg_advisory_xact_lock(hashtext('rm:' || p_old));
+  select id into v_game from games where rematch_of = p_old and status = 'active' limit 1;
+  if v_game is not null then return jsonb_build_object('game_id', v_game); end if;
+  if exists (select 1 from games where status = 'active' and p_user in (p0, p1)) then return jsonb_build_object('error', 'already_in_game'); end if;
+  select * into v_me from profiles where id = p_user for update;
+  if v_me.coins < g.stake then return jsonb_build_object('error', 'not_enough_coins'); end if;
+  select (value #>> '{}')::int into v_secs from app_config where key = 'turn_seconds';
+  update profiles set coins = coins - g.stake where id = p_user;
+  v_first := case when p_opening[1] > p_opening[2] then 0 else 1 end;
+  insert into games (variant, stake, kind, status, p0, p1, p0_name, p1_name, p0_level, p1_level, state, turn, phase, opening, deadline, bot, rematch_of)
+  values (g.variant, g.stake, 'match', 'active', p_user, null, v_me.name, g.p1_name, v_me.level, g.p1_level, p_state, v_first, 'roll',
+          p_opening, now() + make_interval(secs => coalesce(v_secs, 60) + 10), g.bot, p_old)
+  returning id into v_game;
+  if g.stake > 0 then insert into coin_ledger (user_id, delta, reason, game_id) values (p_user, -g.stake, 'stake', v_game); end if;
+  return jsonb_build_object('game_id', v_game);
+end $$;
+revoke all on function public.bot_match(uuid, text, int, jsonb, smallint[], jsonb) from public, anon, authenticated;
+revoke all on function public.bot_rematch(uuid, uuid, jsonb, smallint[]) from public, anon, authenticated;
+grant execute on function public.bot_match(uuid, text, int, jsonb, smallint[], jsonb), public.bot_rematch(uuid, uuid, jsonb, smallint[]) to service_role;
+
 -- Only the server (service role) may call these.
 revoke all on function public.matchmake(uuid, text, int, jsonb, smallint[]) from public, anon, authenticated;
 revoke all on function public.settle_game(uuid, smallint, text, smallint) from public, anon, authenticated;
@@ -626,8 +685,9 @@ language plpgsql security definer set search_path = public as $$
 declare g record;
 begin
   -- a player who ran out of time and never came back loses (the opponent may also claim this sooner)
-  for g in select id, turn from games where status = 'active' and deadline < now() - interval '90 seconds' loop
-    perform settle_game(g.id, (1 - g.turn)::smallint, 'timeout', 1::smallint);
+  for g in select id, turn, bot from games where status = 'active' and deadline < now() - interval '90 seconds' loop
+    -- the bot never runs out of time: if a bot game stalls on the bot's turn, the player left and loses
+    perform settle_game(g.id, (case when g.bot is not null and g.turn = (g.bot->>'seat')::int then g.turn else 1 - g.turn end)::smallint, 'timeout', 1::smallint);
   end loop;
   delete from match_queue where seen_at < now() - interval '1 minute';
   update games set status = 'cancelled', updated_at = now() where status = 'waiting' and created_at < now() - interval '1 day';
