@@ -80,6 +80,10 @@
     '{0} is yours': '{0} — հիմա քոնն է',
     'board': 'տախտակ', 'checker set': 'քարերի հավաքածու', 'dice set': 'զառերի հավաքածու', 'avatar': 'ավատար', 'frame': 'շրջանակ',
 
+    'Sevan Night': 'Սևանի գիշեր', 'Midnight-blue lacquer with silver filigree and the Sevanavank monastery above the lake.': 'Կեսգիշերային կապույտ լաք՝ արծաթե ֆիլիգրանով և լճի վրա բարձրացող Սևանավանքով։',
+    'Moonstone & Sapphire': 'Լուսնաքար և շափյուղա', 'Milky moonstone against deep sapphire, both with polished silver rims.': 'Կաթնագույն լուսնաքար և մուգ շափյուղա, երկուսն էլ՝ հղկված արծաթե եզրերով։',
+    'Silver & Midnight': 'Արծաթ և կեսգիշեր', 'Brushed silver dice with midnight-blue pips and a silver eternity sign.': 'Արծաթե զառեր՝ կեսգիշերային կապույտ կետերով և արծաթե հավերժության նշանով։',
+    'Sevanavank': 'Սևանավանք', 'The silver monastery above Lake Sevan, on midnight-blue enamel.': 'Արծաթե վանքը Սևանա լճի վրա՝ կեսգիշերային կապույտ էմալի վրա։',
     // items: boards
     'Ararat Walnut': 'Արարատյան ընկույզ', 'Carved vines and pomegranates with Mount Ararat medallions.': 'Փորագրված որթատունկ և նռներ՝ Արարատ լեռան մեդալիոններով։',
     'Golden Oak': 'Ոսկե կաղնի', 'Light oak, apricot-wood inlay and carved pomegranate branches.': 'Բաց կաղնի, ծիրանենու ներդիր և փորագրված նռան ճյուղեր։',
@@ -340,6 +344,10 @@
     '{0} is yours': '{0} — теперь твоё',
     'board': 'доска', 'checker set': 'набор шашек', 'dice set': 'набор костей', 'avatar': 'аватар', 'frame': 'рамка',
 
+    'Sevan Night': 'Ночь Севана', 'Midnight-blue lacquer with silver filigree and the Sevanavank monastery above the lake.': 'Полуночно-синий лак с серебряной филигранью и монастырём Севанаванк над озером.',
+    'Moonstone & Sapphire': 'Лунный камень и сапфир', 'Milky moonstone against deep sapphire, both with polished silver rims.': 'Молочный лунный камень и глубокий сапфир, оба с полированными серебряными ободками.',
+    'Silver & Midnight': 'Серебро и полночь', 'Brushed silver dice with midnight-blue pips and a silver eternity sign.': 'Кости из матового серебра с полуночно-синими точками и серебряным знаком вечности.',
+    'Sevanavank': 'Севанаванк', 'The silver monastery above Lake Sevan, on midnight-blue enamel.': 'Серебряный монастырь над озером Севан на полуночно-синей эмали.',
     // items: boards
     'Ararat Walnut': 'Араратский орех', 'Carved vines and pomegranates with Mount Ararat medallions.': 'Резная лоза и гранаты с медальонами горы Арарат.',
     'Golden Oak': 'Золотой дуб', 'Light oak, apricot-wood inlay and carved pomegranate branches.': 'Светлый дуб, инкрустация абрикосовым деревом и резные гранатовые ветви.',

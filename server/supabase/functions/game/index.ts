@@ -162,8 +162,8 @@ const CASES: Record<string, { price: number; drops: Drop[] }> = {
   gold:   { price: 200, drops: [{ w: 25, coins: 2000 }, { w: 20, pearls: 60 }, { w: 20, pearls: 150 }, { w: 15, tier: 'rare' }, { w: 15, tier: 'epic' }, { w: 5, tier: 'legendary' }] },
 };
 const POOL: Record<string, [string, string][]> = {
-  rare: [['dice', 'wood'], ['dice', 'pearl'], ['dice', 'obsidian'], ['dice', 'lapis'], ['sets', 'bone'], ['sets', 'pearl'], ['sets', 'tuff'], ['sets', 'amber']],
-  epic: [['skins', 'oak'], ['skins', 'ebony'], ['skins', 'tuff'], ['skins', 'garnet'], ['frames', 'gold'], ['frames', 'garnet'], ['frames', 'lapis'], ['avatars', 'star'], ['avatars', 'goldsign'], ['avatars', 'silversign']],
+  rare: [['dice', 'wood'], ['dice', 'pearl'], ['dice', 'obsidian'], ['dice', 'lapis'], ['sets', 'bone'], ['sets', 'pearl'], ['sets', 'tuff'], ['sets', 'amber'], ['dice', 'sevan'], ['sets', 'moon']],
+  epic: [['skins', 'oak'], ['skins', 'ebony'], ['skins', 'tuff'], ['skins', 'garnet'], ['skins', 'sevan'], ['avatars', 'sevanavank'], ['frames', 'gold'], ['frames', 'garnet'], ['frames', 'lapis'], ['avatars', 'star'], ['avatars', 'goldsign'], ['avatars', 'silversign']],
   legendary: [['avatars', 'pearl'], ['frames', 'pearl'], ['frames', 'diamond']],
 };
 const DUP = { rare: 30, epic: 80, legendary: 200 };
@@ -198,7 +198,7 @@ function botName() {
   return f;                                                           // Hayk
 }
 const BOT_LEVELS: Record<number, [number, number]> = { 100: [2, 12], 500: [5, 18], 1000: [8, 24], 5000: [14, 34], 10000: [20, 45] };
-const BOT_AVATARS: [string, number][] = [['default', 40], ['ararat', 12], ['pomegranate', 12], ['star', 9], ['eternity', 8], ['garnet', 7], ['goldsign', 5], ['silversign', 5], ['pearl', 2]];
+const BOT_AVATARS: [string, number][] = [['default', 40], ['ararat', 12], ['pomegranate', 12], ['star', 9], ['eternity', 8], ['garnet', 7], ['goldsign', 5], ['silversign', 5], ['sevanavank', 4], ['pearl', 2]];
 const BOT_FRAMES: [string, number][] = [['none', 34], ['bronze', 20], ['silver', 16], ['gold', 12], ['garnet', 7], ['lapis', 6], ['diamond', 3], ['pearl', 2]];
 function weighted(xs: [string, number][], boost = 0) {
   const w = xs.map(([, n], i) => n * (1 + boost * i / xs.length)), sum = w.reduce((a, b) => a + b, 0); let r = Math.random() * sum;

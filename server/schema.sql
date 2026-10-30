@@ -112,6 +112,7 @@ insert into public.shop_items values
   ('dice', 'ivory', 0), ('dice', 'wood', 25), ('dice', 'pearl', 60),
   ('skins', 'tuff', 120), ('sets', 'tuff', 70), ('dice', 'obsidian', 80),
   ('skins', 'garnet', 150), ('sets', 'amber', 90), ('dice', 'lapis', 100),
+  ('skins', 'sevan', 180), ('sets', 'moon', 100), ('dice', 'sevan', 110), ('avatars', 'sevanavank', 70),
   ('avatars', 'default', 0), ('avatars', 'ararat', 30), ('avatars', 'pomegranate', 30), ('avatars', 'star', 50), ('avatars', 'eternity', 60),
   ('avatars', 'garnet', 60), ('avatars', 'goldsign', 80), ('avatars', 'silversign', 80),
   ('frames', 'none', 0), ('frames', 'bronze', 20), ('frames', 'silver', 50), ('frames', 'gold', 100), ('frames', 'garnet', 150),

@@ -727,6 +727,7 @@ html[lang="ru"] #rollBtn.auto::after { content: "АВТО"; }
 .die3.ivory { --face: url(assets/dice/ivory/face.webp); --sign: url(assets/dice/ivory/sign.webp); --core-c: #c9b089; }
 .die3.wood { --face: url(assets/dice/wood/face.webp); --sign: url(assets/dice/wood/sign.webp); --core-c: #3a2414; }
 .die3.obsidian { --face: url(assets/dice/obsidian/face.webp); --sign: url(assets/dice/obsidian/sign.webp); --core-c: #0b0b0b; }
+.die3.sevan { --face: url(assets/dice/sevan/face.webp); --sign: url(assets/dice/sevan/sign.webp); --core-c: #9aa0aa; }
 .die3.lapis { --face: url(assets/dice/lapis/face.webp); --sign: url(assets/dice/lapis/sign.webp); --core-c: #1a2c78; }
 .die3.pearl { --face: url(assets/dice/pearl/face.webp); --sign: url(assets/dice/pearl/sign.webp); --core-c: #d9d5cc; }
 .die3 .sign { position: absolute; inset: 23%; background: var(--sign) center / contain no-repeat; filter: drop-shadow(0 calc(var(--s) * .01) calc(var(--s) * .015) rgba(0, 0, 0, .45)); }
@@ -743,6 +744,8 @@ html[lang="ru"] #rollBtn.auto::after { content: "АВТО"; }
   box-shadow: inset 0 0 0 calc(var(--s) * .012) rgba(30, 15, 4, .7), 0 1px 0 rgba(255, 255, 255, .25); }
 .die3.obsidian .f i { background: radial-gradient(circle at 42% 32%, #fff3c9 0 12%, #e7b24a 45%, #7e5210 85%);
   box-shadow: inset 0 0 0 calc(var(--s) * .01) rgba(0, 0, 0, .6), 0 1px 0 rgba(255, 255, 255, .2); }
+.die3.sevan .f i { background: radial-gradient(circle at 42% 32%, #5a6bd8 0 12%, #1f2a7a 45%, #0a0f38 85%);
+  box-shadow: inset 0 0 0 calc(var(--s) * .01) rgba(0, 0, 20, .7), 0 1px 0 rgba(255, 255, 255, .5); }
 .die3.lapis .f i { background: radial-gradient(circle at 42% 32%, #ffffff 0 12%, #d5dbe4 45%, #6d7683 85%);
   box-shadow: inset 0 0 0 calc(var(--s) * .01) rgba(0, 0, 20, .6), 0 1px 0 rgba(255, 255, 255, .25); }
 .die3.pearl .f i { background: radial-gradient(circle at 42% 32%, #fff3c9 0 12%, #e2ae4c 45%, #8a5a17 85%);
@@ -952,6 +955,7 @@ const SKINS = {
   oak:    { name: 'Golden Oak', desc: 'Light oak, apricot-wood inlay and carved pomegranate branches.', price: 40, W: 848, H: 1264, L: [70, 397], top: 70, bot: 1206, dim: 1, dice: 'wood' },
   ebony:  { name: 'Pearl Ebony', desc: 'Black ebony inlaid with mother-of-pearl and gold.', price: 90, W: 848, H: 1264, L: [60, 392], top: 55, bot: 1196, dim: .86, dice: 'pearl' },
   tuff:   { name: 'Pink Tuff', desc: 'The rose-pink stone of Yerevan, carved lace and a black basalt bar.', price: 120, W: 848, H: 1264, L: [66, 398], top: 64, bot: 1200, dim: 1, dice: 'obsidian' },
+  sevan:  { name: 'Sevan Night', desc: 'Midnight-blue lacquer with silver filigree and the Sevanavank monastery above the lake.', price: 180, W: 848, H: 1264, L: [77, 391], top: 70, bot: 1188, dim: 1, dice: 'sevan' },
   garnet: { name: 'Royal Garnet', desc: 'Garnet-red cherry under glossy lacquer, with gold-leaf lines and a golden pomegranate tree.', price: 150, W: 848, H: 1264, L: [66, 398], top: 68, bot: 1196, dim: 1, dice: 'lapis' },
 };
 for (const k in SKINS) { const sk = SKINS[k]; sk.id = k; sk.R = [sk.W - sk.L[1], sk.W - sk.L[0]]; }
@@ -960,6 +964,7 @@ const SETS = {
   bone:    { name: 'Bone & Walnut', desc: 'Cream bone with a walnut rim, and dark walnut.', price: 20, ring: false },
   pearl:   { name: 'Pearl & Garnet', desc: 'Mother-of-pearl and garnet lacquer, gold rims.', price: 50, ring: true },
   tuff:    { name: 'Tuff & Basalt', desc: 'Rose-pink tuff against polished black basalt, two Armenian stones.', price: 70, ring: true },
+  moon:    { name: 'Moonstone & Sapphire', desc: 'Milky moonstone against deep sapphire, both with polished silver rims.', price: 100, ring: true },
   amber:   { name: 'Amber & Onyx', desc: 'Honey amber against black onyx, both with thin gold rims.', price: 90, ring: true },
 };
 const DICE = {
@@ -967,6 +972,7 @@ const DICE = {
   wood:  { name: 'Walnut & Bone', desc: 'Dark walnut dice with bone pips and a carved bone eternity sign.', price: 25 },
   pearl: { name: 'Pearl & Gold', desc: 'Mother-of-pearl dice with gold pips and a gold eternity sign.', price: 60 },
   obsidian: { name: 'Obsidian & Gold', desc: 'Black Armenian obsidian with gold pips and a gold eternity sign.', price: 80 },
+  sevan: { name: 'Silver & Midnight', desc: 'Brushed silver dice with midnight-blue pips and a silver eternity sign.', price: 110 },
   lapis: { name: 'Lapis & Silver', desc: 'Deep blue lapis lazuli with gold flecks, silver pips and a silver eternity sign.', price: 100 },
 };
 // avatars use art that is already in the game; frames are drawn in CSS
@@ -981,6 +987,7 @@ const AVATARS = {
   pearl:       { name: 'Black Pearl', desc: 'A lustrous pearl on black silk. Only from Gold cases.', price: 0, fromCase: 'gold', img: 'assets/pearl.webp', bg: 'radial-gradient(circle, #2a2a33, #050508)' },
   crown:       { name: 'Royal Crown', desc: 'Only for winners of the Royal 10,000 room.', price: 0, ach: 'royal', img: 'assets/ach/royal.webp', bg: 'radial-gradient(circle, #4a1426, #1a0610)' },
   ara_gold:    { name: 'Ararat Gold', desc: 'Only for players who finished a week as number one.', price: 0, ach: 'number_one', img: 'assets/ach/ara_gold.webp' },
+  sevanavank:  { name: 'Sevanavank', desc: 'The silver monastery above Lake Sevan, on midnight-blue enamel.', price: 70, img: 'assets/skins/sevan/emblem.webp' },
   silversign:  { name: 'Silver Eternity', desc: 'A polished silver eternity sign on deep lapis.', price: 80, img: 'assets/dice/lapis/sign.webp', bg: 'radial-gradient(circle, #2f49b8, #10195a)' },
 };
 const FRAMES = {
@@ -1791,7 +1798,7 @@ const V3 = (() => {
     return c;
   }
   const DICE_PIPS = { 1: [[.5, .5]], 2: [[.28, .28], [.72, .72]], 3: [[.28, .28], [.5, .5], [.72, .72]], 4: [[.28, .28], [.72, .28], [.28, .72], [.72, .72]], 5: [[.28, .28], [.72, .28], [.5, .5], [.28, .72], [.72, .72]], 6: [[.28, .25], [.72, .25], [.28, .5], [.72, .5], [.28, .75], [.72, .75]] };
-  const PIP_C = { ivory: ['#050302', '#2e1b0c'], wood: ['#fffaea', '#b49562'], pearl: ['#fff3c9', '#8a5a17'], obsidian: ['#fff0c0', '#9a6a1c'], lapis: ['#ffffff', '#7a8494'] };
+  const PIP_C = { ivory: ['#050302', '#2e1b0c'], wood: ['#fffaea', '#b49562'], pearl: ['#fff3c9', '#8a5a17'], obsidian: ['#fff0c0', '#9a6a1c'], lapis: ['#ffffff', '#7a8494'], sevan: ['#2a3790', '#0a0f38'] };
   function dieFace(face, sign, theme, v) {
     const [c, x] = canvas(256, 256); x.drawImage(face, 0, 0, 256, 256);
     if (v === 1) { const m = 256 * .23; x.drawImage(sign, m, m, 256 - 2 * m, 256 - 2 * m); return c; }
@@ -2783,8 +2790,8 @@ const CASEDEF = {
 };
 const RARITY = { coins: ['Common', '#9c917f'], pearls: ['Common', '#d8d2e6'], rare: ['Rare', '#4aa3ff'], epic: ['Epic', '#b56cff'], legendary: ['Legendary', '#ffcf4a'] };
 const TIERPOOL = {
-  rare: [['dice', 'wood'], ['dice', 'pearl'], ['dice', 'obsidian'], ['dice', 'lapis'], ['sets', 'bone'], ['sets', 'pearl'], ['sets', 'tuff'], ['sets', 'amber']],
-  epic: [['skins', 'oak'], ['skins', 'ebony'], ['skins', 'tuff'], ['skins', 'garnet'], ['frames', 'gold'], ['frames', 'garnet'], ['frames', 'lapis'], ['avatars', 'star'], ['avatars', 'goldsign'], ['avatars', 'silversign']],
+  rare: [['dice', 'wood'], ['dice', 'pearl'], ['dice', 'obsidian'], ['dice', 'lapis'], ['sets', 'bone'], ['sets', 'pearl'], ['sets', 'tuff'], ['sets', 'amber'], ['dice', 'sevan'], ['sets', 'moon']],
+  epic: [['skins', 'oak'], ['skins', 'ebony'], ['skins', 'tuff'], ['skins', 'garnet'], ['skins', 'sevan'], ['avatars', 'sevanavank'], ['frames', 'gold'], ['frames', 'garnet'], ['frames', 'lapis'], ['avatars', 'star'], ['avatars', 'goldsign'], ['avatars', 'silversign']],
   legendary: [['avatars', 'pearl'], ['frames', 'pearl'], ['frames', 'diamond']],
 };
 const caseCount = k => +((NET.profile && NET.profile.cases) || {})[k] || 0;
